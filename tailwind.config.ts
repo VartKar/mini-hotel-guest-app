@@ -52,6 +52,12 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				hotel: {
+					light: '#F1F0FB',
+					neutral: '#8E9196',
+					dark: '#1A1F2C',
+					accent: '#E5DEFF'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
