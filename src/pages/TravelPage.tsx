@@ -134,7 +134,7 @@ const TravelPage = () => {
         <h2 className="text-xl font-medium mb-4">Чат с виртуальным знатоком города!</h2>
         
         <div className="bg-gray-50 rounded-lg p-4 h-[300px] overflow-y-auto mb-4">
-          {messages.map((msg, index) => <div key={index} className={`mb-3 p-3 rounded-lg max-w-[80%] ${msg.isUser ? 'ml-auto bg-hotel-accent text-hotel-dark' : 'mr-auto bg-white border border-gray-100 text-hotel-dark'}`}>
+          {messages.map((msg, index) => <div key={index} className="">
               {msg.text}
             </div>)}
         </div>
