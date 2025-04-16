@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Home, Map, Coffee, ShoppingBag, MessageCircle, Star, Wifi } from "lucide-react";
+import { Home, Map, Coffee, ShoppingBag, MessageCircle, User, Wifi } from "lucide-react";
 
 const menuItems = [{
   name: "Мой номер",
@@ -24,8 +24,8 @@ const menuItems = [{
   icon: <MessageCircle size={32} />,
   path: "/chat"
 }, {
-  name: "Обратная связь",
-  icon: <Star size={32} />,
+  name: "Личный кабинет",
+  icon: <User size={32} />,
   path: "/feedback"
 }];
 

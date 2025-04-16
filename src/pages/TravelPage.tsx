@@ -1,24 +1,47 @@
+
 import React, { useState } from "react";
-import { MapPin, Calendar, Sun, Compass, Send } from "lucide-react";
+import { MapPin, Calendar, Sun, Compass, Send, Check, X, PlusCircle, DollarSign, CreditCard, User } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+
 const locations = [{
   day: "День 1",
   title: "Исторический центр",
   description: "Посещение главных достопримечательностей исторического центра города.",
-  icon: <MapPin />
+  icon: <MapPin />,
+  service: {
+    title: "Индивидуальный гид",
+    description: "Профессиональный гид с глубокими знаниями истории города. 2 часа.",
+    price: "2000 ₽",
+    available: true
+  }
 }, {
   day: "День 2",
   title: "Морская экскурсия",
   description: "Прогулка на катере вдоль живописного побережья.",
-  icon: <Compass />
+  icon: <Compass />,
+  service: {
+    title: "Аренда частного катера",
+    description: "Комфортабельный катер с капитаном на 4 часа. Напитки включены.",
+    price: "8000 ₽",
+    available: true
+  }
 }, {
   day: "День 3",
   title: "Горный маршрут",
   description: "Поездка в горы с посещением смотровых площадок.",
-  icon: <Sun />
+  icon: <Sun />,
+  service: {
+    title: "Джип-тур в горы",
+    description: "Полный день на джипе с опытным водителем. Обед включен.",
+    price: "5500 ₽",
+    available: true
+  }
 }];
+
 const TravelPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -32,6 +55,8 @@ const TravelPage = () => {
 
   // Make editable states for locations
   const [editableLocations, setEditableLocations] = useState(locations);
+  const [showServices, setShowServices] = useState(true);
+  const [selectedServices, setSelectedServices] = useState<number[]>([]);
 
   // Handle location content edit
   const handleLocationEdit = (index: number, field: string, value: string) => {
@@ -43,6 +68,54 @@ const TravelPage = () => {
       };
       return newLocations;
     });
+  };
+
+  // Handle service content edit
+  const handleServiceEdit = (index: number, field: string, value: string) => {
+    setEditableLocations(prev => {
+      const newLocations = [...prev];
+      if (newLocations[index]?.service) {
+        newLocations[index] = {
+          ...newLocations[index],
+          service: {
+            ...newLocations[index].service,
+            [field]: value
+          }
+        };
+      }
+      return newLocations;
+    });
+  };
+
+  // Toggle service visibility for admin mode
+  const toggleServices = () => {
+    setShowServices(!showServices);
+  };
+
+  // Toggle service selection
+  const toggleServiceSelection = (index: number) => {
+    setSelectedServices(prev => {
+      if (prev.includes(index)) {
+        return prev.filter(i => i !== index);
+      } else {
+        return [...prev, index];
+      }
+    });
+    
+    toast(selectedServices.includes(index) ? 
+      "Услуга удалена из выбранных" : 
+      "Услуга добавлена в выбранные", {
+      description: editableLocations[index].service.title
+    });
+  };
+
+  // Calculate total price
+  const calculateTotal = () => {
+    return selectedServices.reduce((total, index) => {
+      const price = editableLocations[index].service.price;
+      const numericPrice = parseInt(price.replace(/\D/g, ""));
+      return total + numericPrice;
+    }, 0);
   };
 
   // Send message to webhook
@@ -93,40 +166,129 @@ const TravelPage = () => {
       setIsLoading(false);
     }
   };
+
   return <div className="w-full max-w-md mx-auto pt-4">
       <h1 className="text-3xl font-light mb-6">Путешествие</h1>
       
       <div className="w-full h-48 mb-6 rounded-lg bg-cover bg-center" style={{
-      backgroundImage: "url('https://images.unsplash.com/photo-1527631746610-bca00a040d60?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80')"
-    }}>
+        backgroundImage: "url('https://images.unsplash.com/photo-1527631746610-bca00a040d60?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80')"
+      }}>
+        <div className="w-full h-full flex items-end p-4">
+          <button 
+            onClick={toggleServices} 
+            className="bg-hotel-dark bg-opacity-80 text-white px-3 py-1 rounded-full text-xs flex items-center"
+          >
+            {showServices ? "Скрыть услуги" : "Показать услуги"}
+          </button>
+        </div>
       </div>
       
       <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
-        <div className="flex items-center mb-4">
-          <Calendar className="mr-3 text-hotel-dark" size={24} />
-          <h2 className="text-xl font-medium">План поездки</h2>
+        <div className="flex items-center mb-4 justify-between">
+          <div className="flex items-center">
+            <Calendar className="mr-3 text-hotel-dark" size={24} />
+            <h2 className="text-xl font-medium">План поездки</h2>
+          </div>
+          {selectedServices.length > 0 && (
+            <div className="text-sm font-medium text-hotel-dark">
+              Выбрано услуг: {selectedServices.length}
+            </div>
+          )}
         </div>
         
         <div className="space-y-6">
-          {editableLocations.map((item, index) => <div key={index} className="flex">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-hotel-accent flex items-center justify-center text-hotel-dark">
-                {item.icon}
-              </div>
-              <div className="ml-4 flex-1">
-                <div className="flex items-center">
-                  <div className="text-lg font-medium p-1 rounded focus:bg-gray-50 focus:outline-none" contentEditable suppressContentEditableWarning onBlur={e => handleLocationEdit(index, 'day', e.currentTarget.innerText)}>
-                    {item.day}
+          {editableLocations.map((item, index) => (
+            <div key={index} className="flex flex-col">
+              <div className="flex">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-hotel-accent flex items-center justify-center text-hotel-dark">
+                  {item.icon}
+                </div>
+                <div className="ml-4 flex-1">
+                  <div className="flex items-center">
+                    <div className="text-lg font-medium p-1 rounded focus:bg-gray-50 focus:outline-none" 
+                      contentEditable 
+                      suppressContentEditableWarning 
+                      onBlur={e => handleLocationEdit(index, 'day', e.currentTarget.innerText)}
+                    >
+                      {item.day}
+                    </div>
+                    <span className="mx-1">:</span>
+                    <div className="text-lg font-medium p-1 rounded focus:bg-gray-50 focus:outline-none" 
+                      contentEditable 
+                      suppressContentEditableWarning 
+                      onBlur={e => handleLocationEdit(index, 'title', e.currentTarget.innerText)}
+                    >
+                      {item.title}
+                    </div>
                   </div>
-                  <span className="mx-1">:</span>
-                  <div className="text-lg font-medium p-1 rounded focus:bg-gray-50 focus:outline-none" contentEditable suppressContentEditableWarning onBlur={e => handleLocationEdit(index, 'title', e.currentTarget.innerText)}>
-                    {item.title}
+                  <div className="text-hotel-neutral p-1 rounded focus:bg-gray-50 focus:outline-none" 
+                    contentEditable 
+                    suppressContentEditableWarning 
+                    onBlur={e => handleLocationEdit(index, 'description', e.currentTarget.innerText)}
+                  >
+                    {item.description}
                   </div>
                 </div>
-                <div className="text-hotel-neutral p-1 rounded focus:bg-gray-50 focus:outline-none" contentEditable suppressContentEditableWarning onBlur={e => handleLocationEdit(index, 'description', e.currentTarget.innerText)}>
-                  {item.description}
-                </div>
               </div>
-            </div>)}
+              
+              {showServices && item.service && (
+                <div className="ml-14 mt-2">
+                  <div className={`border rounded-lg p-3 mt-2 ${selectedServices.includes(index) ? 'border-hotel-accent bg-hotel-accent bg-opacity-10' : 'border-gray-200'}`}>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="font-medium p-1 rounded focus:bg-gray-50 focus:outline-none" 
+                          contentEditable 
+                          suppressContentEditableWarning 
+                          onBlur={e => handleServiceEdit(index, 'title', e.currentTarget.innerText)}
+                        >
+                          {item.service.title}
+                        </div>
+                        <div className="text-sm text-hotel-neutral p-1 rounded focus:bg-gray-50 focus:outline-none" 
+                          contentEditable 
+                          suppressContentEditableWarning 
+                          onBlur={e => handleServiceEdit(index, 'description', e.currentTarget.innerText)}
+                        >
+                          {item.service.description}
+                        </div>
+                        <div className="text-sm font-medium text-hotel-dark mt-1 p-1 rounded focus:bg-gray-50 focus:outline-none" 
+                          contentEditable 
+                          suppressContentEditableWarning 
+                          onBlur={e => handleServiceEdit(index, 'price', e.currentTarget.innerText)}
+                        >
+                          {item.service.price}
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => toggleServiceSelection(index)} 
+                        className={`ml-2 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${selectedServices.includes(index) ? 'bg-hotel-accent text-hotel-dark' : 'bg-gray-100 text-gray-400'}`}
+                      >
+                        {selectedServices.includes(index) ? <Check size={16} /> : <PlusCircle size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {selectedServices.length > 0 && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <div className="font-medium mb-2">Выбранные услуги</div>
+              {selectedServices.map(index => (
+                <div key={`selected-${index}`} className="flex justify-between items-center py-1">
+                  <div className="text-sm">{editableLocations[index].day}: {editableLocations[index].service.title}</div>
+                  <div className="text-sm font-medium">{editableLocations[index].service.price}</div>
+                </div>
+              ))}
+              <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between items-center">
+                <div className="font-medium">Итого:</div>
+                <div className="font-bold">{calculateTotal().toLocaleString()} ₽</div>
+              </div>
+              <Button className="w-full mt-3 bg-hotel-dark text-white">
+                Забронировать услуги
+              </Button>
+            </div>
+          )}
         </div>
       </div>
       
@@ -159,4 +321,5 @@ const TravelPage = () => {
       </div>
     </div>;
 };
+
 export default TravelPage;
