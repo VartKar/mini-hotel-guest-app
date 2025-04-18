@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Home, Map, Coffee, ShoppingBag, MessageCircle, User, Wifi } from "lucide-react";
@@ -31,7 +30,7 @@ const menuItems = [{
 
 const Index = () => {
   const [guestName, setGuestName] = useState("Иван");
-  const [hotelName, setHotelName] = useState("Отель \"Морская Звезда\"");
+  const [hotelName, setHotelName] = useState("Апартаменты \"Вальс\"");
 
   return (
     <div className="flex flex-col items-center">
@@ -49,7 +48,7 @@ const Index = () => {
             </span>
           </h1>
           <p 
-            className="text-xl text-hotel-neutral text-center"
+            className="text-xl text-hotel-neutral text-center border-b border-dashed border-gray-300 focus:outline-none focus:border-hotel-dark px-1"
             contentEditable
             suppressContentEditableWarning
             onBlur={(e) => setHotelName(e.currentTarget.innerText)}
