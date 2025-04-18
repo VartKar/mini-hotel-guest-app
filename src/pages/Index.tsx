@@ -31,6 +31,7 @@ const menuItems = [{
 const Index = () => {
   const [guestName, setGuestName] = useState("Иван");
   const [hotelName, setHotelName] = useState("Апартаменты \"Вальс\"");
+  const [homeImage, setHomeImage] = useState("https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80");
 
   return (
     <div className="flex flex-col items-center">
@@ -57,10 +58,15 @@ const Index = () => {
           </p>
         </div>
 
-        <div className="w-full h-48 mb-8 rounded-lg bg-cover bg-center" style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80')"
-        }}>
-        </div>
+        <div 
+          className="w-full h-48 mb-8 rounded-lg bg-cover bg-center cursor-pointer hover:opacity-90 transition-opacity"
+          style={{ backgroundImage: `url('${homeImage}')` }}
+          onClick={() => {
+            const newUrl = prompt("Введите URL новой фотографии:", homeImage);
+            if (newUrl) setHomeImage(newUrl);
+          }}
+          title="Нажмите, чтобы изменить изображение"
+        />
 
         <div className="grid grid-cols-2 gap-4">
           {menuItems.map(item => (

@@ -7,6 +7,7 @@ const RoomPage = () => {
   const [wifiNetwork, setWifiNetwork] = useState("GuestNetwork");
   const [wifiPassword, setWifiPassword] = useState("SeaStar2025");
   const [checkoutTime, setCheckoutTime] = useState("12:00");
+  const [roomImage, setRoomImage] = useState("https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80");
   
   // Amenity instructions with default text
   const [amenityInstructions, setAmenityInstructions] = useState({
@@ -43,9 +44,15 @@ const RoomPage = () => {
     <div className="w-full max-w-md mx-auto pt-4">
       <h1 className="text-3xl font-light mb-6">Мой номер</h1>
       
-      <div className="w-full h-48 mb-6 rounded-lg bg-cover bg-center" 
-           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80')" }}>
-      </div>
+      <div 
+        className="w-full h-48 mb-6 rounded-lg bg-cover bg-center cursor-pointer hover:opacity-90 transition-opacity" 
+        style={{ backgroundImage: `url('${roomImage}')` }}
+        onClick={() => {
+          const newUrl = prompt("Введите URL новой фотографии:", roomImage);
+          if (newUrl) setRoomImage(newUrl);
+        }}
+        title="Нажмите, чтобы изменить изображение"
+      />
       
       <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
         <div className="flex items-start mb-2">
