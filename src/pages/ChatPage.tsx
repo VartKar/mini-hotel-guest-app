@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Send, MessageCircle } from "lucide-react";
 
 const ChatPage = () => {
@@ -7,37 +7,20 @@ const ChatPage = () => {
   const [messages, setMessages] = useState([
     { text: "Здравствуйте! Чем я могу вам помочь?", isUser: false }
   ]);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSendMessage = async () => {
-    if (message.trim() === "" || isLoading) return;
+  const handleSendMessage = () => {
+    if (message.trim() === "") return;
     
-    const userMessage = message;
-    setMessages(prev => [...prev, { text: userMessage, isUser: true }]);
+    setMessages([...messages, { text: message, isUser: true }]);
     setMessage("");
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('https://innsight.app.n8n.cloud/webhook/6b9361f4-3386-4584-955a-c6f705176a12/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: userMessage }),
-      });
-
-      const data = await response.json();
-      
-      setMessages(prev => [...prev, { text: data.response || "Извините, произошла ошибка. Попробуйте позже.", isUser: false }]);
-    } catch (error) {
-      console.error('Error:', error);
-      setMessages(prev => [...prev, { 
-        text: "Извините, произошла ошибка. Попробуйте позже.", 
-        isUser: false 
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
+    
+    // Simulate response
+    setTimeout(() => {
+      setMessages(prevMessages => [
+        ...prevMessages, 
+        { text: "Спасибо за ваше сообщение. Наш консьерж ответит вам в ближайшее время.", isUser: false }
+      ]);
+    }, 1000);
   };
 
   return (

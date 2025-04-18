@@ -1,5 +1,6 @@
+
 import React, { useState } from "react";
-import { Wifi, Clock, Coffee, Wind, Tv, CreditCard, Car, Info, MapPin as Map, PawPrint } from "lucide-react";
+import { Wifi, Clock, Coffee, Wind, Tv, CreditCard } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
 const RoomPage = () => {
@@ -23,12 +24,6 @@ const RoomPage = () => {
       [amenity]: value
     }));
   };
-
-  const [additionalInfo, setAdditionalInfo] = useState({
-    parking: "Бесплатная парковка доступна для всех гостей отеля. Въезд с улицы Приморской.",
-    transport: "Остановка общественного транспорта в 100 метрах от отеля. Такси можно заказать на ресепшн.",
-    pets: "Разрешено размещение с домашними животными до 10 кг. Дополнительная плата 1000 ₽/сутки."
-  });
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
@@ -162,53 +157,6 @@ const RoomPage = () => {
               onChange={(e) => handleInstructionChange('safe', e.target.value)}
               className="min-h-[60px] text-sm"
               placeholder="Инструкция по использованию сейфа..."
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg p-6 shadow-sm mt-4">
-        <h2 className="text-xl font-medium mb-4 flex items-center">
-          <Info className="mr-2 text-hotel-dark" size={20} />
-          Дополнительно
-        </h2>
-        <div className="flex flex-col gap-4">
-          <div>
-            <div className="flex items-center mb-2">
-              <Car className="mr-2 text-hotel-dark" size={20} />
-              <span className="text-hotel-neutral">Парковка</span>
-            </div>
-            <Textarea
-              value={additionalInfo.parking}
-              onChange={(e) => setAdditionalInfo(prev => ({...prev, parking: e.target.value}))}
-              className="min-h-[60px] text-sm"
-              placeholder="Информация о парковке..."
-            />
-          </div>
-          
-          <div>
-            <div className="flex items-center mb-2">
-              <Map className="mr-2 text-hotel-dark" size={20} />
-              <span className="text-hotel-neutral">Транспорт</span>
-            </div>
-            <Textarea
-              value={additionalInfo.transport}
-              onChange={(e) => setAdditionalInfo(prev => ({...prev, transport: e.target.value}))}
-              className="min-h-[60px] text-sm"
-              placeholder="Информация о транспорте..."
-            />
-          </div>
-          
-          <div>
-            <div className="flex items-center mb-2">
-              <PawPrint className="mr-2 text-hotel-dark" size={20} />
-              <span className="text-hotel-neutral">Домашние животные</span>
-            </div>
-            <Textarea
-              value={additionalInfo.pets}
-              onChange={(e) => setAdditionalInfo(prev => ({...prev, pets: e.target.value}))}
-              className="min-h-[60px] text-sm"
-              placeholder="Информация о размещении с питомцами..."
             />
           </div>
         </div>
