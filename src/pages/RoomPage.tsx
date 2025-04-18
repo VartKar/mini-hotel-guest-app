@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { Wifi, Clock, Coffee, Wind, Tv, CreditCard } from "lucide-react";
+import { Wifi, Clock, Coffee, Wind, Tv, CreditCard, Car, Info } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
 const RoomPage = () => {
@@ -22,6 +21,21 @@ const RoomPage = () => {
     setAmenityInstructions(prev => ({
       ...prev,
       [amenity]: value
+    }));
+  };
+  
+  // Add new state for additional information
+  const [additionalInfo, setAdditionalInfo] = useState({
+    parking: "Бесплатная парковка доступна для всех гостей. Въезд со стороны главного входа.",
+    extraBed: "Дополнительная кровать доступна по запросу (500 руб/ночь)",
+    pets: "Размещение с домашними животными разрешено (депозит 2000 руб)",
+  });
+
+  // Handle additional info change
+  const handleAdditionalInfoChange = (field: keyof typeof additionalInfo, value: string) => {
+    setAdditionalInfo(prev => ({
+      ...prev,
+      [field]: value
     }));
   };
 
@@ -157,6 +171,54 @@ const RoomPage = () => {
               onChange={(e) => handleInstructionChange('safe', e.target.value)}
               className="min-h-[60px] text-sm"
               placeholder="Инструкция по использованию сейфа..."
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Additional Information Section */}
+      <div className="bg-white rounded-lg p-6 shadow-sm mt-4">
+        <h2 className="text-xl font-medium mb-4 flex items-center gap-2">
+          <Info size={20} className="text-hotel-dark" />
+          Дополнительно
+        </h2>
+        <div className="flex flex-col gap-4">
+          <div>
+            <div className="flex items-center mb-2">
+              <Car className="mr-2 text-hotel-dark" size={20} />
+              <span className="text-hotel-neutral">Парковка</span>
+            </div>
+            <Textarea
+              value={additionalInfo.parking}
+              onChange={(e) => handleAdditionalInfoChange('parking', e.target.value)}
+              className="min-h-[60px] text-sm"
+              placeholder="Информация о парковке..."
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center mb-2">
+              <Clock className="mr-2 text-hotel-dark" size={20} />
+              <span className="text-hotel-neutral">Дополнительная кровать</span>
+            </div>
+            <Textarea
+              value={additionalInfo.extraBed}
+              onChange={(e) => handleAdditionalInfoChange('extraBed', e.target.value)}
+              className="min-h-[60px] text-sm"
+              placeholder="Информация о дополнительных кроватях..."
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center mb-2">
+              <Info className="mr-2 text-hotel-dark" size={20} />
+              <span className="text-hotel-neutral">Домашние животные</span>
+            </div>
+            <Textarea
+              value={additionalInfo.pets}
+              onChange={(e) => handleAdditionalInfoChange('pets', e.target.value)}
+              className="min-h-[60px] text-sm"
+              placeholder="Информация о размещении с животными..."
             />
           </div>
         </div>
