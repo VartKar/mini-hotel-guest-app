@@ -57,9 +57,12 @@ const Index = () => {
           </p>
         </div>
 
-        <div className="w-full h-48 mb-8 rounded-lg bg-cover bg-center" style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80')"
-        }}>
+        <div 
+          className="w-full h-48 mb-8 rounded-lg bg-cover bg-center" 
+          style={{
+            backgroundImage: "url('/lovable-uploads/ed380eb5-2882-47e3-bbd6-b0a34ce4a2c5.png')"
+          }}
+        >
         </div>
 
         <div className="grid grid-cols-2 gap-4">
