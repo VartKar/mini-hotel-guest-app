@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Home, Map, Coffee, ShoppingBag, MessageCircle, User, Wifi } from "lucide-react";
@@ -59,7 +58,7 @@ const Index = () => {
         </div>
 
         <div className="w-full h-48 mb-8 rounded-lg bg-cover bg-center" style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80')"
+          backgroundImage: "url('/lovable-uploads/076c2ade-7712-473b-890f-6a058f4b95e7.png')"
         }}>
         </div>
 
