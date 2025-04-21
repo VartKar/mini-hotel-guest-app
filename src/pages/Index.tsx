@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Home, Map, Coffee, ShoppingBag, MessageCircle, User, Wifi } from "lucide-react";
@@ -31,7 +32,8 @@ const menuItems = [{
 const Index = () => {
   const [guestName, setGuestName] = useState("Иван");
   const [hotelName, setHotelName] = useState("Апартаменты \"Вальс\"");
-  const [homeImage, setHomeImage] = useState("https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80");
+  // Updated homeImage URL as requested
+  const [homeImage, setHomeImage] = useState("https://i.postimg.cc/NFprr3hY/valse.png");
 
   return (
     <div className="flex flex-col items-center">
@@ -86,3 +88,4 @@ const Index = () => {
 };
 
 export default Index;
+
