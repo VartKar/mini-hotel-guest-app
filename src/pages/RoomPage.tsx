@@ -1,21 +1,57 @@
+
 import React, { useState } from "react";
 import { Wifi, Clock, Coffee, Wind, Tv, CreditCard, Car, Info } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { useRoomData } from "@/hooks/useRoomData";
 
 const RoomPage = () => {
-  const [stayDuration, setStayDuration] = useState("3 ночи (12.06 - 15.06)");
-  const [wifiNetwork, setWifiNetwork] = useState("GuestNetwork");
-  const [wifiPassword, setWifiPassword] = useState("SeaStar2025");
-  const [checkoutTime, setCheckoutTime] = useState("12:00");
+  const { roomData, loading, error } = useRoomData();
+  
+  // Local state for editable fields, initialized with data from database
+  const [stayDuration, setStayDuration] = useState("");
+  const [wifiNetwork, setWifiNetwork] = useState("");
+  const [wifiPassword, setWifiPassword] = useState("");
+  const [checkoutTime, setCheckoutTime] = useState("");
   const [roomImage, setRoomImage] = useState("https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80");
   
   // Amenity instructions with default text
   const [amenityInstructions, setAmenityInstructions] = useState({
-    airConditioner: "Пульт находится на прикроватной тумбочке. Рекомендуемая температура 22-24°C.",
-    coffeeMachine: "Капсулы для кофемашины находятся в ящике под ней. Инструкция на боковой стороне.",
-    smartTV: "Пульт от телевизора на столике. Для Netflix используйте кнопку на пульте.",
-    safe: "Сейф находится в шкафу. Установите свой код и нажмите '#' для подтверждения."
+    airConditioner: "",
+    coffeeMachine: "",
+    smartTV: "",
+    safe: ""
   });
+  
+  // Additional information
+  const [additionalInfo, setAdditionalInfo] = useState({
+    parking: "",
+    extraBed: "",
+    pets: "",
+  });
+
+  // Update local state when roomData is loaded
+  React.useEffect(() => {
+    if (roomData) {
+      setStayDuration(roomData.stay_duration || "3 ночи (12.06 - 15.06)");
+      setWifiNetwork(roomData.wifi_network || "GuestNetwork");
+      setWifiPassword(roomData.wifi_password || "SeaStar2025");
+      setCheckoutTime(roomData.checkout_time || "12:00");
+      setRoomImage(roomData.room_image_url || "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80");
+      
+      setAmenityInstructions({
+        airConditioner: roomData.ac_instructions || "Пульт находится на прикроватной тумбочке. Рекомендуемая температура 22-24°C.",
+        coffeeMachine: roomData.coffee_instructions || "Капсулы для кофемашины находятся в ящике под ней. Инструкция на боковой стороне.",
+        smartTV: roomData.tv_instructions || "Пульт от телевизора на столике. Для Netflix используйте кнопку на пульте.",
+        safe: roomData.safe_instructions || "Сейф находится в шкафу. Установите свой код и нажмите '#' для подтверждения."
+      });
+
+      setAdditionalInfo({
+        parking: roomData.parking_info || "Бесплатная парковка доступна для всех гостей. Въезд со стороны главного входа.",
+        extraBed: roomData.extra_bed_info || "Дополнительная кровать доступна по запросу (500 руб/ночь)",
+        pets: roomData.pets_info || "Размещение с домашними животными разрешено (депозит 2000 руб)",
+      });
+    }
+  }, [roomData]);
 
   // Handle amenity instruction change
   const handleInstructionChange = (amenity: keyof typeof amenityInstructions, value: string) => {
@@ -24,13 +60,6 @@ const RoomPage = () => {
       [amenity]: value
     }));
   };
-  
-  // Add new state for additional information
-  const [additionalInfo, setAdditionalInfo] = useState({
-    parking: "Бесплатная парковка доступна для всех гостей. Въезд со стороны главного входа.",
-    extraBed: "Дополнительная кровать доступна по запросу (500 руб/ночь)",
-    pets: "Размещение с домашними животными разрешено (депозит 2000 руб)",
-  });
 
   // Handle additional info change
   const handleAdditionalInfoChange = (field: keyof typeof additionalInfo, value: string) => {
@@ -39,6 +68,26 @@ const RoomPage = () => {
       [field]: value
     }));
   };
+
+  if (loading) {
+    return (
+      <div className="w-full max-w-md mx-auto pt-4">
+        <div className="flex items-center justify-center p-8">
+          <div className="text-lg">Загрузка данных номера...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full max-w-md mx-auto pt-4">
+        <div className="flex items-center justify-center p-8">
+          <div className="text-lg text-red-600">Ошибка загрузки: {error}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
