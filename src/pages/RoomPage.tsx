@@ -1,256 +1,235 @@
-
-import React from "react";
-import { Wifi, Clock, Coffee, Wind, Tv, CreditCard, Car, Info, Bed } from "lucide-react";
+import React, { useState } from "react";
+import { Wifi, Clock, Coffee, Wind, Tv, CreditCard, Car, Info } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { useRoomData } from "../hooks/useRoomData";
 
 const RoomPage = () => {
-  const { data, isLoading, error } = useRoomData();
+  const [stayDuration, setStayDuration] = useState("3 ночи (12.06 - 15.06)");
+  const [wifiNetwork, setWifiNetwork] = useState("GuestNetwork");
+  const [wifiPassword, setWifiPassword] = useState("SeaStar2025");
+  const [checkoutTime, setCheckoutTime] = useState("12:00");
+  const [roomImage, setRoomImage] = useState("https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80");
+  
+  // Amenity instructions with default text
+  const [amenityInstructions, setAmenityInstructions] = useState({
+    airConditioner: "Пульт находится на прикроватной тумбочке. Рекомендуемая температура 22-24°C.",
+    coffeeMachine: "Капсулы для кофемашины находятся в ящике под ней. Инструкция на боковой стороне.",
+    smartTV: "Пульт от телевизора на столике. Для Netflix используйте кнопку на пульте.",
+    safe: "Сейф находится в шкафу. Установите свой код и нажмите '#' для подтверждения."
+  });
 
-  if (isLoading) {
-    return (
-      <div className="w-full max-w-md mx-auto pt-10 text-center">
-        <div className="animate-pulse">
-          <div className="w-full h-48 bg-gray-200 rounded-lg mb-6"></div>
-          <div className="space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
-          </div>
-        </div>
-        <p className="text-gray-500 mt-4">Загрузка данных номера...</p>
-      </div>
-    );
-  }
+  // Handle amenity instruction change
+  const handleInstructionChange = (amenity: keyof typeof amenityInstructions, value: string) => {
+    setAmenityInstructions(prev => ({
+      ...prev,
+      [amenity]: value
+    }));
+  };
+  
+  // Add new state for additional information
+  const [additionalInfo, setAdditionalInfo] = useState({
+    parking: "Бесплатная парковка доступна для всех гостей. Въезд со стороны главного входа.",
+    extraBed: "Дополнительная кровать доступна по запросу (500 руб/ночь)",
+    pets: "Размещение с домашними животными разрешено (депозит 2000 руб)",
+  });
 
-  if (error) {
-    return (
-      <div className="w-full max-w-md mx-auto pt-10 text-center">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <p className="text-red-600 font-medium">Ошибка загрузки данных</p>
-          <p className="text-red-500 text-sm mt-2">
-            Не удалось загрузить информацию о номере. Попробуйте обновить страницу.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="w-full max-w-md mx-auto pt-10 text-center">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-          <p className="text-yellow-600 font-medium">Данные не найдены</p>
-          <p className="text-yellow-600 text-sm mt-2">
-            Информация о номере пока не добавлена в систему.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Map the actual database columns to variables for UI
-  const image = data.image;
-  const stay_duration = data.stay_duration;
-  const wifi_network = data.wifi_network;
-  const wifi_password = data.wifi_password;
-  const checkout_time = data.checkout_time;
-  const air_conditioner = data.air_conditioner;
-  const coffee_machine = data.coffee_machine;
-  const smart_tv = data.smart_tv;
-  const safe = data.safe;
-  const parking = data.parking;
-  const extra_bed = data.extra_bed;
-  const pets = data.pets;
+  // Handle additional info change
+  const handleAdditionalInfoChange = (field: keyof typeof additionalInfo, value: string) => {
+    setAdditionalInfo(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
       <h1 className="text-3xl font-light mb-6">Мой номер</h1>
-
-      {image && (
-        <div 
-          className="w-full h-48 mb-6 rounded-lg bg-cover bg-center bg-gray-200"
-          style={{ backgroundImage: `url('${image}')` }}
-        />
-      )}
-
-      {stay_duration && (
-        <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
-          <div className="flex items-start mb-2">
-            <Clock className="mr-3 text-hotel-dark flex-shrink-0 mt-1" size={24} />
-            <div className="w-full">
-              <div className="flex justify-between items-center mb-1">
-                <h2 className="text-xl font-medium">Длительность проживания</h2>
+      
+      <div 
+        className="w-full h-48 mb-6 rounded-lg bg-cover bg-center cursor-pointer hover:opacity-90 transition-opacity" 
+        style={{ backgroundImage: `url('${roomImage}')` }}
+        onClick={() => {
+          const newUrl = prompt("Введите URL новой фотографии:", roomImage);
+          if (newUrl) setRoomImage(newUrl);
+        }}
+        title="Нажмите, чтобы изменить изображение"
+      />
+      
+      <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
+        <div className="flex items-start mb-2">
+          <Clock className="mr-3 text-hotel-dark flex-shrink-0 mt-1" size={24} />
+          <div className="w-full">
+            <div className="flex justify-between items-center mb-1">
+              <h2 className="text-xl font-medium">Длительность проживания</h2>
+            </div>
+            <div 
+              className="p-2 bg-gray-50 rounded border border-gray-100 focus-within:border-hotel-dark transition-colors"
+              contentEditable
+              suppressContentEditableWarning
+              onBlur={(e) => setStayDuration(e.currentTarget.innerText)}
+            >
+              {stayDuration}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
+        <div className="flex items-start mb-2">
+          <Wifi className="mr-3 text-hotel-dark flex-shrink-0 mt-1" size={24} />
+          <div className="w-full">
+            <h2 className="text-xl font-medium mb-2">Wi-Fi</h2>
+            <div className="mb-2">
+              <p className="text-hotel-neutral mb-1">Сеть:</p>
+              <div 
+                className="p-2 bg-gray-50 rounded border border-gray-100 focus-within:border-hotel-dark transition-colors"
+                contentEditable
+                suppressContentEditableWarning
+                onBlur={(e) => setWifiNetwork(e.currentTarget.innerText)}
+              >
+                {wifiNetwork}
               </div>
-              <div className="p-2 bg-gray-50 rounded border border-gray-100 select-text">
-                {stay_duration}
+            </div>
+            <div>
+              <p className="text-hotel-neutral mb-1">Пароль:</p>
+              <div 
+                className="p-2 bg-gray-50 rounded border border-gray-100 focus-within:border-hotel-dark transition-colors"
+                contentEditable
+                suppressContentEditableWarning
+                onBlur={(e) => setWifiPassword(e.currentTarget.innerText)}
+              >
+                {wifiPassword}
               </div>
             </div>
           </div>
         </div>
-      )}
-
-      {(wifi_network || wifi_password) && (
-        <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
-          <div className="flex items-start mb-2">
-            <Wifi className="mr-3 text-hotel-dark flex-shrink-0 mt-1" size={24} />
-            <div className="w-full">
-              <h2 className="text-xl font-medium mb-2">Wi-Fi</h2>
-              {wifi_network && (
-                <div className="mb-2">
-                  <p className="text-hotel-neutral mb-1">Сеть:</p>
-                  <div className="p-2 bg-gray-50 rounded border border-gray-100 select-text">
-                    {wifi_network}
-                  </div>
-                </div>
-              )}
-              {wifi_password && (
-                <div>
-                  <p className="text-hotel-neutral mb-1">Пароль:</p>
-                  <div className="p-2 bg-gray-50 rounded border border-gray-100 select-text">
-                    {wifi_password}
-                  </div>
-                </div>
-              )}
+      </div>
+      
+      <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
+        <div className="flex items-start mb-2">
+          <Clock className="mr-3 text-hotel-dark flex-shrink-0 mt-1" size={24} />
+          <div className="w-full">
+            <div className="flex justify-between items-center mb-1">
+              <h2 className="text-xl font-medium">Время выезда</h2>
             </div>
-          </div>
-        </div>
-      )}
-
-      {checkout_time && (
-        <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
-          <div className="flex items-start mb-2">
-            <Clock className="mr-3 text-hotel-dark flex-shrink-0 mt-1" size={24} />
-            <div className="w-full">
-              <div className="flex justify-between items-center mb-1">
-                <h2 className="text-xl font-medium">Время выезда</h2>
-              </div>
-              <div className="p-2 bg-gray-50 rounded border border-gray-100 select-text">
-                {checkout_time}
-              </div>
-              <p className="text-sm text-hotel-neutral mt-2">
-                Для позднего выезда, пожалуйста, свяжитесь с нами через чат.
-              </p>
+            <div 
+              className="p-2 bg-gray-50 rounded border border-gray-100 focus-within:border-hotel-dark transition-colors"
+              contentEditable
+              suppressContentEditableWarning
+              onBlur={(e) => setCheckoutTime(e.currentTarget.innerText)}
+            >
+              {checkoutTime}
             </div>
+            <p className="text-sm text-hotel-neutral mt-2">
+              Для позднего выезда, пожалуйста, свяжитесь с нами через чат.
+            </p>
           </div>
         </div>
-      )}
+      </div>
+      
+      <div className="bg-white rounded-lg p-6 shadow-sm">
+        <h2 className="text-xl font-medium mb-4">Удобства номера</h2>
+        <div className="flex flex-col gap-4">
+          <div>
+            <div className="flex items-center mb-2">
+              <Wind className="mr-2 text-hotel-dark" size={20} />
+              <span className="text-hotel-neutral">Кондиционер</span>
+            </div>
+            <Textarea
+              value={amenityInstructions.airConditioner}
+              onChange={(e) => handleInstructionChange('airConditioner', e.target.value)}
+              className="min-h-[60px] text-sm"
+              placeholder="Инструкция по использованию кондиционера..."
+            />
+          </div>
+          
+          <div>
+            <div className="flex items-center mb-2">
+              <Coffee className="mr-2 text-hotel-dark" size={20} />
+              <span className="text-hotel-neutral">Кофемашина</span>
+            </div>
+            <Textarea
+              value={amenityInstructions.coffeeMachine}
+              onChange={(e) => handleInstructionChange('coffeeMachine', e.target.value)}
+              className="min-h-[60px] text-sm"
+              placeholder="Инструкция по использованию кофемашины..."
+            />
+          </div>
+          
+          <div>
+            <div className="flex items-center mb-2">
+              <Tv className="mr-2 text-hotel-dark" size={20} />
+              <span className="text-hotel-neutral">Смарт ТВ</span>
+            </div>
+            <Textarea
+              value={amenityInstructions.smartTV}
+              onChange={(e) => handleInstructionChange('smartTV', e.target.value)}
+              className="min-h-[60px] text-sm"
+              placeholder="Инструкция по использованию телевизора..."
+            />
+          </div>
+          
+          <div>
+            <div className="flex items-center mb-2">
+              <CreditCard className="mr-2 text-hotel-dark" size={20} />
+              <span className="text-hotel-neutral">Сейф</span>
+            </div>
+            <Textarea
+              value={amenityInstructions.safe}
+              onChange={(e) => handleInstructionChange('safe', e.target.value)}
+              className="min-h-[60px] text-sm"
+              placeholder="Инструкция по использованию сейфа..."
+            />
+          </div>
+        </div>
+      </div>
 
-      {(air_conditioner || coffee_machine || smart_tv || safe) && (
-        <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
-          <h2 className="text-xl font-medium mb-4">Удобства номера</h2>
-          <div className="flex flex-col gap-4">
-            {air_conditioner && (
-              <div>
-                <div className="flex items-center mb-2">
-                  <Wind className="mr-2 text-hotel-dark" size={20} />
-                  <span className="text-hotel-neutral">Кондиционер</span>
-                </div>
-                <Textarea
-                  value={air_conditioner}
-                  readOnly
-                  className="min-h-[60px] text-sm"
-                  placeholder="Инструкция по использованию кондиционера..."
-                />
-              </div>
-            )}
-            {coffee_machine && (
-              <div>
-                <div className="flex items-center mb-2">
-                  <Coffee className="mr-2 text-hotel-dark" size={20} />
-                  <span className="text-hotel-neutral">Кофемашина</span>
-                </div>
-                <Textarea
-                  value={coffee_machine}
-                  readOnly
-                  className="min-h-[60px] text-sm"
-                  placeholder="Инструкция по использованию кофемашины..."
-                />
-              </div>
-            )}
-            {smart_tv && (
-              <div>
-                <div className="flex items-center mb-2">
-                  <Tv className="mr-2 text-hotel-dark" size={20} />
-                  <span className="text-hotel-neutral">Смарт ТВ</span>
-                </div>
-                <Textarea
-                  value={smart_tv}
-                  readOnly
-                  className="min-h-[60px] text-sm"
-                  placeholder="Инструкция по использованию телевизора..."
-                />
-              </div>
-            )}
-            {safe && (
-              <div>
-                <div className="flex items-center mb-2">
-                  <CreditCard className="mr-2 text-hotel-dark" size={20} />
-                  <span className="text-hotel-neutral">Сейф</span>
-                </div>
-                <Textarea
-                  value={safe}
-                  readOnly
-                  className="min-h-[60px] text-sm"
-                  placeholder="Инструкция по использованию сейфа..."
-                />
-              </div>
-            )}
+      {/* Additional Information Section */}
+      <div className="bg-white rounded-lg p-6 shadow-sm mt-4">
+        <h2 className="text-xl font-medium mb-4 flex items-center gap-2">
+          <Info size={20} className="text-hotel-dark" />
+          Дополнительно
+        </h2>
+        <div className="flex flex-col gap-4">
+          <div>
+            <div className="flex items-center mb-2">
+              <Car className="mr-2 text-hotel-dark" size={20} />
+              <span className="text-hotel-neutral">Парковка</span>
+            </div>
+            <Textarea
+              value={additionalInfo.parking}
+              onChange={(e) => handleAdditionalInfoChange('parking', e.target.value)}
+              className="min-h-[60px] text-sm"
+              placeholder="Информация о парковке..."
+            />
           </div>
-        </div>
-      )}
 
-      {(parking || extra_bed || pets) && (
-        <div className="bg-white rounded-lg p-6 shadow-sm mt-4">
-          <h2 className="text-xl font-medium mb-4 flex items-center gap-2">
-            <Info size={20} className="text-hotel-dark" />
-            Дополнительно
-          </h2>
-          <div className="flex flex-col gap-4">
-            {parking && (
-              <div>
-                <div className="flex items-center mb-2">
-                  <Car className="mr-2 text-hotel-dark" size={20} />
-                  <span className="text-hotel-neutral">Парковка</span>
-                </div>
-                <Textarea
-                  value={parking}
-                  readOnly
-                  className="min-h-[60px] text-sm"
-                  placeholder="Информация о парковке..."
-                />
-              </div>
-            )}
-            {extra_bed && (
-              <div>
-                <div className="flex items-center mb-2">
-                  <Bed className="mr-2 text-hotel-dark" size={20} />
-                  <span className="text-hotel-neutral">Дополнительная кровать</span>
-                </div>
-                <Textarea
-                  value={extra_bed}
-                  readOnly
-                  className="min-h-[60px] text-sm"
-                  placeholder="Информация о дополнительных кроватях..."
-                />
-              </div>
-            )}
-            {pets && (
-              <div>
-                <div className="flex items-center mb-2">
-                  <Info className="mr-2 text-hotel-dark" size={20} />
-                  <span className="text-hotel-neutral">Домашние животные</span>
-                </div>
-                <Textarea
-                  value={pets}
-                  readOnly
-                  className="min-h-[60px] text-sm"
-                  placeholder="Информация о размещении с животными..."
-                />
-              </div>
-            )}
+          <div>
+            <div className="flex items-center mb-2">
+              <Clock className="mr-2 text-hotel-dark" size={20} />
+              <span className="text-hotel-neutral">Дополнительная кровать</span>
+            </div>
+            <Textarea
+              value={additionalInfo.extraBed}
+              onChange={(e) => handleAdditionalInfoChange('extraBed', e.target.value)}
+              className="min-h-[60px] text-sm"
+              placeholder="Информация о дополнительных кроватях..."
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center mb-2">
+              <Info className="mr-2 text-hotel-dark" size={20} />
+              <span className="text-hotel-neutral">Домашние животные</span>
+            </div>
+            <Textarea
+              value={additionalInfo.pets}
+              onChange={(e) => handleAdditionalInfoChange('pets', e.target.value)}
+              className="min-h-[60px] text-sm"
+              placeholder="Информация о размещении с животными..."
+            />
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

@@ -28,7 +28,7 @@ const services: ServiceItem[] = [
   }, 
   {
     title: "Услуги прачечной",
-    description: "Стирка и глажка вашей одежды в дня.",
+    description: "Стирка и глажка вашей одежды в течение дня.",
     icon: <Shirt size={24} />,
     buttonText: "Заказать"
   }, 
