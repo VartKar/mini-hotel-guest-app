@@ -1,31 +1,22 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-
-console.log("Supabase URL:", supabaseUrl);
-console.log("Supabase Anon Key:", supabaseAnonKey ? "Present" : "Missing");
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Missing Supabase environment variables. Make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.");
-}
-
-// Table: rooms (columns: id, image, stay_duration, wifi_network, wifi_password, checkout_time, air_conditioner, coffee_machine, smart_tv, safe, parking, extra_bed, pets)
-const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+import { supabase } from "@/integrations/supabase/client";
 
 export const fetchRoomData = async () => {
-  if (!supabase) {
-    throw new Error("Supabase client is not initialized. Please check your environment variables.");
-  }
+  console.log("Fetching room data from Supabase...");
   
   const { data, error } = await supabase
     .from("rooms")
     .select("*")
     .limit(1)
-    .single();
-  if (error) throw error;
+    .maybeSingle();
+    
+  if (error) {
+    console.error("Error fetching room data:", error);
+    throw error;
+  }
+  
+  console.log("Room data fetched successfully:", data);
   return data;
 };
 
@@ -33,7 +24,6 @@ export const useRoomData = () => {
   return useQuery({
     queryKey: ["roomData"],
     queryFn: fetchRoomData,
-    enabled: !!supabase, // Only run query if supabase client is available
   });
 };
 
