@@ -2,7 +2,7 @@
 import React from "react";
 import { Wifi, Clock, Coffee, Wind, Tv, CreditCard, Car, Info, Bed } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { useRoomData, RoomData } from "../hooks/useRoomData";
+import { useRoomData } from "../hooks/useRoomData";
 
 const RoomPage = () => {
   const { data, isLoading, error } = useRoomData();
@@ -48,22 +48,19 @@ const RoomPage = () => {
     );
   }
 
-  // Map table fields to variables for UI
-  const room: RoomData = data;
-  const {
-    image,
-    stay_duration,
-    wifi_network,
-    wifi_password,
-    checkout_time,
-    air_conditioner,
-    coffee_machine,
-    smart_tv,
-    safe,
-    parking,
-    extra_bed,
-    pets,
-  } = room;
+  // Map the actual database columns to variables for UI
+  const image = data.image;
+  const stay_duration = data.stay_duration;
+  const wifi_network = data.wifi_network;
+  const wifi_password = data.wifi_password;
+  const checkout_time = data.checkout_time;
+  const air_conditioner = data.air_conditioner;
+  const coffee_machine = data.coffee_machine;
+  const smart_tv = data.smart_tv;
+  const safe = data.safe;
+  const parking = data.parking;
+  const extra_bed = data.extra_bed;
+  const pets = data.pets;
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
