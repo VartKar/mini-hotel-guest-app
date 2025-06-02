@@ -20,10 +20,12 @@ export type Database = {
           extra_bed_info: string | null
           guest_email: string | null
           guest_name: string | null
+          id_key: string
           parking_info: string | null
           pets_info: string | null
           property_id: string | null
           room_image_url: string | null
+          room_number: string | null
           safe_instructions: string | null
           stay_duration: string | null
           tv_instructions: string | null
@@ -40,10 +42,12 @@ export type Database = {
           extra_bed_info?: string | null
           guest_email?: string | null
           guest_name?: string | null
+          id_key?: string
           parking_info?: string | null
           pets_info?: string | null
           property_id?: string | null
           room_image_url?: string | null
+          room_number?: string | null
           safe_instructions?: string | null
           stay_duration?: string | null
           tv_instructions?: string | null
@@ -60,10 +64,12 @@ export type Database = {
           extra_bed_info?: string | null
           guest_email?: string | null
           guest_name?: string | null
+          id_key?: string
           parking_info?: string | null
           pets_info?: string | null
           property_id?: string | null
           room_image_url?: string | null
+          room_number?: string | null
           safe_instructions?: string | null
           stay_duration?: string | null
           tv_instructions?: string | null

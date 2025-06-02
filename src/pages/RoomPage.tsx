@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Wifi, Clock, Coffee, Wind, Tv, CreditCard, Car, Info } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -91,7 +90,9 @@ const RoomPage = () => {
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
-      <h1 className="text-3xl font-light mb-6">Мой номер</h1>
+      <h1 className="text-3xl font-light mb-6">
+        {roomData?.room_number || "Мой номер"}
+      </h1>
       
       <div 
         className="w-full h-48 mb-6 rounded-lg bg-cover bg-center cursor-pointer hover:opacity-90 transition-opacity" 
