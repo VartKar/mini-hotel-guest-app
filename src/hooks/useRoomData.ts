@@ -7,6 +7,7 @@ export interface RoomData {
   booking_id: string | null;
   guest_email: string | null;
   guest_name: string | null;
+  room_number: string | null;
   stay_duration: string | null;
   check_in_date: string | null;
   check_out_date: string | null;
