@@ -22,6 +22,7 @@ export interface RoomData {
   parking_info: string | null;
   extra_bed_info: string | null;
   pets_info: string | null;
+  apartment_name: string | null;
 }
 
 export const useRoomData = () => {

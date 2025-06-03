@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Home, Map, Coffee, ShoppingBag, MessageCircle, User, Wifi } from "lucide-react";
+import { useRoomData } from "@/hooks/useRoomData";
 
 const menuItems = [{
   name: "Мой номер",
@@ -30,10 +31,12 @@ const menuItems = [{
 }];
 
 const Index = () => {
+  const { roomData, loading } = useRoomData();
   const [guestName, setGuestName] = useState("Иван");
-  const [hotelName, setHotelName] = useState("Апартаменты \"Вальс\"");
-  // Updated homeImage URL as requested
   const [homeImage, setHomeImage] = useState("https://i.postimg.cc/NFprr3hY/valse.png");
+
+  // Use apartment name from database or fallback to default
+  const apartmentName = roomData?.apartment_name || 'Апартаменты "Вальс"';
 
   return (
     <div className="flex flex-col items-center">
@@ -47,16 +50,11 @@ const Index = () => {
               onBlur={(e) => setGuestName(e.currentTarget.innerText)}
               className="border-b border-dashed border-gray-300 focus:outline-none focus:border-hotel-dark px-1"
             >
-              {guestName}
+              {roomData?.guest_name || guestName}
             </span>
           </h1>
-          <p 
-            className="text-xl text-hotel-neutral text-center border-b border-dashed border-gray-300 focus:outline-none focus:border-hotel-dark px-1"
-            contentEditable
-            suppressContentEditableWarning
-            onBlur={(e) => setHotelName(e.currentTarget.innerText)}
-          >
-            {hotelName}
+          <p className="text-xl text-hotel-neutral text-center">
+            {apartmentName}
           </p>
         </div>
 
@@ -88,4 +86,3 @@ const Index = () => {
 };
 
 export default Index;
-

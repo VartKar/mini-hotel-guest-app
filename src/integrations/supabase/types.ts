@@ -12,6 +12,7 @@ export type Database = {
       combined: {
         Row: {
           ac_instructions: string | null
+          apartment_name: string | null
           booking_id: string | null
           check_in_date: string | null
           check_out_date: string | null
@@ -34,6 +35,7 @@ export type Database = {
         }
         Insert: {
           ac_instructions?: string | null
+          apartment_name?: string | null
           booking_id?: string | null
           check_in_date?: string | null
           check_out_date?: string | null
@@ -56,6 +58,7 @@ export type Database = {
         }
         Update: {
           ac_instructions?: string | null
+          apartment_name?: string | null
           booking_id?: string | null
           check_in_date?: string | null
           check_out_date?: string | null
