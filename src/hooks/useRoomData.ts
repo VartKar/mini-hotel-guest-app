@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface RoomData {
@@ -29,33 +29,77 @@ export const useRoomData = () => {
   const [roomData, setRoomData] = useState<RoomData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isPersonalMode, setIsPersonalMode] = useState(false);
 
-  useEffect(() => {
-    const fetchRoomData = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('combined')
-          .select('*')
-          .maybeSingle();
+  // Load default demo data (first row)
+  const loadDefaultData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('combined')
+        .select('*')
+        .limit(1)
+        .single();
 
-        if (error) {
-          console.error('Error fetching room data:', error);
-          setError('Failed to load room data');
-          return;
-        }
-
-        setRoomData(data);
-      } catch (err) {
-        console.error('Unexpected error:', err);
-        setError('An unexpected error occurred');
-      } finally {
-        setLoading(false);
+      if (error) {
+        console.error('Error fetching default room data:', error);
+        setError('Failed to load default data');
+        return;
       }
-    };
 
-    fetchRoomData();
+      setRoomData(data);
+      setIsPersonalMode(false);
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { roomData, loading, error };
+  // Look up data by email
+  const lookupByEmail = useCallback(async (email: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('combined')
+        .select('*')
+        .eq('guest_email', email)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error looking up email:', error);
+        return false;
+      }
+
+      if (data) {
+        setRoomData(data);
+        setIsPersonalMode(true);
+        return true;
+      } else {
+        return false;
+      }
+    } catch (err) {
+      console.error('Unexpected error during lookup:', err);
+      return false;
+    }
+  }, []);
+
+  // Clear personal data and return to demo mode
+  const clearPersonalData = useCallback(() => {
+    setIsPersonalMode(false);
+    loadDefaultData();
+  }, [loadDefaultData]);
+
+  useEffect(() => {
+    loadDefaultData();
+  }, [loadDefaultData]);
+
+  return { 
+    roomData, 
+    loading, 
+    error, 
+    isPersonalMode,
+    lookupByEmail,
+    clearPersonalData
+  };
 };
