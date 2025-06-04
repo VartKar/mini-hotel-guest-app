@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { User, Star, CreditCard, Award, DollarSign, Gift, ShoppingBag, Clock, Settings } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +24,7 @@ const PersonalAccountPage = () => {
   });
 
   const [tipAmount, setTipAmount] = useState<string>("500");
+  const [showTipForm, setShowTipForm] = useState(false);
 
   const handleFeedbackSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +45,7 @@ const PersonalAccountPage = () => {
     toast(`Чаевые в размере ${tipAmount} ₽ успешно отправлены`, {
       description: "Спасибо за вашу щедрость!"
     });
+    setShowTipForm(false);
   };
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,6 +59,7 @@ const PersonalAccountPage = () => {
 
   const handleRating = (rating: number) => {
     setFeedbackForm({...feedbackForm, rating});
+    setShowTipForm(false);
   };
 
   return (
@@ -91,12 +93,6 @@ const PersonalAccountPage = () => {
             onClick={() => setActiveTab("bonuses")}
           >
             Бонусы
-          </button>
-          <button 
-            className={`pb-2 px-4 ${activeTab === "tips" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
-            onClick={() => setActiveTab("tips")}
-          >
-            Чаевые
           </button>
           <button 
             className={`pb-2 px-4 ${activeTab === "feedback" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
@@ -196,50 +192,6 @@ const PersonalAccountPage = () => {
           </div>
         )}
         
-        {activeTab === "tips" && (
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-medium mb-2">Оставить чаевые персоналу</h3>
-              <p className="text-sm text-hotel-neutral mb-4">
-                Чаевые будут распределены между всеми сотрудниками, которые делают ваше пребывание комфортным.
-              </p>
-              
-              <form onSubmit={handleTipSubmit}>
-                <div className="mb-4">
-                  <label htmlFor="tipAmount" className="block mb-1 text-hotel-neutral">Сумма чаевых (₽)</label>
-                  <div className="flex">
-                    <Input
-                      id="tipAmount"
-                      type="number"
-                      value={tipAmount}
-                      onChange={(e) => setTipAmount(e.target.value)}
-                      min="100"
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex space-x-2 mb-4">
-                  {[500, 1000, 2000].map((amount) => (
-                    <button
-                      key={amount}
-                      type="button"
-                      onClick={() => setTipAmount(amount.toString())}
-                      className={`flex-1 py-2 rounded-md border ${tipAmount === amount.toString() ? 'bg-hotel-accent border-hotel-dark text-hotel-dark' : 'border-gray-200'}`}
-                    >
-                      {amount} ₽
-                    </button>
-                  ))}
-                </div>
-                
-                <Button type="submit" className="w-full">
-                  Оставить чаевые
-                </Button>
-              </form>
-            </div>
-          </div>
-        )}
-        
         {activeTab === "feedback" && (
           <div className="space-y-4">
             {feedbackForm.submitted ? (
@@ -253,45 +205,108 @@ const PersonalAccountPage = () => {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleFeedbackSubmit} className="space-y-4">
-                <div>
-                  <label className="block mb-1 text-hotel-neutral">Оценка</label>
-                  <div className="flex space-x-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
+              <>
+                {!showTipForm ? (
+                  <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+                    <div>
+                      <label className="block mb-1 text-hotel-neutral">Оценка</label>
+                      <div className="flex space-x-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => handleRating(star)}
+                            className="focus:outline-none"
+                          >
+                            <Star 
+                              size={24} 
+                              className={star <= feedbackForm.rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"} 
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="message" className="block mb-1 text-hotel-neutral">Ваш отзыв</label>
+                      <Textarea
+                        id="message"
+                        value={feedbackForm.message}
+                        onChange={handleFeedbackChange}
+                        rows={4}
+                        placeholder="Расскажите о вашем опыте проживания..."
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    <Button
+                      type="submit"
+                      className="w-full py-2 px-4 bg-hotel-dark text-white rounded-lg font-medium"
+                    >
+                      Отправить отзыв
+                    </Button>
+                    
+                    {feedbackForm.rating >= 4 && (
+                      <Button
                         type="button"
-                        onClick={() => handleRating(star)}
-                        className="focus:outline-none"
+                        onClick={() => setShowTipForm(true)}
+                        className="w-full py-2 px-4 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700"
                       >
-                        <Star 
-                          size={24} 
-                          className={star <= feedbackForm.rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"} 
-                        />
-                      </button>
-                    ))}
+                        Оставить чаевые персоналу
+                      </Button>
+                    )}
+                  </form>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium">Оставить чаевые персоналу</h3>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowTipForm(false)}
+                      >
+                        Назад к отзыву
+                      </Button>
+                    </div>
+                    <p className="text-sm text-hotel-neutral mb-4">
+                      Чаевые будут распределены между всеми сотрудниками, которые делают ваше пребывание комфортным.
+                    </p>
+                    
+                    <form onSubmit={handleTipSubmit}>
+                      <div className="mb-4">
+                        <label htmlFor="tipAmount" className="block mb-1 text-hotel-neutral">Сумма чаевых (₽)</label>
+                        <div className="flex">
+                          <Input
+                            id="tipAmount"
+                            type="number"
+                            value={tipAmount}
+                            onChange={(e) => setTipAmount(e.target.value)}
+                            min="100"
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex space-x-2 mb-4">
+                        {[500, 1000, 2000].map((amount) => (
+                          <button
+                            key={amount}
+                            type="button"
+                            onClick={() => setTipAmount(amount.toString())}
+                            className={`flex-1 py-2 rounded-md border ${tipAmount === amount.toString() ? 'bg-hotel-accent border-hotel-dark text-hotel-dark' : 'border-gray-200'}`}
+                          >
+                            {amount} ₽
+                          </button>
+                        ))}
+                      </div>
+                      
+                      <Button type="submit" className="w-full">
+                        Оставить чаевые
+                      </Button>
+                    </form>
                   </div>
-                </div>
-                
-                <div>
-                  <label htmlFor="message" className="block mb-1 text-hotel-neutral">Ваш отзыв</label>
-                  <Textarea
-                    id="message"
-                    value={feedbackForm.message}
-                    onChange={handleFeedbackChange}
-                    rows={4}
-                    placeholder="Расскажите о вашем опыте проживания..."
-                    className="w-full"
-                  />
-                </div>
-                
-                <Button
-                  type="submit"
-                  className="w-full py-2 px-4 bg-hotel-dark text-white rounded-lg font-medium"
-                >
-                  Отправить отзыв
-                </Button>
-              </form>
+                )}
+              </>
             )}
           </div>
         )}
