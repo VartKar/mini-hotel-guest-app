@@ -1,8 +1,8 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Home, Map, Coffee, ShoppingBag, MessageCircle, User, Wifi } from "lucide-react";
 import { useRoomData } from "@/hooks/useRoomData";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const menuItems = [{
   name: "Мой номер",
@@ -37,6 +37,13 @@ const Index = () => {
 
   // Use apartment name from database or fallback to default
   const apartmentName = roomData?.apartment_name || 'Апартаменты "Вальс"';
+  
+  // Set dynamic document title
+  const documentTitle = roomData?.apartment_name 
+    ? `RubikInn - ${roomData.apartment_name}`
+    : 'RubikInn';
+  
+  useDocumentTitle(documentTitle);
 
   return (
     <div className="flex flex-col items-center">
