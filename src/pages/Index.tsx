@@ -61,22 +61,6 @@ const Index = () => {
           </p>
         </div>
 
-        {!isPersonalized && (
-          <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <Info size={20} className="text-blue-600 flex-shrink-0" />
-              <div>
-                <p className="text-sm text-blue-800 font-medium">
-                  Просмотр демо-данных
-                </p>
-                <p className="text-xs text-blue-600 mt-1">
-                  Введите свой email в личном кабинете для персонализированной информации
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         <div 
           className="w-full h-48 mb-8 rounded-lg bg-cover bg-center cursor-pointer hover:opacity-90 transition-opacity"
           style={{ backgroundImage: `url('${homeImage}')` }}
@@ -87,7 +71,7 @@ const Index = () => {
           title="Нажмите, чтобы изменить изображение"
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 mb-6">
           {menuItems.map(item => (
             <Link 
               key={item.name} 
@@ -99,6 +83,22 @@ const Index = () => {
             </Link>
           ))}
         </div>
+
+        {!isPersonalized && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center gap-2">
+              <Info size={16} className="text-blue-600 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-blue-800 font-medium">
+                  Просмотр демо-данных
+                </p>
+                <p className="text-xs text-blue-600 mt-0.5">
+                  Введите свой email в личном кабинете для персонализированной информации
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
