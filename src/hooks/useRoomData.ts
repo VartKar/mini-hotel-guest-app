@@ -25,37 +25,114 @@ export interface RoomData {
   apartment_name: string | null;
 }
 
+let globalRoomData: RoomData | null = null;
+let globalIsPersonalized = false;
+let listeners: (() => void)[] = [];
+
+const notifyListeners = () => {
+  listeners.forEach(listener => listener());
+};
+
 export const useRoomData = () => {
-  const [roomData, setRoomData] = useState<RoomData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [roomData, setRoomData] = useState<RoomData | null>(globalRoomData);
+  const [loading, setLoading] = useState(!globalRoomData);
   const [error, setError] = useState<string | null>(null);
+  const [isPersonalized, setIsPersonalized] = useState(globalIsPersonalized);
 
   useEffect(() => {
-    const fetchRoomData = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('combined')
-          .select('*')
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error fetching room data:', error);
-          setError('Failed to load room data');
-          return;
-        }
-
-        setRoomData(data);
-      } catch (err) {
-        console.error('Unexpected error:', err);
-        setError('An unexpected error occurred');
-      } finally {
-        setLoading(false);
-      }
+    const listener = () => {
+      setRoomData(globalRoomData);
+      setIsPersonalized(globalIsPersonalized);
     };
+    listeners.push(listener);
 
-    fetchRoomData();
+    return () => {
+      listeners = listeners.filter(l => l !== listener);
+    };
   }, []);
 
-  return { roomData, loading, error };
+  useEffect(() => {
+    if (!globalRoomData) {
+      fetchDefaultData();
+    }
+  }, []);
+
+  const fetchDefaultData = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('combined')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching default room data:', error);
+        setError('Failed to load room data');
+        return;
+      }
+
+      globalRoomData = data;
+      globalIsPersonalized = false;
+      setRoomData(data);
+      setIsPersonalized(false);
+      notifyListeners();
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const lookupByEmail = async (email: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const { data, error } = await supabase
+        .from('combined')
+        .select('*')
+        .eq('guest_email', email.toLowerCase().trim())
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error looking up guest by email:', error);
+        setError('Ошибка при поиске бронирования');
+        return false;
+      }
+
+      if (!data) {
+        setError('Бронирование не найдено. Проверьте email или обратитесь на ресепшн.');
+        return false;
+      }
+
+      globalRoomData = data;
+      globalIsPersonalized = true;
+      setRoomData(data);
+      setIsPersonalized(true);
+      notifyListeners();
+      return true;
+    } catch (err) {
+      console.error('Unexpected error during lookup:', err);
+      setError('Произошла непредвиденная ошибка');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logOut = () => {
+    fetchDefaultData();
+  };
+
+  return { 
+    roomData, 
+    loading, 
+    error, 
+    isPersonalized, 
+    lookupByEmail, 
+    logOut,
+    clearError: () => setError(null)
+  };
 };

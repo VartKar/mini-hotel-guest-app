@@ -1,13 +1,20 @@
 
 import React, { useState } from "react";
-import { User } from "lucide-react";
+import { User, Mail, LogOut, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useRoomData } from "@/hooks/useRoomData";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import ProfileTab from "@/components/feedback/ProfileTab";
 import BonusesTab from "@/components/feedback/BonusesTab";
 import FeedbackTab from "@/components/feedback/FeedbackTab";
 
 const PersonalAccountPage = () => {
+  const { roomData, isPersonalized, lookupByEmail, logOut, loading, error, clearError } = useRoomData();
   const [activeTab, setActiveTab] = useState("profile");
+  const [email, setEmail] = useState("");
+  const [isLookingUp, setIsLookingUp] = useState(false);
+
   const [profile, setProfile] = useState({
     name: "Иван Петров",
     roomNumber: "305",
@@ -25,6 +32,46 @@ const PersonalAccountPage = () => {
 
   const [tipAmount, setTipAmount] = useState<string>("500");
   const [showTipForm, setShowTipForm] = useState(false);
+
+  // Update profile data when room data changes
+  React.useEffect(() => {
+    if (roomData) {
+      setProfile(prev => ({
+        ...prev,
+        name: roomData.guest_name || prev.name,
+        roomNumber: roomData.room_number || prev.roomNumber,
+      }));
+    }
+  }, [roomData]);
+
+  const handleEmailLookup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      toast.error("Введите email адрес");
+      return;
+    }
+
+    setIsLookingUp(true);
+    clearError();
+    
+    const success = await lookupByEmail(email);
+    
+    if (success) {
+      toast.success("Ваши данные найдены!", {
+        description: "Добро пожаловать в ваш персональный кабинет"
+      });
+      setEmail("");
+    }
+    
+    setIsLookingUp(false);
+  };
+
+  const handleLogOut = () => {
+    logOut();
+    toast.success("Вы вышли из аккаунта", {
+      description: "Отображаются демо-данные"
+    });
+  };
 
   const handleFeedbackSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,13 +118,33 @@ const PersonalAccountPage = () => {
           <div className="w-14 h-14 rounded-full bg-hotel-accent flex items-center justify-center text-hotel-dark">
             <User size={24} />
           </div>
-          <div className="ml-4">
-            <h2 className="text-xl font-medium" contentEditable suppressContentEditableWarning>
-              {profile.name}
-            </h2>
-            <p className="text-hotel-neutral">
-              Номер: <span contentEditable suppressContentEditableWarning>{profile.roomNumber}</span>
-            </p>
+          <div className="ml-4 flex-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-medium">
+                  {profile.name}
+                </h2>
+                <p className="text-hotel-neutral">
+                  Номер: {profile.roomNumber}
+                </p>
+                {isPersonalized && (
+                  <p className="text-xs text-green-600 mt-1">
+                    ✓ Персонализированные данные
+                  </p>
+                )}
+              </div>
+              {isPersonalized && (
+                <Button
+                  onClick={handleLogOut}
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  <LogOut size={16} className="mr-1" />
+                  Выйти
+                </Button>
+              )}
+            </div>
           </div>
         </div>
         
@@ -124,6 +191,57 @@ const PersonalAccountPage = () => {
           />
         )}
       </div>
+
+      {!isPersonalized && (
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 shadow-sm border border-blue-100">
+          <div className="text-center mb-4">
+            <Mail className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+            <h3 className="text-lg font-semibold text-gray-800 mb-1">
+              Персонализация
+            </h3>
+            <p className="text-sm text-gray-600">
+              Введите email для доступа к вашим данным бронирования
+            </p>
+          </div>
+
+          <form onSubmit={handleEmailLookup} className="space-y-4">
+            <div>
+              <Input
+                type="email"
+                placeholder="Ваш email адрес"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full"
+                disabled={isLookingUp}
+              />
+              {error && (
+                <p className="text-sm text-red-600 mt-2">{error}</p>
+              )}
+            </div>
+            
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={isLookingUp || !email.trim()}
+            >
+              {isLookingUp ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Поиск бронирования...
+                </>
+              ) : (
+                'Найти мое бронирование'
+              )}
+            </Button>
+          </form>
+
+          <div className="mt-4 pt-4 border-t border-blue-200">
+            <p className="text-xs text-gray-500 text-center">
+              Сейчас отображаются демо-данные. Введите свой email для персонализированной информации.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
