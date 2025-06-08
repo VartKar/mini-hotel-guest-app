@@ -23,6 +23,25 @@ export interface RoomData {
   extra_bed_info: string | null;
   pets_info: string | null;
   apartment_name: string | null;
+  // New host management fields
+  host_id: string | null;
+  host_name: string | null;
+  host_email: string | null;
+  host_phone: string | null;
+  host_company: string | null;
+  property_manager_name: string | null;
+  property_manager_phone: string | null;
+  property_manager_email: string | null;
+  // New visibility control fields
+  visible_to_guests: boolean | null;
+  visible_to_hosts: boolean | null;
+  visible_to_admin: boolean | null;
+  is_archived: boolean | null;
+  booking_status: string | null;
+  last_updated_by: string | null;
+  last_updated_at: string | null;
+  notes_internal: string | null;
+  notes_for_guests: string | null;
 }
 
 let globalRoomData: RoomData | null = null;
@@ -60,6 +79,9 @@ export const useRoomData = () => {
   const fetchDefaultData = async () => {
     try {
       setLoading(true);
+      
+      // The RLS policy will automatically filter to only show records where:
+      // visible_to_guests = true AND is_archived = false AND booking_status IN ('confirmed', 'pending', 'demo')
       const { data, error } = await supabase
         .from('combined')
         .select('*')
@@ -90,6 +112,7 @@ export const useRoomData = () => {
       setLoading(true);
       setError(null);
       
+      // The RLS policy will automatically filter the results
       const { data, error } = await supabase
         .from('combined')
         .select('*')

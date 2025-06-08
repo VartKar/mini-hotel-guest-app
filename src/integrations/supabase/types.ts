@@ -14,6 +14,7 @@ export type Database = {
           ac_instructions: string | null
           apartment_name: string | null
           booking_id: string | null
+          booking_status: string | null
           check_in_date: string | null
           check_out_date: string | null
           checkout_time: string | null
@@ -21,15 +22,31 @@ export type Database = {
           extra_bed_info: string | null
           guest_email: string | null
           guest_name: string | null
+          host_company: string | null
+          host_email: string | null
+          host_id: string | null
+          host_name: string | null
+          host_phone: string | null
           id_key: string
+          is_archived: boolean | null
+          last_updated_at: string | null
+          last_updated_by: string | null
+          notes_for_guests: string | null
+          notes_internal: string | null
           parking_info: string | null
           pets_info: string | null
           property_id: string | null
+          property_manager_email: string | null
+          property_manager_name: string | null
+          property_manager_phone: string | null
           room_image_url: string | null
           room_number: string | null
           safe_instructions: string | null
           stay_duration: string | null
           tv_instructions: string | null
+          visible_to_admin: boolean | null
+          visible_to_guests: boolean | null
+          visible_to_hosts: boolean | null
           wifi_network: string | null
           wifi_password: string | null
         }
@@ -37,6 +54,7 @@ export type Database = {
           ac_instructions?: string | null
           apartment_name?: string | null
           booking_id?: string | null
+          booking_status?: string | null
           check_in_date?: string | null
           check_out_date?: string | null
           checkout_time?: string | null
@@ -44,15 +62,31 @@ export type Database = {
           extra_bed_info?: string | null
           guest_email?: string | null
           guest_name?: string | null
+          host_company?: string | null
+          host_email?: string | null
+          host_id?: string | null
+          host_name?: string | null
+          host_phone?: string | null
           id_key?: string
+          is_archived?: boolean | null
+          last_updated_at?: string | null
+          last_updated_by?: string | null
+          notes_for_guests?: string | null
+          notes_internal?: string | null
           parking_info?: string | null
           pets_info?: string | null
           property_id?: string | null
+          property_manager_email?: string | null
+          property_manager_name?: string | null
+          property_manager_phone?: string | null
           room_image_url?: string | null
           room_number?: string | null
           safe_instructions?: string | null
           stay_duration?: string | null
           tv_instructions?: string | null
+          visible_to_admin?: boolean | null
+          visible_to_guests?: boolean | null
+          visible_to_hosts?: boolean | null
           wifi_network?: string | null
           wifi_password?: string | null
         }
@@ -60,6 +94,7 @@ export type Database = {
           ac_instructions?: string | null
           apartment_name?: string | null
           booking_id?: string | null
+          booking_status?: string | null
           check_in_date?: string | null
           check_out_date?: string | null
           checkout_time?: string | null
@@ -67,15 +102,31 @@ export type Database = {
           extra_bed_info?: string | null
           guest_email?: string | null
           guest_name?: string | null
+          host_company?: string | null
+          host_email?: string | null
+          host_id?: string | null
+          host_name?: string | null
+          host_phone?: string | null
           id_key?: string
+          is_archived?: boolean | null
+          last_updated_at?: string | null
+          last_updated_by?: string | null
+          notes_for_guests?: string | null
+          notes_internal?: string | null
           parking_info?: string | null
           pets_info?: string | null
           property_id?: string | null
+          property_manager_email?: string | null
+          property_manager_name?: string | null
+          property_manager_phone?: string | null
           room_image_url?: string | null
           room_number?: string | null
           safe_instructions?: string | null
           stay_duration?: string | null
           tv_instructions?: string | null
+          visible_to_admin?: boolean | null
+          visible_to_guests?: boolean | null
+          visible_to_hosts?: boolean | null
           wifi_network?: string | null
           wifi_password?: string | null
         }
