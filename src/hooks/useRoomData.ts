@@ -21,7 +21,6 @@ export interface RoomData {
   safe_instructions: string | null;
   parking_info: string | null;
   extra_bed_info: string | null;
-  pets_info: string | null;
   apartment_name: string | null;
   // New host management fields
   host_id: string | null;
@@ -54,6 +53,9 @@ const notifyListeners = () => {
   listeners.forEach(listener => listener());
 };
 
+// Specific ID for the default demonstration record
+const DEMO_RECORD_ID = 'c10fe304-7db8-4ee3-a72a-f9dc5418ceac';
+
 export const useRoomData = () => {
   const [roomData, setRoomData] = useState<RoomData | null>(globalRoomData);
   const [loading, setLoading] = useState(!globalRoomData);
@@ -82,12 +84,11 @@ export const useRoomData = () => {
     try {
       setLoading(true);
       
-      // The RLS policy will automatically filter to only show records where:
-      // visible_to_guests = true AND is_archived = false AND booking_status IN ('confirmed', 'pending', 'demo')
+      // Fetch the specific demonstration record by ID
       const { data, error } = await supabase
         .from('combined')
         .select('*')
-        .limit(1)
+        .eq('id_key', DEMO_RECORD_ID)
         .maybeSingle();
 
       if (error) {
