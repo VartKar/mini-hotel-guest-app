@@ -33,11 +33,13 @@ const menuItems = [{
 
 const Index = () => {
   const { roomData, loading, isPersonalized } = useRoomData();
-  const [homeImage, setHomeImage] = useState("https://i.postimg.cc/NFprr3hY/valse.png");
 
   // Use apartment name from database or fallback to default
   const apartmentName = roomData?.apartment_name || 'Апартаменты "Вальс"';
   const guestName = roomData?.guest_name || "Иван";
+  
+  // Use main image from database or fallback to default
+  const mainImage = roomData?.main_image_url || "https://i.postimg.cc/NFprr3hY/valse.png";
   
   // Set dynamic document title
   const documentTitle = roomData?.apartment_name 
@@ -62,13 +64,8 @@ const Index = () => {
         </div>
 
         <div 
-          className="w-full h-48 mb-8 rounded-lg bg-cover bg-center cursor-pointer hover:opacity-90 transition-opacity"
-          style={{ backgroundImage: `url('${homeImage}')` }}
-          onClick={() => {
-            const newUrl = prompt("Введите URL новой фотографии:", homeImage);
-            if (newUrl) setHomeImage(newUrl);
-          }}
-          title="Нажмите, чтобы изменить изображение"
+          className="w-full h-48 mb-8 rounded-lg bg-cover bg-center"
+          style={{ backgroundImage: `url('${mainImage}')` }}
         />
 
         <div className="grid grid-cols-2 gap-4 mb-6">

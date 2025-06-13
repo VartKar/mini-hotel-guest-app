@@ -42,6 +42,8 @@ export interface RoomData {
   last_updated_at: string | null;
   notes_internal: string | null;
   notes_for_guests: string | null;
+  // New main image field
+  main_image_url: string | null;
 }
 
 let globalRoomData: RoomData | null = null;

@@ -31,6 +31,7 @@ export type Database = {
           is_archived: boolean | null
           last_updated_at: string | null
           last_updated_by: string | null
+          main_image_url: string | null
           notes_for_guests: string | null
           notes_internal: string | null
           parking_info: string | null
@@ -71,6 +72,7 @@ export type Database = {
           is_archived?: boolean | null
           last_updated_at?: string | null
           last_updated_by?: string | null
+          main_image_url?: string | null
           notes_for_guests?: string | null
           notes_internal?: string | null
           parking_info?: string | null
@@ -111,6 +113,7 @@ export type Database = {
           is_archived?: boolean | null
           last_updated_at?: string | null
           last_updated_by?: string | null
+          main_image_url?: string | null
           notes_for_guests?: string | null
           notes_internal?: string | null
           parking_info?: string | null
