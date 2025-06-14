@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,9 +50,31 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
     mutationFn: async (data: typeof formData) => {
       console.log('=== MUTATION FUNCTION STARTED ===');
       console.log('Updating booking with ID:', booking.id_key);
+      console.log('ID type:', typeof booking.id_key);
       console.log('Update data:', data);
       
       try {
+        // First, let's check if the booking exists
+        console.log('=== CHECKING IF BOOKING EXISTS ===');
+        const { data: existingBooking, error: checkError } = await supabase
+          .from('combined')
+          .select('id_key, guest_name, apartment_name')
+          .eq('id_key', booking.id_key)
+          .maybeSingle();
+        
+        console.log('Existing booking check result:', existingBooking);
+        console.log('Check error:', checkError);
+        
+        if (checkError) {
+          console.error('Error checking existing booking:', checkError);
+          throw checkError;
+        }
+        
+        if (!existingBooking) {
+          console.error('Booking not found with ID:', booking.id_key);
+          throw new Error(`Booking with ID ${booking.id_key} not found`);
+        }
+        
         console.log('=== CALLING SUPABASE UPDATE ===');
         const { data: result, error } = await supabase
           .from('combined')
@@ -70,6 +93,11 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
         if (error) {
           console.error('Supabase update error:', error);
           throw error;
+        }
+        
+        if (!result || result.length === 0) {
+          console.error('No rows were updated - this should not happen if booking exists');
+          throw new Error('Update operation completed but no rows were affected');
         }
         
         console.log('Successfully updated booking:', result);
