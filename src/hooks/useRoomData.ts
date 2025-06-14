@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface RoomData {
+  id_key: string | null;
   property_id: string | null;
   booking_id: string | null;
   guest_email: string | null;
