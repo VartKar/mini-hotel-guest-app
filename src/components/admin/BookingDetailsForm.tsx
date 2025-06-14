@@ -48,33 +48,46 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
 
   const updateBookingMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const { error } = await supabase
+      console.log('Updating booking with ID:', booking.id_key);
+      console.log('Update data:', data);
+      
+      const { data: result, error } = await supabase
         .from('combined')
         .update({
           ...data,
           last_updated_at: new Date().toISOString(),
           last_updated_by: 'admin'
         })
-        .eq('id_key', booking.id_key);
+        .eq('id_key', booking.id_key)
+        .select(); // Add select to return the updated row
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw error;
+      }
+      
+      console.log('Successfully updated booking:', result);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log('Mutation success with result:', result);
       toast.success('Бронирование обновлено');
       onSuccess();
     },
     onError: (error) => {
       console.error('Error updating booking:', error);
-      toast.error('Ошибка при обновлении бронирования');
+      toast.error(`Ошибка при обновлении бронирования: ${error.message}`);
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted with data:', formData);
     updateBookingMutation.mutate(formData);
   };
 
   const handleInputChange = (field: string, value: string) => {
+    console.log(`Updating field ${field} to:`, value);
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
