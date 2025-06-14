@@ -18,16 +18,25 @@ const AdminDashboard = () => {
       console.log('Using admin client for dashboard bookings');
       
       try {
+        console.log('Making request to combined table...');
         const { data, error } = await adminSupabase
           .from('combined')
           .select('*')
           .eq('is_archived', false);
         
-        console.log('Dashboard bookings result:', { data, error });
+        console.log('Dashboard bookings result:', { 
+          dataCount: data?.length, 
+          error: error ? {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          } : null 
+        });
         
         if (error) {
-          console.error('Error fetching dashboard bookings:', error);
-          throw error;
+          console.error('Detailed error fetching dashboard bookings:', error);
+          throw new Error(`Database error: ${error.message} (Code: ${error.code})`);
         }
         return data;
       } catch (err) {
