@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,7 +53,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
       console.log('Original booking object:', booking);
       console.log('Booking ID being updated:', booking.id_key);
       console.log('Form data being sent:', data);
-      console.log('Supabase client config:', supabase.supabaseUrl, supabase.supabaseKey);
+      console.log('Supabase client initialized');
       
       // Check if there are any actual changes
       const hasChanges = Object.keys(data).some(key => {
