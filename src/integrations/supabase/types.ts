@@ -135,6 +135,42 @@ export type Database = {
         }
         Relationships: []
       }
+      host_change_requests: {
+        Row: {
+          booking_id: string | null
+          created_at: string | null
+          host_email: string
+          id: string
+          property_id: string | null
+          request_details: string
+          request_type: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string | null
+          host_email: string
+          id?: string
+          property_id?: string | null
+          request_details: string
+          request_type: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string | null
+          host_email?: string
+          id?: string
+          property_id?: string | null
+          request_details?: string
+          request_type?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

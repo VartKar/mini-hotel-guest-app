@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { User, Mail, LogOut, Loader2 } from "lucide-react";
+import { User, Mail, LogOut, Loader2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { useRoomData } from "@/hooks/useRoomData";
 import { Button } from "@/components/ui/button";
@@ -111,7 +111,19 @@ const PersonalAccountPage = () => {
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
-      <h1 className="text-3xl font-light mb-6">Личный кабинет</h1>
+      {/* Host Link in Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-light">Личный кабинет</h1>
+        <a
+          href="/host"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+        >
+          Для владельцев
+          <ExternalLink className="w-3 h-3" />
+        </a>
+      </div>
       
       <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
         <div className="flex items-center mb-6">

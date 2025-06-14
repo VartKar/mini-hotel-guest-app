@@ -13,6 +13,7 @@ import ServicesPage from "./pages/ServicesPage";
 import ShopPage from "./pages/ShopPage";
 import ChatPage from "./pages/ChatPage";
 import PersonalAccountPage from "./pages/FeedbackPage";
+import HostPage from "./pages/HostPage";
 import Layout from "./components/Layout";
 
 // Create a client
@@ -33,6 +34,7 @@ function App() {
             <Route path="/shop" element={<Layout><ShopPage /></Layout>} />
             <Route path="/chat" element={<Layout><ChatPage /></Layout>} />
             <Route path="/feedback" element={<Layout><PersonalAccountPage /></Layout>} />
+            <Route path="/host" element={<Layout><HostPage /></Layout>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
