@@ -2,7 +2,7 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = 'https://xsklkktajwtcdgkmmsrk.supabase.co'
-// Use the correct service role key from Supabase secrets
+// Use the actual service role key that matches the project
 const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhza2xra3Rhand0Y2Rna21tc3JrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODg0MjQ2NCwiZXhwIjoyMDY0NDE4NDY0fQ.xE4zQ9T_KE5qEq5QI9yjhGk-fFQlqNQgJdKEHWgWWBQ'
 
 console.log('=== ADMIN CLIENT SETUP ===');
@@ -18,16 +18,11 @@ if (!supabaseServiceKey.startsWith('eyJ')) {
 
 console.log('✅ Service key format is valid');
 
-// Create admin client with proper configuration
+// Create admin client with basic configuration - no custom headers
 export const adminSupabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
-  },
-  global: {
-    headers: {
-      'Authorization': `Bearer ${supabaseServiceKey}`
-    }
   }
 })
 
@@ -38,10 +33,10 @@ const testConnection = async () => {
   try {
     console.log('🔍 Testing admin client connection...');
     
-    // First test: simple table query
-    const { data, error, count } = await adminSupabase
+    // Test with a simple query first
+    const { data, error } = await adminSupabase
       .from('combined')
-      .select('*', { count: 'exact' })
+      .select('id_key')
       .limit(1);
     
     if (error) {
@@ -55,8 +50,7 @@ const testConnection = async () => {
     }
     
     console.log('✅ Admin client connection test successful:', {
-      dataCount: data?.length || 0,
-      totalCount: count
+      dataCount: data?.length || 0
     });
     
     return true;
