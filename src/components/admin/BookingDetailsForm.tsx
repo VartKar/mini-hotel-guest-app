@@ -53,7 +53,22 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
       console.log('Original booking object:', booking);
       console.log('Booking ID being updated:', booking.id_key);
       console.log('Form data being sent:', data);
-      console.log('Supabase client initialized');
+      
+      // First, check if the record exists
+      console.log('Checking if record exists...');
+      const { data: existingRecord, error: checkError } = await supabase
+        .from('combined')
+        .select('id_key')
+        .eq('id_key', booking.id_key)
+        .single();
+      
+      console.log('Existing record check:', existingRecord);
+      console.log('Check error:', checkError);
+      
+      if (checkError) {
+        console.error('Record not found or error checking:', checkError);
+        throw new Error(`Record not found: ${checkError.message}`);
+      }
       
       // Check if there are any actual changes
       const hasChanges = Object.keys(data).some(key => {
@@ -103,7 +118,18 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
         console.error('=== NO ROWS AFFECTED ===');
         console.error('Update succeeded but no rows were returned');
         console.error('This might indicate the row was not found or not updated');
-        throw new Error('No rows were updated');
+        
+        // Try to fetch the record again to see if it still exists
+        const { data: recheckRecord, error: recheckError } = await supabase
+          .from('combined')
+          .select('id_key, last_updated_at')
+          .eq('id_key', booking.id_key)
+          .single();
+        
+        console.log('Recheck record after failed update:', recheckRecord);
+        console.log('Recheck error:', recheckError);
+        
+        throw new Error(`No rows were updated. Record ${recheckError ? 'not found' : 'still exists but was not updated'}`);
       }
       
       console.log('=== UPDATE SUCCESSFUL ===');
@@ -117,6 +143,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
       // Invalidate and refetch admin queries
       queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
       queryClient.invalidateQueries({ queryKey: ['admin-change-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
       
       toast.success('Бронирование обновлено');
       onSuccess();
@@ -132,7 +159,6 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
     e.preventDefault();
     console.log('=== FORM SUBMIT TRIGGERED ===');
     console.log('Current form data:', formData);
-    console.log('Mutation is pending:', updateBookingMutation.isPending);
     
     if (updateBookingMutation.isPending) {
       console.log('Mutation already in progress, skipping');
