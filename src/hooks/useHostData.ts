@@ -114,7 +114,8 @@ export const useHostData = () => {
 
   const requestChange = async (booking: HostBooking, requestType: string, details: string) => {
     try {
-      const { error } = await supabase
+      // First, insert the change request into the database
+      const { error: insertError } = await supabase
         .from('host_change_requests')
         .insert({
           host_email: hostData?.host_email,
@@ -124,9 +125,26 @@ export const useHostData = () => {
           request_details: details,
         });
 
-      if (error) {
-        console.error('Error creating change request:', error);
+      if (insertError) {
+        console.error('Error creating change request:', insertError);
         return false;
+      }
+
+      // Then, call the Edge Function to send email notification to admin
+      const { error: emailError } = await supabase.functions.invoke('notify-admin-change-request', {
+        body: {
+          host_email: hostData?.host_email,
+          property_id: booking.id_key,
+          booking_id: booking.booking_id,
+          request_type: requestType,
+          request_details: details,
+        },
+      });
+
+      if (emailError) {
+        console.error('Error sending admin notification email:', emailError);
+        // Don't fail the request if email fails - the request is still saved
+        console.log('Change request saved but admin notification email failed');
       }
 
       return true;
