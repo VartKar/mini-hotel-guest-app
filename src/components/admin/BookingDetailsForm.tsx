@@ -74,8 +74,34 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
           console.error('Booking not found with ID:', booking.id_key);
           throw new Error(`Booking with ID ${booking.id_key} not found`);
         }
+
+        // Let's try a simpler update first with just one field to test
+        console.log('=== TESTING SIMPLE UPDATE ===');
+        const { data: testResult, error: testError, count: testCount } = await supabase
+          .from('combined')
+          .update({ guest_name: data.guest_name })
+          .eq('id_key', booking.id_key)
+          .select();
         
-        console.log('=== CALLING SUPABASE UPDATE ===');
+        console.log('Test update result:', testResult);
+        console.log('Test update error:', testError);
+        console.log('Test update count:', testCount);
+        
+        if (testError) {
+          console.error('Test update failed:', testError);
+          throw testError;
+        }
+
+        if (!testResult || testResult.length === 0) {
+          console.error('Test update returned no rows');
+          // Let's check current user session
+          const { data: session, error: sessionError } = await supabase.auth.getSession();
+          console.log('Current session:', session);
+          console.log('Session error:', sessionError);
+          throw new Error('Update operation failed - no rows affected');
+        }
+        
+        console.log('=== CALLING FULL SUPABASE UPDATE ===');
         const { data: result, error } = await supabase
           .from('combined')
           .update({
