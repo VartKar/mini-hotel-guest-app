@@ -15,7 +15,7 @@ const AdminDashboard = () => {
     queryKey: ['admin-bookings'],
     queryFn: async () => {
       console.log('=== FETCHING DASHBOARD BOOKINGS ===');
-      console.log('Admin client configured with URL:', adminSupabase.supabaseUrl);
+      console.log('Using admin client for dashboard bookings');
       
       try {
         const { data, error } = await adminSupabase
