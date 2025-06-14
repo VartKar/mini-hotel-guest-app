@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Calendar, FileText, Users, Building } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +18,11 @@ const AdminDashboard = () => {
       
       try {
         console.log('Making request to combined table...');
+        
+        // Test if admin client is properly configured
+        const testResponse = await adminSupabase.auth.getSession();
+        console.log('Admin client auth session:', testResponse);
+        
         const { data, error } = await adminSupabase
           .from('combined')
           .select('*')
@@ -36,6 +40,12 @@ const AdminDashboard = () => {
         
         if (error) {
           console.error('Detailed error fetching dashboard bookings:', error);
+          
+          // Check if it's an authentication issue
+          if (error.message.includes('Invalid API key') || error.message.includes('JWT')) {
+            throw new Error('Admin authentication failed. Please check the service role key configuration.');
+          }
+          
           throw new Error(`Database error: ${error.message} (Code: ${error.code})`);
         }
         return data;
@@ -44,6 +54,8 @@ const AdminDashboard = () => {
         throw err;
       }
     },
+    retry: 1, // Only retry once for auth errors
+    retryDelay: 1000,
   });
 
   // Fetch change requests data using admin client
@@ -90,7 +102,13 @@ const AdminDashboard = () => {
               <Card className="border-red-200 bg-red-50">
                 <CardContent className="p-4">
                   <div className="text-red-800">
-                    Ошибка загрузки бронирований: {bookingsError.message}
+                    <div className="font-semibold mb-2">Ошибка загрузки бронирований:</div>
+                    <div className="text-sm">{bookingsError.message}</div>
+                    {bookingsError.message.includes('authentication') && (
+                      <div className="mt-2 text-xs text-red-600">
+                        Проверьте конфигурацию ключей администратора в настройках Supabase.
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
