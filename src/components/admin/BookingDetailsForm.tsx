@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,33 +47,47 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
 
   const updateBookingMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
+      console.log('=== MUTATION FUNCTION STARTED ===');
       console.log('Updating booking with ID:', booking.id_key);
       console.log('Update data:', data);
       
-      const { data: result, error } = await supabase
-        .from('combined')
-        .update({
-          ...data,
-          last_updated_at: new Date().toISOString(),
-          last_updated_by: 'admin'
-        })
-        .eq('id_key', booking.id_key)
-        .select(); // Add select to return the updated row
-      
-      if (error) {
-        console.error('Supabase update error:', error);
-        throw error;
+      try {
+        console.log('=== CALLING SUPABASE UPDATE ===');
+        const { data: result, error } = await supabase
+          .from('combined')
+          .update({
+            ...data,
+            last_updated_at: new Date().toISOString(),
+            last_updated_by: 'admin'
+          })
+          .eq('id_key', booking.id_key)
+          .select();
+        
+        console.log('=== SUPABASE RESPONSE ===');
+        console.log('Result:', result);
+        console.log('Error:', error);
+        
+        if (error) {
+          console.error('Supabase update error:', error);
+          throw error;
+        }
+        
+        console.log('Successfully updated booking:', result);
+        return result;
+      } catch (err) {
+        console.error('=== CAUGHT ERROR IN MUTATION ===');
+        console.error('Error details:', err);
+        throw err;
       }
-      
-      console.log('Successfully updated booking:', result);
-      return result;
     },
     onSuccess: (result) => {
+      console.log('=== MUTATION SUCCESS ===');
       console.log('Mutation success with result:', result);
       toast.success('Бронирование обновлено');
       onSuccess();
     },
     onError: (error) => {
+      console.error('=== MUTATION ERROR ===');
       console.error('Error updating booking:', error);
       toast.error(`Ошибка при обновлении бронирования: ${error.message}`);
     },
@@ -82,8 +95,18 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('=== FORM SUBMIT STARTED ===');
     console.log('Form submitted with data:', formData);
-    updateBookingMutation.mutate(formData);
+    console.log('Booking ID being updated:', booking.id_key);
+    
+    try {
+      console.log('=== CALLING MUTATE ===');
+      updateBookingMutation.mutate(formData);
+      console.log('=== MUTATE CALLED ===');
+    } catch (err) {
+      console.error('=== ERROR CALLING MUTATE ===');
+      console.error('Error:', err);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
