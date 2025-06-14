@@ -1,13 +1,13 @@
 
 import React, { useState } from "react";
-import { Calendar, Search, Filter, Edit, Trash2 } from "lucide-react";
+import { Calendar, Search, Filter, Edit, Trash2, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { adminSupabase } from "@/integrations/supabase/adminClient";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import BookingDetailsForm from "./BookingDetailsForm";
 import { Database } from "@/integrations/supabase/types";
@@ -21,30 +21,24 @@ const BookingsManagement = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  // Fetch all bookings using admin client
-  const { data: bookings, isLoading, error } = useQuery({
+  // Fetch all bookings
+  const { data: bookings, isLoading } = useQuery({
     queryKey: ['admin-all-bookings'],
     queryFn: async () => {
-      console.log('=== FETCHING BOOKINGS WITH ADMIN CLIENT ===');
-      const { data, error } = await adminSupabase
+      const { data, error } = await supabase
         .from('combined')
         .select('*')
         .order('last_updated_at', { ascending: false });
       
-      console.log('Bookings fetch result:', { data, error });
-      
-      if (error) {
-        console.error('Error fetching bookings:', error);
-        throw error;
-      }
+      if (error) throw error;
       return data as Booking[];
     },
   });
 
-  // Delete booking mutation using admin client
+  // Delete booking mutation
   const deleteBookingMutation = useMutation({
     mutationFn: async (bookingId: string) => {
-      const { error } = await adminSupabase
+      const { error } = await supabase
         .from('combined')
         .delete()
         .eq('id_key', bookingId);
@@ -100,18 +94,6 @@ const BookingsManagement = () => {
       <Card>
         <CardContent className="p-6">
           <div className="text-center">Загрузка бронирований...</div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center text-red-600">
-            Ошибка загрузки бронирований: {error.message}
-          </div>
         </CardContent>
       </Card>
     );
@@ -231,7 +213,7 @@ const BookingsManagement = () => {
             </Table>
           </div>
 
-          {filteredBookings.length === 0 && !isLoading && (
+          {filteredBookings.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               Бронирования не найдены
             </div>

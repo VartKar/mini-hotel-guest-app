@@ -1,68 +1,35 @@
+
 import React, { useState } from "react";
-import { Calendar, FileText, Users, Building } from "lucide-react";
+import { Calendar, FileText, Users, Building, Settings } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { adminSupabase } from "@/integrations/supabase/adminClient";
+import { supabase } from "@/integrations/supabase/client";
 import BookingsManagement from "./BookingsManagement";
 import ChangeRequestsManagement from "./ChangeRequestsManagement";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Fetch bookings data using admin client
-  const { data: bookings, isLoading: bookingsLoading, error: bookingsError } = useQuery({
+  // Fetch bookings data
+  const { data: bookings, isLoading: bookingsLoading } = useQuery({
     queryKey: ['admin-bookings'],
     queryFn: async () => {
-      console.log('=== FETCHING DASHBOARD BOOKINGS ===');
-      console.log('Using admin client for dashboard bookings');
+      const { data, error } = await supabase
+        .from('combined')
+        .select('*')
+        .eq('is_archived', false);
       
-      try {
-        console.log('Making request to combined table...');
-        
-        // Test if admin client is properly configured
-        const testResponse = await adminSupabase.auth.getSession();
-        console.log('Admin client auth session:', testResponse);
-        
-        const { data, error } = await adminSupabase
-          .from('combined')
-          .select('*')
-          .eq('is_archived', false);
-        
-        console.log('Dashboard bookings result:', { 
-          dataCount: data?.length, 
-          error: error ? {
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code
-          } : null 
-        });
-        
-        if (error) {
-          console.error('Detailed error fetching dashboard bookings:', error);
-          
-          // Check if it's an authentication issue
-          if (error.message.includes('Invalid API key') || error.message.includes('JWT')) {
-            throw new Error('Admin authentication failed. Please check the service role key configuration.');
-          }
-          
-          throw new Error(`Database error: ${error.message} (Code: ${error.code})`);
-        }
-        return data;
-      } catch (err) {
-        console.error('Exception in dashboard bookings fetch:', err);
-        throw err;
-      }
+      if (error) throw error;
+      return data;
     },
-    retry: 1, // Only retry once for auth errors
-    retryDelay: 1000,
   });
 
-  // Fetch change requests data using admin client
+  // Fetch change requests data
   const { data: changeRequests, isLoading: requestsLoading } = useQuery({
     queryKey: ['admin-change-requests'],
     queryFn: async () => {
-      const { data, error } = await adminSupabase
+      const { data, error } = await supabase
         .from('host_change_requests')
         .select('*')
         .order('created_at', { ascending: false });
@@ -71,11 +38,6 @@ const AdminDashboard = () => {
       return data;
     },
   });
-
-  // Show error if bookings failed to load
-  if (bookingsError) {
-    console.error('Bookings error in dashboard:', bookingsError);
-  }
 
   const totalBookings = bookings?.length || 0;
   const pendingRequests = changeRequests?.filter(req => req.status === 'pending').length || 0;
@@ -97,23 +59,6 @@ const AdminDashboard = () => {
       default:
         return (
           <div className="space-y-6">
-            {/* Show error message if bookings failed to load */}
-            {bookingsError && (
-              <Card className="border-red-200 bg-red-50">
-                <CardContent className="p-4">
-                  <div className="text-red-800">
-                    <div className="font-semibold mb-2">Ошибка загрузки бронирований:</div>
-                    <div className="text-sm">{bookingsError.message}</div>
-                    {bookingsError.message.includes('authentication') && (
-                      <div className="mt-2 text-xs text-red-600">
-                        Проверьте конфигурацию ключей администратора в настройках Supabase.
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             {/* Overview Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
