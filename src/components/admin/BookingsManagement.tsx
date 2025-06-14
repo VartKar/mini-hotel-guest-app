@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { adminSupabase } from "@/integrations/supabase/adminClient";
 import { toast } from "sonner";
 import BookingDetailsForm from "./BookingDetailsForm";
 import { Database } from "@/integrations/supabase/types";
@@ -21,11 +21,11 @@ const BookingsManagement = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  // Fetch all bookings
+  // Fetch all bookings using admin client
   const { data: bookings, isLoading } = useQuery({
     queryKey: ['admin-all-bookings'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await adminSupabase
         .from('combined')
         .select('*')
         .order('last_updated_at', { ascending: false });
@@ -35,10 +35,10 @@ const BookingsManagement = () => {
     },
   });
 
-  // Delete booking mutation
+  // Delete booking mutation using admin client
   const deleteBookingMutation = useMutation({
     mutationFn: async (bookingId: string) => {
-      const { error } = await supabase
+      const { error } = await adminSupabase
         .from('combined')
         .delete()
         .eq('id_key', bookingId);

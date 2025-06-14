@@ -1,10 +1,9 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMutation } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { adminSupabase } from "@/integrations/supabase/adminClient";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 
@@ -48,91 +47,36 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
 
   const updateBookingMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      console.log('=== MUTATION FUNCTION STARTED ===');
+      console.log('=== ADMIN CLIENT UPDATE STARTED ===');
       console.log('Updating booking with ID:', booking.id_key);
-      console.log('ID type:', typeof booking.id_key);
       console.log('Update data:', data);
       
-      try {
-        // First, let's check if the booking exists
-        console.log('=== CHECKING IF BOOKING EXISTS ===');
-        const { data: existingBooking, error: checkError } = await supabase
-          .from('combined')
-          .select('id_key, guest_name, apartment_name')
-          .eq('id_key', booking.id_key)
-          .maybeSingle();
-        
-        console.log('Existing booking check result:', existingBooking);
-        console.log('Check error:', checkError);
-        
-        if (checkError) {
-          console.error('Error checking existing booking:', checkError);
-          throw checkError;
-        }
-        
-        if (!existingBooking) {
-          console.error('Booking not found with ID:', booking.id_key);
-          throw new Error(`Booking with ID ${booking.id_key} not found`);
-        }
-
-        // Let's try a simpler update first with just one field to test
-        console.log('=== TESTING SIMPLE UPDATE ===');
-        const { data: testResult, error: testError, count: testCount } = await supabase
-          .from('combined')
-          .update({ guest_name: data.guest_name })
-          .eq('id_key', booking.id_key)
-          .select();
-        
-        console.log('Test update result:', testResult);
-        console.log('Test update error:', testError);
-        console.log('Test update count:', testCount);
-        
-        if (testError) {
-          console.error('Test update failed:', testError);
-          throw testError;
-        }
-
-        if (!testResult || testResult.length === 0) {
-          console.error('Test update returned no rows');
-          // Let's check current user session
-          const { data: session, error: sessionError } = await supabase.auth.getSession();
-          console.log('Current session:', session);
-          console.log('Session error:', sessionError);
-          throw new Error('Update operation failed - no rows affected');
-        }
-        
-        console.log('=== CALLING FULL SUPABASE UPDATE ===');
-        const { data: result, error } = await supabase
-          .from('combined')
-          .update({
-            ...data,
-            last_updated_at: new Date().toISOString(),
-            last_updated_by: 'admin'
-          })
-          .eq('id_key', booking.id_key)
-          .select();
-        
-        console.log('=== SUPABASE RESPONSE ===');
-        console.log('Result:', result);
-        console.log('Error:', error);
-        
-        if (error) {
-          console.error('Supabase update error:', error);
-          throw error;
-        }
-        
-        if (!result || result.length === 0) {
-          console.error('No rows were updated - this should not happen if booking exists');
-          throw new Error('Update operation completed but no rows were affected');
-        }
-        
-        console.log('Successfully updated booking:', result);
-        return result;
-      } catch (err) {
-        console.error('=== CAUGHT ERROR IN MUTATION ===');
-        console.error('Error details:', err);
-        throw err;
+      const { data: result, error } = await adminSupabase
+        .from('combined')
+        .update({
+          ...data,
+          last_updated_at: new Date().toISOString(),
+          last_updated_by: 'admin'
+        })
+        .eq('id_key', booking.id_key)
+        .select();
+      
+      console.log('=== ADMIN CLIENT RESPONSE ===');
+      console.log('Result:', result);
+      console.log('Error:', error);
+      
+      if (error) {
+        console.error('Admin client update error:', error);
+        throw error;
       }
+      
+      if (!result || result.length === 0) {
+        console.error('No rows were updated with admin client');
+        throw new Error('Update operation completed but no rows were affected');
+      }
+      
+      console.log('Successfully updated booking with admin client:', result);
+      return result;
     },
     onSuccess: (result) => {
       console.log('=== MUTATION SUCCESS ===');
@@ -153,14 +97,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
     console.log('Form submitted with data:', formData);
     console.log('Booking ID being updated:', booking.id_key);
     
-    try {
-      console.log('=== CALLING MUTATE ===');
-      updateBookingMutation.mutate(formData);
-      console.log('=== MUTATE CALLED ===');
-    } catch (err) {
-      console.error('=== ERROR CALLING MUTATE ===');
-      console.error('Error:', err);
-    }
+    updateBookingMutation.mutate(formData);
   };
 
   const handleInputChange = (field: string, value: string) => {

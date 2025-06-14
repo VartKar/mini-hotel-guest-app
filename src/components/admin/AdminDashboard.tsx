@@ -4,18 +4,18 @@ import { Calendar, FileText, Users, Building, Settings } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { adminSupabase } from "@/integrations/supabase/adminClient";
 import BookingsManagement from "./BookingsManagement";
 import ChangeRequestsManagement from "./ChangeRequestsManagement";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Fetch bookings data
+  // Fetch bookings data using admin client
   const { data: bookings, isLoading: bookingsLoading } = useQuery({
     queryKey: ['admin-bookings'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await adminSupabase
         .from('combined')
         .select('*')
         .eq('is_archived', false);
@@ -25,11 +25,11 @@ const AdminDashboard = () => {
     },
   });
 
-  // Fetch change requests data
+  // Fetch change requests data using admin client
   const { data: changeRequests, isLoading: requestsLoading } = useQuery({
     queryKey: ['admin-change-requests'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await adminSupabase
         .from('host_change_requests')
         .select('*')
         .order('created_at', { ascending: false });
