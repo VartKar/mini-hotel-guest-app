@@ -1,8 +1,7 @@
 
 import React, { useState } from "react";
-import { Calendar, FileText, Users, Building, Settings } from "lucide-react";
+import { Calendar, FileText, Users, Building } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { adminSupabase } from "@/integrations/supabase/adminClient";
 import BookingsManagement from "./BookingsManagement";
@@ -15,12 +14,18 @@ const AdminDashboard = () => {
   const { data: bookings, isLoading: bookingsLoading } = useQuery({
     queryKey: ['admin-bookings'],
     queryFn: async () => {
+      console.log('=== FETCHING DASHBOARD BOOKINGS ===');
       const { data, error } = await adminSupabase
         .from('combined')
         .select('*')
         .eq('is_archived', false);
       
-      if (error) throw error;
+      console.log('Dashboard bookings result:', { data, error });
+      
+      if (error) {
+        console.error('Error fetching dashboard bookings:', error);
+        throw error;
+      }
       return data;
     },
   });
