@@ -25,14 +25,17 @@ export const adminSupabase = createClient(supabaseUrl, supabaseServiceKey, {
 console.log('Admin client created successfully');
 
 // Test the connection immediately
-adminSupabase.from('combined').select('count(*)', { count: 'exact' }).limit(1)
-  .then(({ data, error }) => {
+const testConnection = async () => {
+  try {
+    const { data, error } = await adminSupabase.from('combined').select('count(*)', { count: 'exact' }).limit(1);
     if (error) {
       console.error('Admin client connection test failed:', error);
     } else {
       console.log('Admin client connection test successful:', data);
     }
-  })
-  .catch(err => {
+  } catch (err) {
     console.error('Admin client connection test exception:', err);
-  });
+  }
+};
+
+testConnection();
