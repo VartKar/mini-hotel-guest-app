@@ -171,6 +171,59 @@ export type Database = {
         }
         Relationships: []
       }
+      travel_itineraries: {
+        Row: {
+          activity_description: string | null
+          activity_title: string
+          booking_id_key: string | null
+          created_at: string
+          day_number: number
+          icon_type: string | null
+          id: string
+          is_service_available: boolean | null
+          service_description: string | null
+          service_price: number | null
+          service_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          activity_description?: string | null
+          activity_title: string
+          booking_id_key?: string | null
+          created_at?: string
+          day_number: number
+          icon_type?: string | null
+          id?: string
+          is_service_available?: boolean | null
+          service_description?: string | null
+          service_price?: number | null
+          service_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activity_description?: string | null
+          activity_title?: string
+          booking_id_key?: string | null
+          created_at?: string
+          day_number?: number
+          icon_type?: string | null
+          id?: string
+          is_service_available?: boolean | null
+          service_description?: string | null
+          service_price?: number | null
+          service_title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_itineraries_booking_id_key_fkey"
+            columns: ["booking_id_key"]
+            isOneToOne: false
+            referencedRelation: "combined"
+            referencedColumns: ["id_key"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -17,6 +17,8 @@ export interface TravelLocationType {
   service: TravelServiceType;
 }
 
+// This data is now mainly used as fallback/reference
+// The actual data comes from the travel_itineraries table
 export const initialTravelLocations: TravelLocationType[] = [
   {
     day: "День 1",
@@ -55,3 +57,16 @@ export const initialTravelLocations: TravelLocationType[] = [
     }
   }
 ];
+
+// Helper function to get icon component by name
+export const getIconByName = (iconName: string | null): React.ReactNode => {
+  switch (iconName) {
+    case 'Compass':
+      return <Compass />;
+    case 'Sun':
+      return <Sun />;
+    case 'MapPin':
+    default:
+      return <MapPin />;
+  }
+};
