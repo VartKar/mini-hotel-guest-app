@@ -37,7 +37,7 @@ const TravelPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Handle itinerary content edit
-  const handleItineraryEdit = (id: string, field: string, value: string) => {
+  const handleItineraryEdit = (id: string, field: string, value: string | number) => {
     updateItinerary({ id, updates: { [field]: value } });
   };
 
@@ -194,7 +194,7 @@ const TravelPage = () => {
                     <div className="text-lg font-medium p-1 rounded focus:bg-gray-50 focus:outline-none" 
                       contentEditable 
                       suppressContentEditableWarning 
-                      onBlur={e => handleItineraryEdit(item.id, 'day_number', e.currentTarget.innerText.replace('День ', ''))}
+                      onBlur={e => handleItineraryEdit(item.id, 'day_number', parseInt(e.currentTarget.innerText.replace('День ', '')) || item.day_number)}
                     >
                       День {item.day_number}
                     </div>
