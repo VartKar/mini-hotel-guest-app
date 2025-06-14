@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
@@ -21,6 +21,8 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const queryClient = useQueryClient();
+  
   const [formData, setFormData] = useState({
     guest_name: booking.guest_name || '',
     guest_email: booking.guest_email || '',
@@ -48,33 +50,80 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
 
   const updateBookingMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      console.log('Updating booking with ID:', booking.id_key);
-      console.log('Update data:', data);
+      console.log('=== STARTING BOOKING UPDATE ===');
+      console.log('Original booking object:', booking);
+      console.log('Booking ID being updated:', booking.id_key);
+      console.log('Form data being sent:', data);
+      console.log('Supabase client config:', supabase.supabaseUrl, supabase.supabaseKey);
+      
+      // Check if there are any actual changes
+      const hasChanges = Object.keys(data).some(key => {
+        const originalValue = booking[key as keyof typeof booking];
+        const newValue = data[key as keyof typeof data];
+        const changed = originalValue !== newValue;
+        if (changed) {
+          console.log(`Field "${key}" changed from "${originalValue}" to "${newValue}"`);
+        }
+        return changed;
+      });
+      
+      console.log('Has changes detected:', hasChanges);
+      
+      if (!hasChanges) {
+        console.log('No changes detected, skipping update');
+        return booking;
+      }
+      
+      const updatePayload = {
+        ...data,
+        last_updated_at: new Date().toISOString(),
+        last_updated_by: 'admin'
+      };
+      
+      console.log('Final update payload:', updatePayload);
+      console.log('Calling supabase update...');
       
       const { data: result, error } = await supabase
         .from('combined')
-        .update({
-          ...data,
-          last_updated_at: new Date().toISOString(),
-          last_updated_by: 'admin'
-        })
+        .update(updatePayload)
         .eq('id_key', booking.id_key)
-        .select(); // Add select to return the updated row
+        .select();
+      
+      console.log('Supabase response - data:', result);
+      console.log('Supabase response - error:', error);
       
       if (error) {
-        console.error('Supabase update error:', error);
+        console.error('=== SUPABASE UPDATE ERROR ===');
+        console.error('Error details:', error);
+        console.error('Error message:', error.message);
+        console.error('Error code:', error.code);
         throw error;
       }
       
-      console.log('Successfully updated booking:', result);
-      return result;
+      if (!result || result.length === 0) {
+        console.error('=== NO ROWS AFFECTED ===');
+        console.error('Update succeeded but no rows were returned');
+        console.error('This might indicate the row was not found or not updated');
+        throw new Error('No rows were updated');
+      }
+      
+      console.log('=== UPDATE SUCCESSFUL ===');
+      console.log('Updated booking:', result[0]);
+      return result[0];
     },
     onSuccess: (result) => {
+      console.log('=== MUTATION SUCCESS ===');
       console.log('Mutation success with result:', result);
+      
+      // Invalidate and refetch admin queries
+      queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-change-requests'] });
+      
       toast.success('Бронирование обновлено');
       onSuccess();
     },
     onError: (error) => {
+      console.error('=== MUTATION ERROR ===');
       console.error('Error updating booking:', error);
       toast.error(`Ошибка при обновлении бронирования: ${error.message}`);
     },
@@ -82,13 +131,25 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted with data:', formData);
+    console.log('=== FORM SUBMIT TRIGGERED ===');
+    console.log('Current form data:', formData);
+    console.log('Mutation is pending:', updateBookingMutation.isPending);
+    
+    if (updateBookingMutation.isPending) {
+      console.log('Mutation already in progress, skipping');
+      return;
+    }
+    
     updateBookingMutation.mutate(formData);
   };
 
   const handleInputChange = (field: string, value: string) => {
-    console.log(`Updating field ${field} to:`, value);
-    setFormData(prev => ({ ...prev, [field]: value }));
+    console.log(`Input changed - Field: ${field}, New value: "${value}"`);
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      console.log('Updated form data:', updated);
+      return updated;
+    });
   };
 
   return (
