@@ -6,32 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
 
-interface Booking {
-  id_key: string;
-  guest_name: string | null;
-  guest_email: string | null;
-  room_number: string | null;
-  apartment_name: string | null;
-  check_in_date: string | null;
-  check_out_date: string | null;
-  booking_status: string | null;
-  booking_id: string | null;
-  host_name: string | null;
-  host_email: string | null;
-  host_company: string | null;
-  wifi_network: string | null;
-  wifi_password: string | null;
-  checkout_time: string | null;
-  ac_instructions: string | null;
-  coffee_instructions: string | null;
-  tv_instructions: string | null;
-  safe_instructions: string | null;
-  parking_info: string | null;
-  extra_bed_info: string | null;
-  notes_internal: string | null;
-  notes_for_guests: string | null;
-}
+type Booking = Database['public']['Tables']['combined']['Row'];
 
 interface BookingDetailsFormProps {
   booking: Booking;
