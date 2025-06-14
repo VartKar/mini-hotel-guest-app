@@ -11,22 +11,29 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
 
   // Fetch bookings data using admin client
-  const { data: bookings, isLoading: bookingsLoading } = useQuery({
+  const { data: bookings, isLoading: bookingsLoading, error: bookingsError } = useQuery({
     queryKey: ['admin-bookings'],
     queryFn: async () => {
       console.log('=== FETCHING DASHBOARD BOOKINGS ===');
-      const { data, error } = await adminSupabase
-        .from('combined')
-        .select('*')
-        .eq('is_archived', false);
+      console.log('Admin client configured with URL:', adminSupabase.supabaseUrl);
       
-      console.log('Dashboard bookings result:', { data, error });
-      
-      if (error) {
-        console.error('Error fetching dashboard bookings:', error);
-        throw error;
+      try {
+        const { data, error } = await adminSupabase
+          .from('combined')
+          .select('*')
+          .eq('is_archived', false);
+        
+        console.log('Dashboard bookings result:', { data, error });
+        
+        if (error) {
+          console.error('Error fetching dashboard bookings:', error);
+          throw error;
+        }
+        return data;
+      } catch (err) {
+        console.error('Exception in dashboard bookings fetch:', err);
+        throw err;
       }
-      return data;
     },
   });
 
@@ -43,6 +50,11 @@ const AdminDashboard = () => {
       return data;
     },
   });
+
+  // Show error if bookings failed to load
+  if (bookingsError) {
+    console.error('Bookings error in dashboard:', bookingsError);
+  }
 
   const totalBookings = bookings?.length || 0;
   const pendingRequests = changeRequests?.filter(req => req.status === 'pending').length || 0;
@@ -64,6 +76,17 @@ const AdminDashboard = () => {
       default:
         return (
           <div className="space-y-6">
+            {/* Show error message if bookings failed to load */}
+            {bookingsError && (
+              <Card className="border-red-200 bg-red-50">
+                <CardContent className="p-4">
+                  <div className="text-red-800">
+                    Ошибка загрузки бронирований: {bookingsError.message}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Overview Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
