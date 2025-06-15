@@ -38,8 +38,8 @@ const Index = () => {
   const apartmentName = roomData?.apartment_name || 'Апартаменты "Вальс"';
   const guestName = roomData?.guest_name || "Иван";
   
-  // Use room image from database or fallback to default
-  const roomImage = roomData?.room_image_url || "https://i.postimg.cc/NFprr3hY/valse.png";
+  // Use hotel main image from database or fallback to default
+  const hotelImage = roomData?.main_image_url || "https://i.postimg.cc/NFprr3hY/valse.png";
   
   // Set dynamic document title
   const documentTitle = roomData?.apartment_name 
@@ -65,7 +65,7 @@ const Index = () => {
 
         <div 
           className="w-full h-48 mb-8 rounded-lg bg-cover bg-center"
-          style={{ backgroundImage: `url('${roomImage}')` }}
+          style={{ backgroundImage: `url('${hotelImage}')` }}
         />
 
         <div className="grid grid-cols-2 gap-4 mb-6">
