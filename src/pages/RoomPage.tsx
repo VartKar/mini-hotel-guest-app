@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Wifi, Car, Coffee, Tv, Shield, Bed } from "lucide-react";
 import { useRoomData } from "@/hooks/useRoomData";
@@ -22,14 +21,16 @@ const RoomPage = () => {
     );
   }
 
+  const imageUrl = roomData.room_image_url || roomData.main_image_url;
+
   return (
     <div className="w-full max-w-md mx-auto pt-4">
       <h1 className="text-3xl font-light mb-6">Ваш номер</h1>
       
-      {roomData.main_image_url && (
+      {imageUrl && (
         <div className="mb-6">
           <img 
-            src={roomData.main_image_url} 
+            src={imageUrl} 
             alt={roomData.apartment_name || "Room"} 
             className="w-full h-48 object-cover rounded-lg"
           />
