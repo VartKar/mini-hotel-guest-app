@@ -18,31 +18,35 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     )
 
-    const { customerName, customerPhone, customerComment, services, totalPrice, bookingIdKey } = await req.json()
+    const { bookingIdKey, customerName, rating, message, roomNumber } = await req.json()
 
-    console.log('Received travel order:', { customerName, customerPhone, services, totalPrice })
+    console.log('Received feedback:', { customerName, rating, message })
 
-    // Insert the order into the database
-    const { data: orderData, error: orderError } = await supabaseClient
-      .from('travel_service_orders')
+    // Store feedback as a shop order for now (we can create a separate table later)
+    const { data: feedbackData, error: feedbackError } = await supabaseClient
+      .from('shop_orders')
       .insert({
         booking_id_key: bookingIdKey,
         customer_name: customerName,
-        customer_phone: customerPhone,
-        customer_comment: customerComment,
-        selected_services: services,
-        total_amount: totalPrice,
-        order_status: 'pending'
+        customer_phone: 'feedback',
+        room_number: roomNumber,
+        ordered_items: [{
+          type: 'feedback',
+          rating: rating,
+          message: message
+        }],
+        total_amount: 0,
+        order_status: 'completed'
       })
       .select()
       .single()
 
-    if (orderError) {
-      console.error('Database error:', orderError)
-      throw orderError
+    if (feedbackError) {
+      console.error('Database error:', feedbackError)
+      throw feedbackError
     }
 
-    console.log('Order saved to database:', orderData.id)
+    console.log('Feedback saved to database:', feedbackData.id)
 
     // Send email notification to admin
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
@@ -58,20 +62,17 @@ serve(async (req) => {
         body: JSON.stringify({
           from: 'Hotel System <noreply@lovable.app>',
           to: ['admin@hotel.com'],
-          subject: 'Новый заказ услуг путешествия',
+          subject: 'Новый отзыв от гостя',
           html: `
-            <h2>Новый заказ услуг путешествия</h2>
-            <p><strong>Имя клиента:</strong> ${customerName}</p>
-            <p><strong>Телефон:</strong> ${customerPhone}</p>
-            <p><strong>Комментарий:</strong> ${customerComment || 'Нет комментариев'}</p>
-            <p><strong>Общая сумма:</strong> ${totalPrice} ₽</p>
-            <p><strong>Заказ ID:</strong> ${orderData.id}</p>
-            <h3>Выбранные услуги:</h3>
-            <ul>
-              ${services.map((service: any) => `
-                <li>${service.day}: ${service.title} - ${service.price}</li>
-              `).join('')}
-            </ul>
+            <h2>Новый отзыв от гостя</h2>
+            <p><strong>Имя гостя:</strong> ${customerName}</p>
+            <p><strong>Номер комнаты:</strong> ${roomNumber || 'Не указан'}</p>
+            <p><strong>Рейтинг:</strong> ${rating}/5 ⭐</p>
+            <p><strong>Отзыв:</strong></p>
+            <blockquote style="border-left: 4px solid #ccc; padding-left: 16px; margin: 16px 0;">
+              ${message || 'Без комментариев'}
+            </blockquote>
+            <p><strong>ID записи:</strong> ${feedbackData.id}</p>
           `,
         }),
       })
@@ -92,8 +93,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        orderId: orderData.id,
-        message: 'Заказ успешно отправлен' 
+        feedbackId: feedbackData.id,
+        message: 'Отзыв успешно отправлен' 
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -102,11 +103,11 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error processing travel order:', error)
+    console.error('Error processing feedback:', error)
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || 'Failed to process order' 
+        error: error.message || 'Failed to process feedback' 
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

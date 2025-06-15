@@ -3,6 +3,9 @@ import React from "react";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { useRoomData } from "@/hooks/useRoomData";
+import { toast } from "@/components/ui/sonner";
 import TipForm from "./TipForm";
 
 interface FeedbackForm {
@@ -34,6 +37,50 @@ const FeedbackTab = ({
   onRating,
   setShowTipForm
 }: FeedbackTabProps) => {
+  const { roomData } = useRoomData();
+
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (feedbackForm.rating === 0) {
+      toast.error("Пожалуйста, укажите рейтинг");
+      return;
+    }
+
+    try {
+      // Store feedback in database
+      const feedbackData = {
+        booking_id_key: roomData?.id_key || null,
+        customer_name: roomData?.guest_name || 'Гость',
+        rating: feedbackForm.rating,
+        message: feedbackForm.message,
+        room_number: roomData?.room_number || null
+      };
+
+      console.log('Submitting feedback:', feedbackData);
+
+      const { data, error } = await supabase.functions.invoke('submit-feedback', {
+        body: feedbackData
+      });
+
+      if (error) {
+        console.error('Feedback submission error:', error);
+        throw error;
+      }
+
+      console.log('Feedback submitted successfully:', data);
+      
+      // Call the original submit handler to update UI state
+      onFeedbackSubmit(e);
+      
+      toast.success("Спасибо за отзыв!");
+      
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      toast.error("Ошибка при отправке отзыва. Попробуйте еще раз.");
+    }
+  };
+
   if (feedbackForm.submitted) {
     return (
       <div className="text-center py-4">
@@ -60,7 +107,7 @@ const FeedbackTab = ({
   }
 
   return (
-    <form onSubmit={onFeedbackSubmit} className="space-y-4">
+    <form onSubmit={handleFeedbackSubmit} className="space-y-4">
       <div>
         <label className="block mb-1 text-hotel-neutral">Оценка</label>
         <div className="flex space-x-2">

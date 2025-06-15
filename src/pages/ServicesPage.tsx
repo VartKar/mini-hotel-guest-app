@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useRoomData } from "@/hooks/useRoomData";
 
 interface ServiceItem {
   title: string;
@@ -41,16 +43,28 @@ const services: ServiceItem[] = [
 ];
 
 const ServicesPage = () => {
+  const { roomData } = useRoomData();
   const [basketItems, setBasketItems] = useState<ServiceItem[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [contactInfo, setContactInfo] = useState({
     name: "",
     roomNumber: "",
     phone: ""
   });
 
+  // Pre-fill with room data if available
+  React.useEffect(() => {
+    if (roomData) {
+      setContactInfo(prev => ({
+        ...prev,
+        name: roomData.guest_name || prev.name,
+        roomNumber: roomData.room_number || prev.roomNumber,
+      }));
+    }
+  }, [roomData]);
+
   const addToBasket = (service: ServiceItem) => {
-    // Check if service is already in basket
     if (!basketItems.some(item => item.title === service.title)) {
       setBasketItems([...basketItems, service]);
       toast(`"${service.title}" добавлен в корзину`);
@@ -72,19 +86,51 @@ const ServicesPage = () => {
     });
   };
 
-  const handleSubmitOrder = () => {
+  const handleSubmitOrder = async () => {
     if (!contactInfo.name || !contactInfo.roomNumber || !contactInfo.phone) {
       toast.error("Пожалуйста, заполните все поля контактной информации");
       return;
     }
 
-    // Here we would send the order to a backend system
-    console.log("Submitted order:", { services: basketItems, contact: contactInfo });
-    
-    toast.success("Ваш заказ успешно отправлен!");
-    setBasketItems([]);
-    setIsDrawerOpen(false);
-    setContactInfo({ name: "", roomNumber: "", phone: "" });
+    setIsSubmitting(true);
+
+    try {
+      const orderData = {
+        customerName: contactInfo.name,
+        customerPhone: contactInfo.phone,
+        roomNumber: contactInfo.roomNumber,
+        services: basketItems.map(item => ({
+          title: item.title,
+          description: item.description,
+          buttonText: item.buttonText
+        })),
+        bookingIdKey: roomData?.id_key || null
+      };
+
+      console.log('Submitting service order:', orderData);
+
+      const { data, error } = await supabase.functions.invoke('submit-service-order', {
+        body: orderData
+      });
+
+      if (error) {
+        console.error('Service order submission error:', error);
+        throw error;
+      }
+
+      console.log('Service order submitted successfully:', data);
+      
+      toast.success("Ваш заказ успешно отправлен!");
+      setBasketItems([]);
+      setIsDrawerOpen(false);
+      setContactInfo({ name: "", roomNumber: "", phone: "" });
+      
+    } catch (error) {
+      console.error('Error submitting service order:', error);
+      toast.error("Ошибка при отправке заказа. Попробуйте еще раз.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -128,7 +174,6 @@ const ServicesPage = () => {
         ))}
       </div>
 
-      {/* Checkout Drawer */}
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <DrawerContent className="px-4">
           <DrawerHeader>
@@ -187,9 +232,19 @@ const ServicesPage = () => {
 
           <DrawerFooter>
             {basketItems.length > 0 && (
-              <Button onClick={handleSubmitOrder} className="w-full">
-                <Check className="mr-2" size={18} />
-                Отправить заказ
+              <Button 
+                onClick={handleSubmitOrder} 
+                className="w-full"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>Отправка...</>
+                ) : (
+                  <>
+                    <Check className="mr-2" size={18} />
+                    Отправить заказ
+                  </>
+                )}
               </Button>
             )}
             <Button variant="outline" onClick={() => setIsDrawerOpen(false)}>

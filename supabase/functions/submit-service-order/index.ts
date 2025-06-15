@@ -18,20 +18,20 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     )
 
-    const { customerName, customerPhone, customerComment, services, totalPrice, bookingIdKey } = await req.json()
+    const { customerName, customerPhone, roomNumber, services, bookingIdKey } = await req.json()
 
-    console.log('Received travel order:', { customerName, customerPhone, services, totalPrice })
+    console.log('Received service order:', { customerName, customerPhone, services })
 
     // Insert the order into the database
     const { data: orderData, error: orderError } = await supabaseClient
-      .from('travel_service_orders')
+      .from('shop_orders')
       .insert({
         booking_id_key: bookingIdKey,
         customer_name: customerName,
         customer_phone: customerPhone,
-        customer_comment: customerComment,
-        selected_services: services,
-        total_amount: totalPrice,
+        room_number: roomNumber,
+        ordered_items: services,
+        total_amount: 0, // Services might not have prices
         order_status: 'pending'
       })
       .select()
@@ -42,7 +42,7 @@ serve(async (req) => {
       throw orderError
     }
 
-    console.log('Order saved to database:', orderData.id)
+    console.log('Service order saved to database:', orderData.id)
 
     // Send email notification to admin
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
@@ -58,18 +58,17 @@ serve(async (req) => {
         body: JSON.stringify({
           from: 'Hotel System <noreply@lovable.app>',
           to: ['admin@hotel.com'],
-          subject: 'Новый заказ услуг путешествия',
+          subject: 'Новый заказ услуг в номере',
           html: `
-            <h2>Новый заказ услуг путешествия</h2>
+            <h2>Новый заказ услуг в номере</h2>
             <p><strong>Имя клиента:</strong> ${customerName}</p>
             <p><strong>Телефон:</strong> ${customerPhone}</p>
-            <p><strong>Комментарий:</strong> ${customerComment || 'Нет комментариев'}</p>
-            <p><strong>Общая сумма:</strong> ${totalPrice} ₽</p>
+            <p><strong>Номер комнаты:</strong> ${roomNumber || 'Не указан'}</p>
             <p><strong>Заказ ID:</strong> ${orderData.id}</p>
-            <h3>Выбранные услуги:</h3>
+            <h3>Заказанные услуги:</h3>
             <ul>
               ${services.map((service: any) => `
-                <li>${service.day}: ${service.title} - ${service.price}</li>
+                <li>${service.title} - ${service.description}</li>
               `).join('')}
             </ul>
           `,
@@ -102,7 +101,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error processing travel order:', error)
+    console.error('Error processing service order:', error)
     return new Response(
       JSON.stringify({ 
         success: false, 

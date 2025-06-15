@@ -20,6 +20,8 @@ serve(async (req) => {
 
     const { customerName, customerPhone, roomNumber, items, totalPrice, bookingIdKey } = await req.json()
 
+    console.log('Received shop order:', { customerName, customerPhone, items, totalPrice })
+
     // Insert the order into the database
     const { data: orderData, error: orderError } = await supabaseClient
       .from('shop_orders')
@@ -36,12 +38,17 @@ serve(async (req) => {
       .single()
 
     if (orderError) {
+      console.error('Database error:', orderError)
       throw orderError
     }
+
+    console.log('Order saved to database:', orderData.id)
 
     // Send email notification to admin
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
     if (resendApiKey) {
+      console.log('Attempting to send email notification...')
+      
       const emailResponse = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -49,7 +56,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'noreply@lovable.app',
+          from: 'Hotel System <noreply@lovable.app>',
           to: ['admin@hotel.com'],
           subject: 'Новый заказ в магазине',
           html: `
@@ -62,16 +69,24 @@ serve(async (req) => {
             <h3>Заказанные товары:</h3>
             <ul>
               ${items.map((item: any) => `
-                <li>${item.name} - ${item.price} (${item.category})</li>
+                <li>${item.name} - ${item.price} ₽ (${item.category})</li>
               `).join('')}
             </ul>
           `,
         }),
       })
 
+      const emailResult = await emailResponse.text()
+      console.log('Email API response status:', emailResponse.status)
+      console.log('Email API response:', emailResult)
+
       if (!emailResponse.ok) {
-        console.error('Failed to send email notification')
+        console.error('Failed to send email notification:', emailResult)
+      } else {
+        console.log('Email notification sent successfully')
       }
+    } else {
+      console.log('RESEND_API_KEY not found, skipping email notification')
     }
 
     return new Response(
