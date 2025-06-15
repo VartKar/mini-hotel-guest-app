@@ -1,10 +1,11 @@
-
 import React, { useState } from "react";
 import { Gift, Coffee, Apple, ShoppingBag, Check, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useRoomData } from "@/hooks/useRoomData";
 
 interface ShopItem {
   name: string;
@@ -49,6 +50,7 @@ const categories: Category[] = [
 ];
 
 const ShopPage = () => {
+  const { roomData } = useRoomData();
   const [basketItems, setBasketItems] = useState<ShopItem[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [contactInfo, setContactInfo] = useState({
@@ -56,6 +58,7 @@ const ShopPage = () => {
     roomNumber: "",
     phone: ""
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const addToBasket = (item: ShopItem, categoryName: string) => {
     const itemWithCategory = { ...item, category: categoryName };
@@ -76,19 +79,51 @@ const ShopPage = () => {
     });
   };
 
-  const handleSubmitOrder = () => {
-    if (!contactInfo.name || !contactInfo.roomNumber || !contactInfo.phone) {
-      toast.error("Пожалуйста, заполните все поля контактной информации");
+  const handleSubmitOrder = async () => {
+    if (!contactInfo.name || !contactInfo.phone) {
+      toast.error("Пожалуйста, заполните все обязательные поля");
       return;
     }
 
-    // Here we would send the order to a backend system
-    console.log("Submitted order:", { items: basketItems, contact: contactInfo });
-    
-    toast.success("Ваш заказ успешно отправлен!");
-    setBasketItems([]);
-    setIsDrawerOpen(false);
-    setContactInfo({ name: "", roomNumber: "", phone: "" });
+    if (basketItems.length === 0) {
+      toast.error("Ваша корзина пуста");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Call the edge function
+      const { data, error } = await supabase.functions.invoke('submit-shop-order', {
+        body: {
+          customerName: contactInfo.name,
+          customerPhone: contactInfo.phone,
+          roomNumber: contactInfo.roomNumber,
+          items: basketItems,
+          totalPrice: totalPrice,
+          bookingIdKey: roomData?.id_key || null
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.success) {
+        toast.success("Ваш заказ успешно отправлен!");
+        setBasketItems([]);
+        setIsDrawerOpen(false);
+        setContactInfo({ name: "", roomNumber: "", phone: "" });
+      } else {
+        throw new Error(data.error || 'Failed to submit order');
+      }
+      
+    } catch (error) {
+      console.error("Error submitting order:", error);
+      toast.error("Ошибка при отправке заказа. Пожалуйста, попробуйте позже.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Calculate total price
@@ -222,9 +257,13 @@ const ShopPage = () => {
 
           <DrawerFooter>
             {basketItems.length > 0 && (
-              <Button onClick={handleSubmitOrder} className="w-full">
+              <Button 
+                onClick={handleSubmitOrder} 
+                className="w-full"
+                disabled={isSubmitting}
+              >
                 <Check className="mr-2" size={18} />
-                Оформить заказ
+                {isSubmitting ? 'Отправка...' : 'Оформить заказ'}
               </Button>
             )}
             <Button variant="outline" onClick={() => setIsDrawerOpen(false)}>

@@ -171,6 +171,53 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_orders: {
+        Row: {
+          booking_id_key: string | null
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          order_status: string
+          ordered_items: Json
+          room_number: string | null
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          booking_id_key?: string | null
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          order_status?: string
+          ordered_items: Json
+          room_number?: string | null
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          booking_id_key?: string | null
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          order_status?: string
+          ordered_items?: Json
+          room_number?: string | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_orders_booking_id_key_fkey"
+            columns: ["booking_id_key"]
+            isOneToOne: false
+            referencedRelation: "combined"
+            referencedColumns: ["id_key"]
+          },
+        ]
+      }
       travel_itineraries: {
         Row: {
           activity_description: string | null
@@ -220,6 +267,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "travel_itineraries_booking_id_key_fkey"
+            columns: ["booking_id_key"]
+            isOneToOne: false
+            referencedRelation: "combined"
+            referencedColumns: ["id_key"]
+          },
+        ]
+      }
+      travel_service_orders: {
+        Row: {
+          booking_id_key: string | null
+          created_at: string
+          customer_comment: string | null
+          customer_name: string
+          customer_phone: string
+          id: string
+          order_status: string
+          selected_services: Json
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          booking_id_key?: string | null
+          created_at?: string
+          customer_comment?: string | null
+          customer_name: string
+          customer_phone: string
+          id?: string
+          order_status?: string
+          selected_services: Json
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          booking_id_key?: string | null
+          created_at?: string
+          customer_comment?: string | null
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          order_status?: string
+          selected_services?: Json
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_service_orders_booking_id_key_fkey"
             columns: ["booking_id_key"]
             isOneToOne: false
             referencedRelation: "combined"

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { MapPin, Calendar, Sun, Compass, Check, X, PlusCircle, ShoppingBasket, ShoppingCart } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -7,6 +6,7 @@ import { toast } from "@/components/ui/sonner";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useTravelItinerary } from "@/hooks/useTravelItinerary";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
 
 // Icon mapping for different activity types
 const getIconForType = (iconType: string | null) => {
@@ -100,45 +100,53 @@ const TravelPage = () => {
     
     setIsSubmitting(true);
     
-    // Prepare order data
-    const selectedItineraries = itineraries.filter(item => selectedServices.includes(item.id));
-    const orderData = {
-      customerName,
-      customerPhone,
-      customerComment,
-      services: selectedItineraries.map(item => ({
+    try {
+      // Prepare order data
+      const selectedItineraries = itineraries.filter(item => selectedServices.includes(item.id));
+      const services = selectedItineraries.map(item => ({
         day: `День ${item.day_number}`,
         title: item.service_title,
         price: `${item.service_price} ₽`
-      })),
-      totalPrice: `${calculateTotal()} ₽`,
-      orderDate: new Date().toISOString(),
-    };
-    
-    try {
-      // In the future, this will send to a cloud database
-      console.log("Order submitted:", orderData);
+      }));
       
-      // Simulate network request
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const totalPrice = calculateTotal();
       
-      // Success notification
-      toast("Заказ успешно отправлен", {
-        description: "Мы свяжемся с вами в ближайшее время для подтверждения заказа."
+      // Call the edge function
+      const { data, error } = await supabase.functions.invoke('submit-travel-order', {
+        body: {
+          customerName,
+          customerPhone,
+          customerComment,
+          services,
+          totalPrice,
+          bookingIdKey: roomData?.id_key || null
+        }
       });
-      
-      // Reset form
-      setSelectedServices([]);
-      setCustomerName("");
-      setCustomerPhone("");
-      setCustomerComment("");
-      setBasketOpen(false);
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.success) {
+        toast("Заказ успешно отправлен", {
+          description: "Мы свяжемся с вами в ближайшее время для подтверждения заказа."
+        });
+        
+        // Reset form
+        setSelectedServices([]);
+        setCustomerName("");
+        setCustomerPhone("");
+        setCustomerComment("");
+        setBasketOpen(false);
+      } else {
+        throw new Error(data.error || 'Failed to submit order');
+      }
       
     } catch (error) {
+      console.error("Error submitting order:", error);
       toast("Ошибка при отправке заказа", {
         description: "Пожалуйста, попробуйте позже."
       });
-      console.error("Error submitting order:", error);
     } finally {
       setIsSubmitting(false);
     }
