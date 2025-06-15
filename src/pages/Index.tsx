@@ -38,8 +38,9 @@ const Index = () => {
   const apartmentName = roomData?.apartment_name || 'Апартаменты "Вальс"';
   const guestName = roomData?.guest_name || "Иван";
   
-  // Use hotel main image from database or fallback to default
-  const hotelImage = roomData?.main_image_url || "https://i.postimg.cc/NFprr3hY/valse.png";
+  // Use hotel main image with better fallback logic
+  // Priority: main_image_url -> room_image_url -> default image
+  const hotelImage = roomData?.main_image_url || roomData?.room_image_url || "https://i.postimg.cc/NFprr3hY/valse.png";
   
   // Set dynamic document title
   const documentTitle = roomData?.apartment_name 
