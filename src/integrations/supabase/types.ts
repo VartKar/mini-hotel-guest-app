@@ -176,6 +176,7 @@ export type Database = {
           activity_description: string | null
           activity_title: string
           booking_id_key: string | null
+          city: string | null
           created_at: string
           day_number: number
           icon_type: string | null
@@ -190,6 +191,7 @@ export type Database = {
           activity_description?: string | null
           activity_title: string
           booking_id_key?: string | null
+          city?: string | null
           created_at?: string
           day_number: number
           icon_type?: string | null
@@ -204,6 +206,7 @@ export type Database = {
           activity_description?: string | null
           activity_title?: string
           booking_id_key?: string | null
+          city?: string | null
           created_at?: string
           day_number?: number
           icon_type?: string | null

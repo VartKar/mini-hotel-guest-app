@@ -36,6 +36,21 @@ const TravelPage = () => {
   const [customerComment, setCustomerComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const city = itineraries?.[0]?.city || 'ваше';
+  const activitiesCount = itineraries.length;
+
+  const getDayLabel = (count: number) => {
+    if (count === 1) return 'день';
+    if (count > 1 && count < 5) return 'дня';
+    return 'дней';
+  }
+
+  const getActivityLabel = (count: number) => {
+    if (count === 1) return 'мероприятие';
+    if (count > 1 && count < 5) return 'мероприятия';
+    return 'мероприятий';
+  }
+
   // Handle itinerary content edit
   const handleItineraryEdit = (id: string, field: string, value: string | number) => {
     updateItinerary({ id, updates: { [field]: value } });
@@ -142,7 +157,7 @@ const TravelPage = () => {
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
-      <h1 className="text-3xl font-light mb-6">Путешествие</h1>
+      <h1 className="text-3xl font-light mb-6">Путешествие в г. {city}</h1>
       
       {/* Banner with basket counter */}
       <div className="w-full h-48 mb-6 rounded-lg bg-cover bg-center relative" style={{
@@ -168,7 +183,7 @@ const TravelPage = () => {
           <div className="flex items-center">
             <Calendar className="mr-3 text-hotel-dark" size={24} />
             <h2 className="text-xl font-medium">
-              План поездки ({numberOfDays} {numberOfDays === 1 ? 'день' : numberOfDays <= 4 ? 'дня' : 'дней'})
+              План поездки ({numberOfDays} {getDayLabel(numberOfDays)}, {activitiesCount} {getActivityLabel(activitiesCount)})
             </h2>
           </div>
           {selectedServices.length > 0 && (

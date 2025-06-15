@@ -16,6 +16,7 @@ export interface TravelItinerary {
   is_service_available: boolean | null;
   created_at: string;
   updated_at: string;
+  city: string | null;
 }
 
 export interface TravelItineraryWithIcon extends TravelItinerary {
@@ -91,6 +92,7 @@ export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: str
         service_price: template.service_price,
         icon_type: template.icon_type,
         is_service_available: template.is_service_available,
+        city: template.city,
       }));
 
       const { error } = await supabase
