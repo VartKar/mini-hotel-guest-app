@@ -1,7 +1,7 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { Home, Map, Coffee, ShoppingBag, MessageCircle, User, Wifi, Info } from "lucide-react";
+import { Home, Map, Coffee, ShoppingBag, MessageCircle, User, Info } from "lucide-react";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
@@ -71,10 +71,14 @@ const Index = () => {
           </p>
         </div>
 
-        <div 
-          className="w-full h-48 mb-8 rounded-lg bg-cover bg-center"
-          style={{ backgroundImage: `url('${hotelImage}')` }}
-        />
+        {loading ? (
+          <div className="w-full h-48 mb-8 rounded-lg bg-gray-200 animate-pulse" />
+        ) : (
+          <div 
+            className="w-full h-48 mb-8 rounded-lg bg-cover bg-center"
+            style={{ backgroundImage: `url('${hotelImage}')` }}
+          />
+        )}
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           {menuItems.map(item => (
