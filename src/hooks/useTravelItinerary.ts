@@ -38,6 +38,7 @@ const calculateDays = (checkIn: string | null, checkOut: string | null): number 
 export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: string | null, checkOutDate: string | null) => {
   const queryClient = useQueryClient();
   const numberOfDays = calculateDays(checkInDate, checkOutDate);
+  const [hasGenerated, setHasGenerated] = useState(false);
 
   // Fetch itineraries for specific booking
   const { data: bookingItineraries, isLoading } = useQuery({
@@ -76,7 +77,7 @@ export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: str
   // Generate itineraries for the booking based on templates
   const generateItinerariesMutation = useMutation({
     mutationFn: async () => {
-      if (!bookingIdKey || !templateItineraries?.length) return;
+      if (!bookingIdKey || !templateItineraries?.length || hasGenerated) return;
 
       const itinerariesToCreate = templateItineraries.slice(0, numberOfDays).map((template, index) => ({
         booking_id_key: bookingIdKey,
@@ -95,6 +96,7 @@ export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: str
         .insert(itinerariesToCreate);
 
       if (error) throw error;
+      setHasGenerated(true);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['travel-itineraries', bookingIdKey] });
@@ -131,19 +133,26 @@ export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: str
     },
   });
 
-  // Determine which itineraries to use
+  // Determine which itineraries to use - prioritize booking-specific ones
   const effectiveItineraries = bookingItineraries?.length 
     ? bookingItineraries 
     : templateItineraries?.slice(0, numberOfDays) || [];
 
-  // Auto-generate if we have templates but no booking-specific itineraries
+  // Auto-generate only once if we have templates but no booking-specific itineraries
   useEffect(() => {
     if (bookingIdKey && 
         templateItineraries?.length && 
-        (!bookingItineraries || bookingItineraries.length === 0)) {
+        (!bookingItineraries || bookingItineraries.length === 0) &&
+        !hasGenerated &&
+        !generateItinerariesMutation.isPending) {
       generateItinerariesMutation.mutate();
     }
-  }, [bookingIdKey, templateItineraries, bookingItineraries]);
+  }, [bookingIdKey, templateItineraries, bookingItineraries, hasGenerated]);
+
+  // Reset generation flag when booking changes
+  useEffect(() => {
+    setHasGenerated(false);
+  }, [bookingIdKey]);
 
   return {
     itineraries: effectiveItineraries,
