@@ -1,9 +1,12 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Home, Map, Coffee, ShoppingBag, MessageCircle, User, Info } from "lucide-react";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+
+// Placeholder image
+const DEFAULT_IMG = "https://i.postimg.cc/NFprr3hY/valse.png";
+// For user context: You can replace the above URL with any good placeholder image.
 
 const menuItems = [{
   name: "Мой номер",
@@ -34,26 +37,37 @@ const menuItems = [{
 const Index = () => {
   const { roomData, loading, isPersonalized } = useRoomData();
 
-  // Use apartment name from database or fallback to default
   const apartmentName = roomData?.apartment_name || 'Апартаменты "Вальс"';
   const guestName = roomData?.guest_name || "Иван";
-  
-  // Use hotel main image with proper validation
-  // Check if main_image_url exists and is not empty, otherwise fall back
-  const hasValidMainImage = roomData?.main_image_url && roomData.main_image_url.trim() !== '';
-  const hasValidRoomImage = roomData?.room_image_url && roomData.room_image_url.trim() !== '';
-  
-  const hotelImage = hasValidMainImage 
-    ? roomData.main_image_url 
-    : hasValidRoomImage 
-      ? roomData.room_image_url 
-      : "https://i.postimg.cc/NFprr3hY/valse.png";
-  
-  // Set dynamic document title
-  const documentTitle = roomData?.apartment_name 
+
+  // Only pick URLs that are non-empty strings
+  const getValidImage = () => {
+    // Returns the main should-be-seen image URL or fallback
+    if (roomData?.main_image_url && roomData.main_image_url.trim() !== '') {
+      return roomData.main_image_url;
+    }
+    if (roomData?.room_image_url && roomData.room_image_url.trim() !== '') {
+      return roomData.room_image_url;
+    }
+    return DEFAULT_IMG;
+  };
+
+  // We use component state to handle load failure
+  const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  // Reset error state if hotelImage changes
+  React.useEffect(() => {
+    setImgError(false);
+    setImgLoaded(false);
+  }, [roomData?.main_image_url, roomData?.room_image_url]);
+
+  const hotelImage = getValidImage();
+
+  const documentTitle = roomData?.apartment_name
     ? `RubikInn - ${roomData.apartment_name}`
     : 'RubikInn';
-  
+
   useDocumentTitle(documentTitle);
 
   return (
@@ -71,20 +85,41 @@ const Index = () => {
           </p>
         </div>
 
-        {loading ? (
-          <div className="w-full h-48 mb-8 rounded-lg bg-gray-200 animate-pulse" />
-        ) : (
-          <div 
-            className="w-full h-48 mb-8 rounded-lg bg-cover bg-center"
-            style={{ backgroundImage: `url('${hotelImage}')` }}
-          />
-        )}
+        {/* Main hotel image section */}
+        <div className="w-full h-48 mb-8 rounded-lg overflow-hidden flex items-center justify-center bg-hotel-light relative">
+          {loading && (
+            <div className="w-full h-full animate-pulse bg-gray-200" />
+          )}
+          {!loading && !imgError && (
+            <img
+              src={hotelImage}
+              alt="Фото апартаментов"
+              className={`object-cover w-full h-full transition-opacity duration-500 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+              loading="lazy"
+              onLoad={() => setImgLoaded(true)}
+              onError={() => setImgError(true)}
+              style={{ minHeight: "8rem", minWidth: "8rem" }}
+            />
+          )}
+          {!loading && imgError && (
+            <div className="w-full h-full bg-gray-100 flex flex-col justify-center items-center">
+              <span className="text-gray-400 text-xs">Ошибка загрузки изображения</span>
+              <img
+                src={DEFAULT_IMG}
+                alt="Фото по умолчанию"
+                className="w-20 h-20 opacity-40 mt-2"
+                draggable={false}
+              />
+            </div>
+          )}
+        </div>
 
+        {/* Menu section */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           {menuItems.map(item => (
-            <Link 
-              key={item.name} 
-              to={item.path} 
+            <Link
+              key={item.name}
+              to={item.path}
               className="flex flex-col items-center justify-center bg-white rounded-lg p-6 shadow-sm transition-all hover:shadow-md"
             >
               <div className="text-hotel-dark mb-3">{item.icon}</div>
@@ -93,6 +128,7 @@ const Index = () => {
           ))}
         </div>
 
+        {/* Demo info for non-personalized */}
         {!isPersonalized && (
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3">
             <div className="flex items-center gap-2">
