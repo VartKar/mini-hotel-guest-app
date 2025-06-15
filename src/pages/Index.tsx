@@ -38,9 +38,16 @@ const Index = () => {
   const apartmentName = roomData?.apartment_name || 'Апартаменты "Вальс"';
   const guestName = roomData?.guest_name || "Иван";
   
-  // Use hotel main image with better fallback logic
-  // Priority: main_image_url -> room_image_url -> default image
-  const hotelImage = roomData?.main_image_url || roomData?.room_image_url || "https://i.postimg.cc/NFprr3hY/valse.png";
+  // Use hotel main image with proper validation
+  // Check if main_image_url exists and is not empty, otherwise fall back
+  const hasValidMainImage = roomData?.main_image_url && roomData.main_image_url.trim() !== '';
+  const hasValidRoomImage = roomData?.room_image_url && roomData.room_image_url.trim() !== '';
+  
+  const hotelImage = hasValidMainImage 
+    ? roomData.main_image_url 
+    : hasValidRoomImage 
+      ? roomData.room_image_url 
+      : "https://i.postimg.cc/NFprr3hY/valse.png";
   
   // Set dynamic document title
   const documentTitle = roomData?.apartment_name 
