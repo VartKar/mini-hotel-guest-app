@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
@@ -38,7 +37,7 @@ const calculateDays = (checkIn: string | null, checkOut: string | null): number 
 export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: string | null, checkOutDate: string | null) => {
   const queryClient = useQueryClient();
   const numberOfDays = calculateDays(checkInDate, checkOutDate);
-  const [hasGenerated, setHasGenerated] = useState(false);
+  const generatedRef = useRef<Set<string>>(new Set());
 
   // Fetch itineraries for specific booking
   const { data: bookingItineraries, isLoading } = useQuery({
@@ -77,7 +76,10 @@ export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: str
   // Generate itineraries for the booking based on templates
   const generateItinerariesMutation = useMutation({
     mutationFn: async () => {
-      if (!bookingIdKey || !templateItineraries?.length || hasGenerated) return;
+      if (!bookingIdKey || !templateItineraries?.length) return;
+
+      // Check if we already generated for this booking
+      if (generatedRef.current.has(bookingIdKey)) return;
 
       const itinerariesToCreate = templateItineraries.slice(0, numberOfDays).map((template, index) => ({
         booking_id_key: bookingIdKey,
@@ -96,7 +98,9 @@ export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: str
         .insert(itinerariesToCreate);
 
       if (error) throw error;
-      setHasGenerated(true);
+      
+      // Mark this booking as generated
+      generatedRef.current.add(bookingIdKey);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['travel-itineraries', bookingIdKey] });
@@ -143,15 +147,28 @@ export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: str
     if (bookingIdKey && 
         templateItineraries?.length && 
         (!bookingItineraries || bookingItineraries.length === 0) &&
-        !hasGenerated &&
+        !generatedRef.current.has(bookingIdKey) &&
         !generateItinerariesMutation.isPending) {
-      generateItinerariesMutation.mutate();
+      
+      // Use setTimeout to avoid state updates during render
+      const timer = setTimeout(() => {
+        generateItinerariesMutation.mutate();
+      }, 0);
+      
+      return () => clearTimeout(timer);
     }
-  }, [bookingIdKey, templateItineraries, bookingItineraries, hasGenerated]);
+  }, [bookingIdKey, templateItineraries, bookingItineraries, generateItinerariesMutation]);
 
-  // Reset generation flag when booking changes
+  // Clear generated flag when booking changes
   useEffect(() => {
-    setHasGenerated(false);
+    if (bookingIdKey) {
+      // Clear the ref for previous bookings but keep current one
+      const currentGenerated = generatedRef.current.has(bookingIdKey);
+      generatedRef.current.clear();
+      if (currentGenerated) {
+        generatedRef.current.add(bookingIdKey);
+      }
+    }
   }, [bookingIdKey]);
 
   return {
