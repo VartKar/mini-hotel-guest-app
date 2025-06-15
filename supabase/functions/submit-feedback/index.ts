@@ -61,7 +61,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           from: 'Hotel System <noreply@lovable.app>',
-          to: ['admin@hotel.com'],
+          to: ['monaco1@ya.ru'],
           subject: 'Новый отзыв от гостя',
           html: `
             <h2>Новый отзыв от гостя</h2>
