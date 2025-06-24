@@ -44,6 +44,8 @@ export interface RoomData {
   notes_for_guests: string | null;
   // New main image field
   main_image_url: string | null;
+  // Add city field to match the database schema
+  city: string | null;
 }
 
 let globalRoomData: RoomData | null = null;
