@@ -220,12 +220,15 @@ export type Database = {
       }
       travel_itineraries: {
         Row: {
+          activity_category: string | null
           activity_description: string | null
           activity_title: string
           booking_id_key: string | null
           city: string | null
           created_at: string
           day_number: number
+          difficulty_level: string | null
+          duration_hours: number | null
           icon_type: string | null
           id: string
           is_service_available: boolean | null
@@ -235,12 +238,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          activity_category?: string | null
           activity_description?: string | null
           activity_title: string
           booking_id_key?: string | null
           city?: string | null
           created_at?: string
           day_number: number
+          difficulty_level?: string | null
+          duration_hours?: number | null
           icon_type?: string | null
           id?: string
           is_service_available?: boolean | null
@@ -250,12 +256,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          activity_category?: string | null
           activity_description?: string | null
           activity_title?: string
           booking_id_key?: string | null
           city?: string | null
           created_at?: string
           day_number?: number
+          difficulty_level?: string | null
+          duration_hours?: number | null
           icon_type?: string | null
           id?: string
           is_service_available?: boolean | null

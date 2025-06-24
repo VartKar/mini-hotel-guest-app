@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { MapPin, Calendar, Sun, Compass, Check, X, PlusCircle, ShoppingBasket, ShoppingCart } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -36,7 +37,7 @@ const TravelPage = () => {
   const [customerComment, setCustomerComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const city = itineraries?.[0]?.city || 'ваше';
+  const city = itineraries?.[0]?.city || 'Сочи';
   const activitiesCount = itineraries.length;
 
   const getDayLabel = (count: number) => {
@@ -185,13 +186,15 @@ const TravelPage = () => {
         </div>
       </div>
       
-      {/* Travel plan with dynamic services */}
+      {/* Travel plan with activities from templates */}
       <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
         <div className="flex items-center mb-4 justify-between">
           <div className="flex items-center">
             <Calendar className="mr-3 text-hotel-dark" size={24} />
             <h2 className="text-xl font-medium">
-              План поездки ({numberOfDays} {getDayLabel(numberOfDays)}, {activitiesCount} {getActivityLabel(activitiesCount)})
+              План поездки ({numberOfDays} {numberOfDays === 1 ? 'день' : 
+                numberOfDays > 1 && numberOfDays < 5 ? 'дня' : 'дней'}, {activitiesCount} {activitiesCount === 1 ? 'мероприятие' : 
+                activitiesCount > 1 && activitiesCount < 5 ? 'мероприятия' : 'мероприятий'})
             </h2>
           </div>
           {selectedServices.length > 0 && (
@@ -206,8 +209,8 @@ const TravelPage = () => {
         </div>
         
         <div className="space-y-6">
-          {itineraries.map((item) => (
-            <div key={item.id} className="flex flex-col">
+          {itineraries.map((item, index) => (
+            <div key={`${item.id}-${index}`} className="flex flex-col">
               <div className="flex">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-hotel-accent flex items-center justify-center text-hotel-dark">
                   {getIconForType(item.icon_type)}
@@ -284,7 +287,7 @@ const TravelPage = () => {
         {itineraries.length === 0 && (
           <div className="text-center py-8">
             <Calendar size={48} className="mx-auto mb-4 text-gray-300" />
-            <p className="text-gray-500">Программа путешествия будет создана на основе дат вашего пребывания</p>
+            <p className="text-gray-500">Программа путешествия создается на основе шаблонов для города {city}</p>
           </div>
         )}
       </div>
