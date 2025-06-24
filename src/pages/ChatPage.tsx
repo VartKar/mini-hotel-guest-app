@@ -1,76 +1,107 @@
 
-import React, { useState } from "react";
-import { Send, MessageCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Send, MessageCircle, User, Bot } from "lucide-react";
 
 const ChatPage = () => {
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([
-    { text: "Здравствуйте! Чем я могу вам помочь?", isUser: false }
-  ]);
+  const [activeTab, setActiveTab] = useState<'concierge' | 'travel'>('concierge');
 
-  const handleSendMessage = () => {
-    if (message.trim() === "") return;
-    
-    setMessages([...messages, { text: message, isUser: true }]);
-    setMessage("");
-    
-    // Simulate response
-    setTimeout(() => {
-      setMessages(prevMessages => [
-        ...prevMessages, 
-        { text: "Спасибо за ваше сообщение. Наш консьерж ответит вам в ближайшее время.", isUser: false }
-      ]);
-    }, 1000);
+  useEffect(() => {
+    // Initialize Jivochat when component mounts
+    if (window.jivo_api) {
+      window.jivo_api.open();
+    }
+  }, []);
+
+  const openJivochat = () => {
+    if (window.jivo_api) {
+      window.jivo_api.open();
+    } else {
+      console.log('Jivochat is loading...');
+    }
   };
 
   return (
     <div className="w-full max-w-md mx-auto pt-4 h-[calc(100vh-120px)] flex flex-col">
-      <h1 className="text-3xl font-light mb-6">Чат с консьержем</h1>
+      <h1 className="text-3xl font-light mb-6">Чат с поддержкой</h1>
       
-      <div className="flex-1 bg-white rounded-lg p-4 shadow-sm mb-4 overflow-y-auto">
-        <div className="space-y-4">
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-[80%] px-4 py-2 rounded-lg ${
-                  msg.isUser
-                    ? "bg-hotel-dark text-white"
-                    : "bg-hotel-accent text-hotel-dark"
-                }`}
-              >
-                {!msg.isUser && index === 0 && (
-                  <div className="flex items-center mb-2">
-                    <MessageCircle size={16} className="mr-2" />
-                    <span className="font-medium">Консьерж</span>
-                  </div>
-                )}
-                <p>{msg.text}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      <div className="bg-white rounded-lg shadow-sm p-3 flex items-center">
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Введите сообщение..."
-          className="flex-1 bg-transparent outline-none text-hotel-dark"
-        />
-        <button 
-          onClick={handleSendMessage}
-          className="ml-2 w-10 h-10 rounded-full bg-hotel-dark flex items-center justify-center text-white"
+      {/* Tab Navigation */}
+      <div className="flex mb-4 bg-white rounded-lg shadow-sm overflow-hidden">
+        <button
+          onClick={() => setActiveTab('concierge')}
+          className={`flex-1 px-4 py-3 flex items-center justify-center space-x-2 transition-colors ${
+            activeTab === 'concierge' 
+              ? 'bg-hotel-dark text-white' 
+              : 'bg-white text-hotel-dark hover:bg-hotel-accent'
+          }`}
         >
-          <Send size={18} />
+          <User size={18} />
+          <span>Консьерж</span>
         </button>
+        <button
+          onClick={() => setActiveTab('travel')}
+          className={`flex-1 px-4 py-3 flex items-center justify-center space-x-2 transition-colors ${
+            activeTab === 'travel' 
+              ? 'bg-hotel-dark text-white' 
+              : 'bg-white text-hotel-dark hover:bg-hotel-accent'
+          }`}
+        >
+          <Bot size={18} />
+          <span>Эксперт по путешествиям</span>
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
+        {activeTab === 'concierge' ? (
+          <ConciergeChat onOpenJivochat={openJivochat} />
+        ) : (
+          <TravelExpertChat />
+        )}
       </div>
     </div>
   );
 };
+
+const ConciergeChat = ({ onOpenJivochat }: { onOpenJivochat: () => void }) => {
+  return (
+    <div className="h-full flex flex-col items-center justify-center p-6 text-center">
+      <MessageCircle size={64} className="text-hotel-dark mb-4" />
+      <h3 className="text-xl font-medium mb-2">Чат с консьержем</h3>
+      <p className="text-gray-600 mb-6">
+        Свяжитесь с нашим консьержем для получения помощи и информации
+      </p>
+      <button
+        onClick={onOpenJivochat}
+        className="bg-hotel-dark text-white px-6 py-3 rounded-lg hover:bg-opacity-90 transition-colors flex items-center space-x-2"
+      >
+        <MessageCircle size={18} />
+        <span>Открыть чат</span>
+      </button>
+    </div>
+  );
+};
+
+const TravelExpertChat = () => {
+  return (
+    <div className="h-full">
+      <iframe
+        src="https://rubikinn.ru/webhook/de012477-bbe8-44fc-8b10-4ecadf13cd66/chat"
+        className="w-full h-full border-0"
+        title="Виртуальный эксперт по путешествиям"
+        allow="microphone; camera"
+      />
+    </div>
+  );
+};
+
+// Extend window interface for Jivochat
+declare global {
+  interface Window {
+    jivo_api?: {
+      open: () => void;
+      close: () => void;
+    };
+  }
+}
 
 export default ChatPage;
