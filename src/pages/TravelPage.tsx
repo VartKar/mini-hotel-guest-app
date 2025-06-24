@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { MapPin, Calendar, Sun, Compass, Check, X, PlusCircle, ShoppingBasket, ShoppingCart } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -24,10 +23,15 @@ const getIconForType = (iconType: string | null) => {
 
 const TravelPage = () => {
   const { roomData } = useRoomData();
+  
+  console.log('TravelPage - roomData:', roomData);
+  console.log('TravelPage - roomData.city:', roomData?.city);
+  
   const { itineraries, numberOfDays, updateItinerary, isLoading } = useTravelItinerary(
     roomData?.id_key || null,
     roomData?.check_in_date,
-    roomData?.check_out_date
+    roomData?.check_out_date,
+    roomData?.city || undefined // Pass the city from roomData
   );
 
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -37,8 +41,11 @@ const TravelPage = () => {
   const [customerComment, setCustomerComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const city = itineraries?.[0]?.city || 'Сочи';
+  const city = roomData?.city || itineraries?.[0]?.city || 'Сочи';
   const activitiesCount = itineraries.length;
+
+  console.log('TravelPage - final city used:', city);
+  console.log('TravelPage - itineraries count:', activitiesCount);
 
   const getDayLabel = (count: number) => {
     if (count === 1) return 'день';
@@ -102,6 +109,7 @@ const TravelPage = () => {
     setIsSubmitting(true);
     
     try {
+      console.log('Submitting travel service order...');
       // Prepare order data
       const selectedItineraries = itineraries.filter(item => selectedServices.includes(item.id));
       const services = selectedItineraries.map(item => ({
@@ -111,6 +119,15 @@ const TravelPage = () => {
       }));
       
       const totalPrice = calculateTotal();
+      
+      console.log('Order data:', {
+        customerName,
+        customerPhone,
+        customerComment,
+        services,
+        totalPrice,
+        bookingIdKey: roomData?.id_key
+      });
       
       // Call the edge function
       const { data, error } = await supabase.functions.invoke('submit-travel-order', {
@@ -123,6 +140,8 @@ const TravelPage = () => {
           bookingIdKey: roomData?.id_key || null
         }
       });
+
+      console.log('Edge function response:', { data, error });
 
       if (error) {
         throw error;
@@ -192,9 +211,7 @@ const TravelPage = () => {
           <div className="flex items-center">
             <Calendar className="mr-3 text-hotel-dark" size={24} />
             <h2 className="text-xl font-medium">
-              План поездки ({numberOfDays} {numberOfDays === 1 ? 'день' : 
-                numberOfDays > 1 && numberOfDays < 5 ? 'дня' : 'дней'}, {activitiesCount} {activitiesCount === 1 ? 'мероприятие' : 
-                activitiesCount > 1 && activitiesCount < 5 ? 'мероприятия' : 'мероприятий'})
+              План поездки ({numberOfDays} {getDayLabel(numberOfDays)}, {activitiesCount} {getActivityLabel(activitiesCount)})
             </h2>
           </div>
           {selectedServices.length > 0 && (
@@ -292,7 +309,6 @@ const TravelPage = () => {
         )}
       </div>
       
-      {/* Checkout Drawer */}
       {basketOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center p-4">
           <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">

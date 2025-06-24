@@ -41,12 +41,17 @@ const calculateDays = (checkIn: string | null, checkOut: string | null): number 
 
 // Helper function to select activities based on stay duration
 const selectActivitiesForStay = (templates: TravelItinerary[], numberOfDays: number, city: string): TravelItinerary[] => {
+  console.log('Selecting activities for city:', city, 'numberOfDays:', numberOfDays);
+  
   // Filter templates by city first
   const cityTemplates = templates.filter(template => 
     template.city === city || (!template.city && city === 'Сочи') // fallback for default city
   );
   
+  console.log('Found city templates:', cityTemplates.length);
+  
   if (cityTemplates.length === 0) {
+    console.log('No city templates found, using all templates as fallback');
     return templates.slice(0, numberOfDays); // fallback to any templates
   }
   
@@ -90,7 +95,7 @@ const selectActivitiesForStay = (templates: TravelItinerary[], numberOfDays: num
   return selectedActivities;
 };
 
-export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: string | null, checkOutDate: string | null) => {
+export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: string | null, checkOutDate: string | null, city?: string) => {
   const queryClient = useQueryClient();
   const numberOfDays = calculateDays(checkInDate, checkOutDate);
   const [selectedActivities, setSelectedActivities] = useState<TravelItinerary[]>([]);
@@ -99,13 +104,18 @@ export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: str
   const { data: templateItineraries, isLoading } = useQuery({
     queryKey: ['travel-itinerary-templates'],
     queryFn: async () => {
+      console.log('Fetching travel itinerary templates...');
       const { data, error } = await supabase
         .from('travel_itineraries')
         .select('*')
         .is('booking_id_key', null)
         .order('day_number');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching templates:', error);
+        throw error;
+      }
+      console.log('Fetched templates:', data?.length || 0);
       return data as TravelItinerary[];
     },
   });
@@ -129,11 +139,12 @@ export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: str
   // Select activities when templates are loaded or parameters change
   useEffect(() => {
     if (templateItineraries && templateItineraries.length > 0) {
-      const city = 'Сочи'; // Default city for MVP, can be extracted from roomData later
-      const activities = selectActivitiesForStay(templateItineraries, numberOfDays, city);
+      const targetCity = city || 'Сочи'; // Use provided city or default to Сочи
+      console.log('Selecting activities for target city:', targetCity);
+      const activities = selectActivitiesForStay(templateItineraries, numberOfDays, targetCity);
       setSelectedActivities(activities);
     }
-  }, [templateItineraries, numberOfDays]);
+  }, [templateItineraries, numberOfDays, city]);
 
   return {
     itineraries: selectedActivities,

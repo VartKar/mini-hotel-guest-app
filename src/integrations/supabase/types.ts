@@ -18,6 +18,7 @@ export type Database = {
           check_in_date: string | null
           check_out_date: string | null
           checkout_time: string | null
+          city: string | null
           coffee_instructions: string | null
           extra_bed_info: string | null
           guest_email: string | null
@@ -59,6 +60,7 @@ export type Database = {
           check_in_date?: string | null
           check_out_date?: string | null
           checkout_time?: string | null
+          city?: string | null
           coffee_instructions?: string | null
           extra_bed_info?: string | null
           guest_email?: string | null
@@ -100,6 +102,7 @@ export type Database = {
           check_in_date?: string | null
           check_out_date?: string | null
           checkout_time?: string | null
+          city?: string | null
           coffee_instructions?: string | null
           extra_bed_info?: string | null
           guest_email?: string | null
