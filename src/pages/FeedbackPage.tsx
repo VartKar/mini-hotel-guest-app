@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { User, Mail, LogOut, Loader2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
@@ -40,6 +39,8 @@ const PersonalAccountPage = () => {
         ...prev,
         name: roomData.guest_name || prev.name,
         roomNumber: roomData.room_number || prev.roomNumber,
+        checkInDate: roomData.check_in_date || prev.checkInDate,
+        checkOutDate: roomData.check_out_date || prev.checkOutDate,
       }));
     }
   }, [roomData]);
