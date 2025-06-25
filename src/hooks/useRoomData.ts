@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -23,7 +22,7 @@ export interface RoomData {
   parking_info: string | null;
   extra_bed_info: string | null;
   apartment_name: string | null;
-  // New host management fields
+  // Host management fields
   host_id: string | null;
   host_name: string | null;
   host_email: string | null;
@@ -32,7 +31,7 @@ export interface RoomData {
   property_manager_name: string | null;
   property_manager_phone: string | null;
   property_manager_email: string | null;
-  // New visibility control fields
+  // Visibility control fields
   visible_to_guests: boolean | null;
   visible_to_hosts: boolean | null;
   visible_to_admin: boolean | null;
@@ -42,10 +41,12 @@ export interface RoomData {
   last_updated_at: string | null;
   notes_internal: string | null;
   notes_for_guests: string | null;
-  // New main image field
+  // Main image field
   main_image_url: string | null;
-  // Add city field to match the database schema
+  // City field
   city: string | null;
+  // NEW: Number of guests field
+  number_of_guests: number | null;
 }
 
 let globalRoomData: RoomData | null = null;

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { MapPin, Calendar, Sun, Compass, Check, X, PlusCircle, ShoppingBasket, ShoppingCart } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useTravelItinerary } from "@/hooks/useTravelItinerary";
+import { useTravelServices, TravelServiceWithPrice } from "@/hooks/useTravelServices";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -31,8 +33,14 @@ const TravelPage = () => {
     roomData?.id_key || null,
     roomData?.check_in_date,
     roomData?.check_out_date,
-    roomData?.city || undefined // Pass the city from roomData
+    roomData?.city || undefined
   );
+
+  const city = roomData?.city || 'Сочи';
+  const propertyId = roomData?.property_id;
+  
+  // Fetch available travel services
+  const { data: travelServices, isLoading: servicesLoading } = useTravelServices(city, propertyId);
 
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [basketOpen, setBasketOpen] = useState(false);
@@ -41,7 +49,6 @@ const TravelPage = () => {
   const [customerComment, setCustomerComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const city = roomData?.city || itineraries?.[0]?.city || 'Сочи';
   const activitiesCount = itineraries.length;
 
   console.log('TravelPage - final city used:', city);
@@ -74,19 +81,20 @@ const TravelPage = () => {
       }
     });
     
-    const itinerary = itineraries.find(item => item.id === id);
+    const service = travelServices?.find(item => item.id === id);
     toast(selectedServices.includes(id) ? 
       "Услуга удалена из выбранных" : 
       "Услуга добавлена в выбранных", {
-      description: itinerary?.service_title || ''
+      description: service?.title || ''
     });
   };
 
   // Calculate total price
   const calculateTotal = () => {
+    if (!travelServices) return 0;
     return selectedServices.reduce((total, id) => {
-      const itinerary = itineraries.find(item => item.id === id);
-      return total + (itinerary?.service_price || 0);
+      const service = travelServices.find(item => item.id === id);
+      return total + (service?.final_price || 0);
     }, 0);
   };
 
@@ -110,12 +118,16 @@ const TravelPage = () => {
     
     try {
       console.log('Submitting travel service order...');
-      // Prepare order data
-      const selectedItineraries = itineraries.filter(item => selectedServices.includes(item.id));
-      const services = selectedItineraries.map(item => ({
-        day: `День ${item.day_number}`,
-        title: item.service_title,
-        price: `${item.service_price} ₽`
+      
+      if (!travelServices) {
+        throw new Error('Travel services not loaded');
+      }
+      
+      const selectedTravelServices = travelServices.filter(item => selectedServices.includes(item.id));
+      const services = selectedTravelServices.map(item => ({
+        title: item.title,
+        price: `${item.final_price} ₽`,
+        category: item.category || 'Общее'
       }));
       
       const totalPrice = calculateTotal();
@@ -129,7 +141,6 @@ const TravelPage = () => {
         bookingIdKey: roomData?.id_key
       });
       
-      // Call the edge function
       const { data, error } = await supabase.functions.invoke('submit-travel-order', {
         body: {
           customerName,
@@ -172,7 +183,7 @@ const TravelPage = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || servicesLoading) {
     return (
       <div className="w-full max-w-md mx-auto pt-4">
         <div className="text-center py-8">
@@ -301,6 +312,43 @@ const TravelPage = () => {
           ))}
         </div>
 
+        {/* Additional Travel Services Section */}
+        {travelServices && travelServices.length > 0 && (
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <h3 className="text-lg font-medium mb-4 flex items-center">
+              <Sun className="mr-2" size={20} />
+              Дополнительные услуги
+            </h3>
+            <div className="space-y-3">
+              {travelServices.map((service) => (
+                <div key={service.id} className={`border rounded-lg p-3 ${selectedServices.includes(service.id) ? 'border-hotel-accent bg-hotel-accent bg-opacity-10' : 'border-gray-200'}`}>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="font-medium">{service.title}</div>
+                      <div className="text-sm text-hotel-neutral">{service.description}</div>
+                      <div className="text-sm text-gray-500 mt-1">
+                        {service.category && <span className="mr-3">Категория: {service.category}</span>}
+                        {service.duration_hours && <span className="mr-3">Длительность: {service.duration_hours}ч</span>}
+                        {service.difficulty_level && <span>Сложность: {service.difficulty_level}</span>}
+                      </div>
+                      <div className="text-sm font-medium text-hotel-dark mt-1">
+                        {service.final_price} ₽
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => toggleServiceSelection(service.id)} 
+                      className={`ml-2 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${selectedServices.includes(service.id) ? 'bg-hotel-accent text-hotel-dark' : 'bg-gray-100 text-gray-400'}`}
+                      disabled={!service.is_available}
+                    >
+                      {selectedServices.includes(service.id) ? <Check size={16} /> : <PlusCircle size={16} />}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {itineraries.length === 0 && (
           <div className="text-center py-8">
             <Calendar size={48} className="mx-auto mb-4 text-gray-300" />
@@ -343,16 +391,25 @@ const TravelPage = () => {
                   <div className="mb-6">
                     <h3 className="text-sm font-medium mb-2 text-gray-500">Выбранные услуги</h3>
                     {selectedServices.map(id => {
-                      const item = itineraries.find(i => i.id === id);
+                      // Look in both itineraries and travel services
+                      const itineraryItem = itineraries.find(i => i.id === id);
+                      const serviceItem = travelServices?.find(s => s.id === id);
+                      const item = itineraryItem || serviceItem;
+                      
                       if (!item) return null;
+                      
+                      const title = 'service_title' in item ? item.service_title : item.title;
+                      const price = 'service_price' in item ? item.service_price : item.final_price;
+                      
                       return (
                         <div key={`checkout-${id}`} className="flex justify-between items-center py-3 border-b">
                           <div>
-                            <div className="font-medium">{item.service_title}</div>
-                            <div className="text-sm text-gray-500">День {item.day_number}</div>
+                            <div className="font-medium">{title}</div>
+                            {'day_number' in item && <div className="text-sm text-gray-500">День {item.day_number}</div>}
+                            {'category' in item && item.category && <div className="text-sm text-gray-500">{item.category}</div>}
                           </div>
                           <div className="flex items-center">
-                            <div className="font-medium mr-3">{item.service_price} ₽</div>
+                            <div className="font-medium mr-3">{price} ₽</div>
                             <button 
                               onClick={() => toggleServiceSelection(id)} 
                               className="w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 text-gray-500 hover:bg-gray-200"

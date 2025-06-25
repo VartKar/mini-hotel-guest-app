@@ -35,6 +35,7 @@ export type Database = {
           main_image_url: string | null
           notes_for_guests: string | null
           notes_internal: string | null
+          number_of_guests: number | null
           parking_info: string | null
           pets_info: string | null
           property_id: string | null
@@ -77,6 +78,7 @@ export type Database = {
           main_image_url?: string | null
           notes_for_guests?: string | null
           notes_internal?: string | null
+          number_of_guests?: number | null
           parking_info?: string | null
           pets_info?: string | null
           property_id?: string | null
@@ -119,6 +121,7 @@ export type Database = {
           main_image_url?: string | null
           notes_for_guests?: string | null
           notes_internal?: string | null
+          number_of_guests?: number | null
           parking_info?: string | null
           pets_info?: string | null
           property_id?: string | null
@@ -171,6 +174,118 @@ export type Database = {
           request_type?: string
           status?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      property_item_pricing: {
+        Row: {
+          created_at: string
+          id: string
+          is_available: boolean
+          price_override: number
+          property_id: string
+          shop_item_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          price_override: number
+          property_id: string
+          shop_item_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          price_override?: number
+          property_id?: string
+          shop_item_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_item_pricing_shop_item_id_fkey"
+            columns: ["shop_item_id"]
+            isOneToOne: false
+            referencedRelation: "shop_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_service_pricing: {
+        Row: {
+          created_at: string
+          id: string
+          is_available: boolean
+          price_override: number
+          property_id: string
+          travel_service_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          price_override: number
+          property_id: string
+          travel_service_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          price_override?: number
+          property_id?: string
+          travel_service_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_service_pricing_travel_service_id_fkey"
+            columns: ["travel_service_id"]
+            isOneToOne: false
+            referencedRelation: "travel_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_items: {
+        Row: {
+          base_price: number
+          category: string
+          city: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          base_price: number
+          category: string
+          city?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          base_price?: number
+          category?: string
+          city?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -332,6 +447,48 @@ export type Database = {
             referencedColumns: ["id_key"]
           },
         ]
+      }
+      travel_services: {
+        Row: {
+          base_price: number
+          category: string | null
+          city: string
+          created_at: string
+          description: string | null
+          difficulty_level: string | null
+          duration_hours: number | null
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          base_price: number
+          category?: string | null
+          city?: string
+          created_at?: string
+          description?: string | null
+          difficulty_level?: string | null
+          duration_hours?: number | null
+          id?: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          base_price?: number
+          category?: string | null
+          city?: string
+          created_at?: string
+          description?: string | null
+          difficulty_level?: string | null
+          duration_hours?: number | null
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
