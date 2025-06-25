@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -45,7 +46,7 @@ export interface RoomData {
   main_image_url: string | null;
   // City field
   city: string | null;
-  // NEW: Number of guests field
+  // Number of guests field
   number_of_guests: number | null;
 }
 
@@ -59,6 +60,43 @@ const notifyListeners = () => {
 
 // Specific ID for the default demonstration record
 const DEMO_RECORD_ID = 'c10fe304-7db8-4ee3-a72a-f9dc5418ceac';
+
+// Storage keys
+const STORAGE_KEYS = {
+  ROOM_DATA: 'rubikinn_room_data',
+  IS_PERSONALIZED: 'rubikinn_is_personalized'
+};
+
+// Load data from localStorage
+const loadFromStorage = () => {
+  try {
+    const storedRoomData = localStorage.getItem(STORAGE_KEYS.ROOM_DATA);
+    const storedIsPersonalized = localStorage.getItem(STORAGE_KEYS.IS_PERSONALIZED);
+    
+    if (storedRoomData && storedIsPersonalized) {
+      globalRoomData = JSON.parse(storedRoomData);
+      globalIsPersonalized = storedIsPersonalized === 'true';
+      return true;
+    }
+  } catch (error) {
+    console.error('Error loading data from localStorage:', error);
+  }
+  return false;
+};
+
+// Save data to localStorage
+const saveToStorage = (roomData: RoomData | null, isPersonalized: boolean) => {
+  try {
+    if (roomData) {
+      localStorage.setItem(STORAGE_KEYS.ROOM_DATA, JSON.stringify(roomData));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
+    }
+    localStorage.setItem(STORAGE_KEYS.IS_PERSONALIZED, isPersonalized.toString());
+  } catch (error) {
+    console.error('Error saving data to localStorage:', error);
+  }
+};
 
 export const useRoomData = () => {
   const [roomData, setRoomData] = useState<RoomData | null>(globalRoomData);
@@ -79,7 +117,15 @@ export const useRoomData = () => {
   }, []);
 
   useEffect(() => {
-    if (!globalRoomData) {
+    // Try to load from storage first
+    const hasStoredData = loadFromStorage();
+    
+    if (hasStoredData) {
+      setRoomData(globalRoomData);
+      setIsPersonalized(globalIsPersonalized);
+      setLoading(false);
+      notifyListeners();
+    } else if (!globalRoomData) {
       fetchDefaultData();
     }
   }, []);
@@ -105,6 +151,7 @@ export const useRoomData = () => {
       globalIsPersonalized = false;
       setRoomData(data);
       setIsPersonalized(false);
+      saveToStorage(data, false);
       notifyListeners();
     } catch (err) {
       console.error('Unexpected error:', err);
@@ -141,6 +188,7 @@ export const useRoomData = () => {
       globalIsPersonalized = true;
       setRoomData(data);
       setIsPersonalized(true);
+      saveToStorage(data, true);
       notifyListeners();
       return true;
     } catch (err) {
@@ -153,6 +201,9 @@ export const useRoomData = () => {
   };
 
   const logOut = () => {
+    // Clear storage and reset to default
+    localStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
+    localStorage.removeItem(STORAGE_KEYS.IS_PERSONALIZED);
     fetchDefaultData();
   };
 
