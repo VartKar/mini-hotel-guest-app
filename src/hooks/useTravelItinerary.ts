@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,12 +30,48 @@ export interface TravelItineraryWithIcon extends TravelItinerary {
 const calculateDays = (checkIn: string | null, checkOut: string | null): number => {
   if (!checkIn || !checkOut) return 3; // Default to 3 days
   
-  const start = new Date(checkIn);
-  const end = new Date(checkOut);
-  const diffTime = Math.abs(end.getTime() - start.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  console.log('Calculating days between:', checkIn, 'and', checkOut);
   
-  return diffDays > 0 ? diffDays : 3;
+  // Handle different date formats
+  let startDate: Date;
+  let endDate: Date;
+  
+  try {
+    // Try parsing as ISO date first (YYYY-MM-DD)
+    if (checkIn.includes('-') && checkIn.length >= 10) {
+      startDate = new Date(checkIn);
+    } else {
+      // Try parsing as DD.MM.YYYY format
+      const [day, month, year] = checkIn.split('.');
+      startDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }
+    
+    if (checkOut.includes('-') && checkOut.length >= 10) {
+      endDate = new Date(checkOut);
+    } else {
+      // Try parsing as DD.MM.YYYY format
+      const [day, month, year] = checkOut.split('.');
+      endDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }
+    
+    console.log('Parsed dates:', startDate, endDate);
+    
+    // Check if dates are valid
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      console.log('Invalid dates, using default 3 days');
+      return 3;
+    }
+    
+    const diffTime = endDate.getTime() - startDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    console.log('Calculated days:', diffDays);
+    
+    return diffDays > 0 ? diffDays : 3;
+  } catch (error) {
+    console.error('Error calculating days:', error);
+    return 3;
+  }
 };
 
 // Helper function to select activities based on stay duration
