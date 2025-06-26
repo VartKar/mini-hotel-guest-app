@@ -48,13 +48,16 @@ const FeedbackTab = ({
     }
 
     try {
+      // Ensure we always have a valid customer name
+      const customerName = roomData?.guest_name || 'Гость';
+      
       // Store feedback in database
       const feedbackData = {
-        booking_id_key: roomData?.id_key || null,
-        customer_name: roomData?.guest_name || 'Гость',
+        bookingIdKey: roomData?.id_key || null,
+        customerName: customerName,
         rating: feedbackForm.rating,
         message: feedbackForm.message,
-        room_number: roomData?.room_number || null
+        roomNumber: roomData?.room_number || null
       };
 
       console.log('Submitting feedback:', feedbackData);

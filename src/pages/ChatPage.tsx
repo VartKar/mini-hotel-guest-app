@@ -83,13 +83,32 @@ const ConciergeChat = ({ onOpenJivochat }: { onOpenJivochat: () => void }) => {
 
 const TravelExpertChat = () => {
   return (
-    <div className="h-full">
-      <iframe
-        src="https://rubikinn.ru/webhook/de012477-bbe8-44fc-8b10-4ecadf13cd66/chat"
-        className="w-full h-full border-0"
-        title="Виртуальный эксперт по путешествиям"
-        allow="microphone; camera"
-      />
+    <div className="h-full flex flex-col">
+      {/* Compact header for mobile */}
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 text-center">
+        <h3 className="text-sm font-medium">AI эксперт по путешествиям</h3>
+      </div>
+      
+      {/* Chat iframe with custom styling to hide default text */}
+      <div className="flex-1 relative">
+        <iframe
+          src="https://rubikinn.ru/webhook/de012477-bbe8-44fc-8b10-4ecadf13cd66/chat"
+          className="w-full h-full border-0"
+          title="Виртуальный эксперт по путешествиям"
+          allow="microphone; camera"
+          style={{
+            minHeight: '400px'
+          }}
+        />
+        
+        {/* Loading state overlay */}
+        <div className="absolute inset-0 bg-gray-50 flex items-center justify-center text-gray-500 pointer-events-none opacity-0 transition-opacity duration-300" id="chat-loading">
+          <div className="text-center">
+            <Bot size={32} className="mx-auto mb-2 text-blue-500" />
+            <p className="text-sm">Загрузка чата...</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
