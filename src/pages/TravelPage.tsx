@@ -1,8 +1,9 @@
 
 import React, { useState } from "react";
-import { MapPin, Calendar, Sun, Compass, Check, X, PlusCircle, ShoppingBasket, ShoppingCart } from "lucide-react";
+import { MapPin, Calendar, Sun, Compass, Check, PlusCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
 import { toast } from "@/components/ui/sonner";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useTravelItinerary } from "@/hooks/useTravelItinerary";
@@ -26,9 +27,6 @@ const getIconForType = (iconType: string | null) => {
 const TravelPage = () => {
   const { roomData } = useRoomData();
   
-  console.log('TravelPage - roomData:', roomData);
-  console.log('TravelPage - roomData.city:', roomData?.city);
-  
   const { itineraries, numberOfDays, updateItinerary, isLoading } = useTravelItinerary(
     roomData?.id_key || null,
     roomData?.check_in_date,
@@ -42,17 +40,28 @@ const TravelPage = () => {
   // Fetch available travel services
   const { data: travelServices, isLoading: servicesLoading } = useTravelServices(city, propertyId);
 
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [basketOpen, setBasketOpen] = useState(false);
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [customerComment, setCustomerComment] = useState("");
+  const [selectedService, setSelectedService] = useState<any>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [contactInfo, setContactInfo] = useState({
+    name: "",
+    roomNumber: "",
+    phone: "",
+    comment: ""
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const activitiesCount = itineraries.length;
 
-  console.log('TravelPage - final city used:', city);
-  console.log('TravelPage - itineraries count:', activitiesCount);
+  // Pre-fill with room data if available
+  React.useEffect(() => {
+    if (roomData) {
+      setContactInfo(prev => ({
+        ...prev,
+        name: roomData.guest_name || prev.name,
+        roomNumber: roomData.room_number || prev.roomNumber,
+      }));
+    }
+  }, [roomData]);
 
   const getDayLabel = (count: number) => {
     if (count === 1) return 'день';
@@ -71,113 +80,76 @@ const TravelPage = () => {
     updateItinerary({ id, updates: { [field]: value } });
   };
 
-  // Toggle service selection
-  const toggleServiceSelection = (id: string) => {
-    setSelectedServices(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(serviceId => serviceId !== id);
-      } else {
-        return [...prev, id];
-      }
-    });
-    
-    const service = travelServices?.find(item => item.id === id);
-    toast(selectedServices.includes(id) ? 
-      "Услуга удалена из выбранных" : 
-      "Услуга добавлена в выбранных", {
-      description: service?.title || ''
+  // Handle service click - open order drawer
+  const handleServiceClick = (service: any) => {
+    setSelectedService(service);
+    setIsDrawerOpen(true);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setContactInfo({
+      ...contactInfo,
+      [name]: value
     });
   };
 
-  // Calculate total price
-  const calculateTotal = () => {
-    if (!travelServices) return 0;
-    return selectedServices.reduce((total, id) => {
-      const service = travelServices.find(item => item.id === id);
-      return total + (service?.final_price || 0);
-    }, 0);
-  };
-
-  // Handle submission of selected services
-  const handleSubmitServices = async () => {
-    if (selectedServices.length === 0) {
-      toast("Нет выбранных услуг", {
-        description: "Пожалуйста, выберите хотя бы одну услугу."
-      });
+  // Handle submission of selected service
+  const handleSubmitOrder = async () => {
+    if (!contactInfo.name || !contactInfo.phone) {
+      toast.error("Пожалуйста, заполните все обязательные поля");
       return;
     }
     
-    if (!customerName || !customerPhone) {
-      toast("Заполните обязательные поля", {
-        description: "Имя и телефон обязательны для заказа услуг."
-      });
+    if (!selectedService) {
+      toast.error("Услуга не выбрана");
       return;
     }
     
     setIsSubmitting(true);
     
     try {
-      console.log('Submitting travel service order...');
+      const service = {
+        title: 'service_title' in selectedService ? selectedService.service_title : selectedService.title,
+        price: `${'service_price' in selectedService ? selectedService.service_price : selectedService.final_price} ₽`,
+        category: selectedService.category || 'Общее'
+      };
       
-      if (!travelServices) {
-        throw new Error('Travel services not loaded');
-      }
+      const totalPrice = 'service_price' in selectedService ? selectedService.service_price : selectedService.final_price;
       
-      const selectedTravelServices = travelServices.filter(item => selectedServices.includes(item.id));
-      const services = selectedTravelServices.map(item => ({
-        title: item.title,
-        price: `${item.final_price} ₽`,
-        category: item.category || 'Общее'
-      }));
-      
-      const totalPrice = calculateTotal();
-      
-      console.log('Order data:', {
-        customerName,
-        customerPhone,
-        customerComment,
-        services,
+      const orderData = {
+        customerName: contactInfo.name,
+        customerPhone: contactInfo.phone,
+        customerComment: contactInfo.comment,
+        services: [service],
         totalPrice,
-        bookingIdKey: roomData?.id_key
-      });
-      
-      const { data, error } = await supabase.functions.invoke('submit-travel-order', {
-        body: {
-          customerName,
-          customerPhone,
-          customerComment,
-          services,
-          totalPrice,
-          bookingIdKey: roomData?.id_key || null
-        }
-      });
+        bookingIdKey: roomData?.id_key || null
+      };
 
-      console.log('Edge function response:', { data, error });
+      const { data, error } = await supabase.functions.invoke('submit-travel-order', {
+        body: orderData
+      });
 
       if (error) {
         throw error;
       }
 
       if (data.success) {
-        toast("Заказ успешно отправлен", {
-          description: "Мы свяжемся с вами в ближайшее время для подтверждения заказа."
-        });
-        
+        toast.success("Ваш заказ успешно отправлен!");
+        setIsDrawerOpen(false);
+        setSelectedService(null);
         // Reset form
-        setSelectedServices([]);
-        setCustomerName("");
-        setCustomerPhone("");
-        setCustomerComment("");
-        setBasketOpen(false);
+        setContactInfo(prev => ({
+          ...prev,
+          comment: ""
+        }));
       } else {
         throw new Error(data.error || 'Failed to submit order');
       }
       
     } catch (error) {
       console.error("Error submitting order:", error);
-      toast("Ошибка при отправке заказа", {
-        description: "Пожалуйста, попробуйте позже."
-      });
+      toast.error("Ошибка при отправке заказа. Попробуйте еще раз.");
     } finally {
       setIsSubmitting(false);
     }
@@ -198,42 +170,22 @@ const TravelPage = () => {
     <div className="w-full max-w-md mx-auto pt-4">
       <h1 className="text-3xl font-light mb-6">Путешествие в г. {city}</h1>
       
-      {/* Banner with basket counter */}
-      <div className="w-full h-48 mb-6 rounded-lg bg-cover bg-center relative" style={{
+      {/* Banner */}
+      <div className="w-full h-48 mb-6 rounded-lg bg-cover bg-center" style={{
         backgroundImage: "url('https://images.unsplash.com/photo-1527631746610-bca00a040d60?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80')"
       }}>
-        <div className="w-full h-full flex items-end justify-end p-4">
-          {selectedServices.length > 0 && (
-            <button 
-              onClick={() => setBasketOpen(true)}
-              className="bg-hotel-accent text-hotel-dark px-3 py-1 rounded-full text-xs flex items-center"
-            >
-              <ShoppingCart size={16} className="mr-1" />
-              {selectedServices.length} {selectedServices.length === 1 ? 'услуга' : 
-                (selectedServices.length >= 2 && selectedServices.length <= 4) ? 'услуги' : 'услуг'}
-            </button>
-          )}
+        <div className="w-full h-full flex items-center justify-center bg-black/30 rounded-lg">
+          <h2 className="text-white text-xl font-medium">Ваше путешествие</h2>
         </div>
       </div>
       
       {/* Travel plan with activities from templates */}
       <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
-        <div className="flex items-center mb-4 justify-between">
-          <div className="flex items-center">
-            <Calendar className="mr-3 text-hotel-dark" size={24} />
-            <h2 className="text-xl font-medium">
-              План поездки ({numberOfDays} {getDayLabel(numberOfDays)}, {activitiesCount} {getActivityLabel(activitiesCount)})
-            </h2>
-          </div>
-          {selectedServices.length > 0 && (
-            <div 
-              onClick={() => setBasketOpen(true)}
-              className="text-sm font-medium text-hotel-dark flex items-center cursor-pointer hover:text-hotel-accent transition-colors"
-            >
-              <ShoppingBasket size={18} className="mr-1" />
-              Выбрано: {selectedServices.length}
-            </div>
-          )}
+        <div className="flex items-center mb-4">
+          <Calendar className="mr-3 text-hotel-dark" size={24} />
+          <h2 className="text-xl font-medium">
+            План поездки ({numberOfDays} {getDayLabel(numberOfDays)}, {activitiesCount} {getActivityLabel(activitiesCount)})
+          </h2>
         </div>
         
         <div className="space-y-6">
@@ -273,7 +225,7 @@ const TravelPage = () => {
               
               {item.service_title && item.is_service_available && (
                 <div className="ml-14 mt-2">
-                  <div className={`border rounded-lg p-3 mt-2 ${selectedServices.includes(item.id) ? 'border-hotel-accent bg-hotel-accent bg-opacity-10' : 'border-gray-200'}`}>
+                  <div className="border rounded-lg p-3 mt-2 border-gray-200">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="font-medium p-1 rounded focus:bg-gray-50 focus:outline-none" 
@@ -299,10 +251,10 @@ const TravelPage = () => {
                         </div>
                       </div>
                       <button 
-                        onClick={() => toggleServiceSelection(item.id)} 
-                        className={`ml-2 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${selectedServices.includes(item.id) ? 'bg-hotel-accent text-hotel-dark' : 'bg-gray-100 text-gray-400'}`}
+                        onClick={() => handleServiceClick(item)} 
+                        className="ml-2 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-hotel-dark text-white"
                       >
-                        {selectedServices.includes(item.id) ? <Check size={16} /> : <PlusCircle size={16} />}
+                        <PlusCircle size={16} />
                       </button>
                     </div>
                   </div>
@@ -321,7 +273,7 @@ const TravelPage = () => {
             </h3>
             <div className="space-y-3">
               {travelServices.map((service) => (
-                <div key={service.id} className={`border rounded-lg p-3 ${selectedServices.includes(service.id) ? 'border-hotel-accent bg-hotel-accent bg-opacity-10' : 'border-gray-200'}`}>
+                <div key={service.id} className="border rounded-lg p-3 border-gray-200">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="font-medium">{service.title}</div>
@@ -336,11 +288,11 @@ const TravelPage = () => {
                       </div>
                     </div>
                     <button 
-                      onClick={() => toggleServiceSelection(service.id)} 
-                      className={`ml-2 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${selectedServices.includes(service.id) ? 'bg-hotel-accent text-hotel-dark' : 'bg-gray-100 text-gray-400'}`}
+                      onClick={() => handleServiceClick(service)} 
+                      className="ml-2 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-hotel-dark text-white"
                       disabled={!service.is_available}
                     >
-                      {selectedServices.includes(service.id) ? <Check size={16} /> : <PlusCircle size={16} />}
+                      <PlusCircle size={16} />
                     </button>
                   </div>
                 </div>
@@ -357,133 +309,90 @@ const TravelPage = () => {
         )}
       </div>
       
-      {basketOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-medium flex items-center">
-                  <ShoppingBasket className="mr-2" size={24} />
-                  Ваш заказ
-                </h2>
-                <button 
-                  onClick={() => setBasketOpen(false)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 text-gray-500 hover:bg-gray-200"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              
-              {selectedServices.length === 0 ? (
-                <div className="text-center py-8">
-                  <ShoppingCart size={48} className="mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500">Ваша корзина пуста</p>
-                  <Button 
-                    variant="outline" 
-                    className="mt-4"
-                    onClick={() => setBasketOpen(false)}
-                  >
-                    Выбрать услуги
-                  </Button>
+      {/* Order Drawer */}
+      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+        <DrawerContent className="px-4">
+          <DrawerHeader>
+            <DrawerTitle>Заказ услуги</DrawerTitle>
+          </DrawerHeader>
+          
+          <div className="space-y-4 py-4">
+            {selectedService && (
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <span className="block font-medium">
+                      {'service_title' in selectedService ? selectedService.service_title : selectedService.title}
+                    </span>
+                    {'day_number' in selectedService && (
+                      <span className="text-sm text-gray-500">День {selectedService.day_number}</span>
+                    )}
+                    {selectedService.category && (
+                      <span className="text-sm text-gray-500">{selectedService.category}</span>
+                    )}
+                    <p className="text-sm text-gray-600 mt-1">
+                      {'service_description' in selectedService ? selectedService.service_description : selectedService.description}
+                    </p>
+                  </div>
+                  <span className="font-medium text-lg">
+                    {'service_price' in selectedService ? selectedService.service_price : selectedService.final_price}₽
+                  </span>
                 </div>
-              ) : (
-                <>
-                  <div className="mb-6">
-                    <h3 className="text-sm font-medium mb-2 text-gray-500">Выбранные услуги</h3>
-                    {selectedServices.map(id => {
-                      // Look in both itineraries and travel services
-                      const itineraryItem = itineraries.find(i => i.id === id);
-                      const serviceItem = travelServices?.find(s => s.id === id);
-                      const item = itineraryItem || serviceItem;
-                      
-                      if (!item) return null;
-                      
-                      const title = 'service_title' in item ? item.service_title : item.title;
-                      const price = 'service_price' in item ? item.service_price : item.final_price;
-                      
-                      return (
-                        <div key={`checkout-${id}`} className="flex justify-between items-center py-3 border-b">
-                          <div>
-                            <div className="font-medium">{title}</div>
-                            {'day_number' in item && <div className="text-sm text-gray-500">День {item.day_number}</div>}
-                            {'category' in item && item.category && <div className="text-sm text-gray-500">{item.category}</div>}
-                          </div>
-                          <div className="flex items-center">
-                            <div className="font-medium mr-3">{price} ₽</div>
-                            <button 
-                              onClick={() => toggleServiceSelection(id)} 
-                              className="w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 text-gray-500 hover:bg-gray-200"
-                            >
-                              <X size={12} />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div className="flex justify-between items-center pt-4 font-medium">
-                      <div>Итого:</div>
-                      <div className="text-lg">{calculateTotal().toLocaleString()} ₽</div>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <h3 className="text-sm font-medium mb-3 text-gray-500">Информация для заказа</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <label htmlFor="name" className="block text-sm font-medium mb-1">Имя *</label>
-                        <Input 
-                          id="name" 
-                          value={customerName} 
-                          onChange={e => setCustomerName(e.target.value)}
-                          placeholder="Введите ваше имя"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="phone" className="block text-sm font-medium mb-1">Телефон *</label>
-                        <Input 
-                          id="phone" 
-                          value={customerPhone} 
-                          onChange={e => setCustomerPhone(e.target.value)}
-                          placeholder="+7 (___) ___-__-__"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="comment" className="block text-sm font-medium mb-1">Комментарий</label>
-                        <Textarea 
-                          id="comment" 
-                          value={customerComment} 
-                          onChange={e => setCustomerComment(e.target.value)}
-                          placeholder="Дополнительная информация к заказу"
-                          rows={3}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-3">
-                    <Button 
-                      variant="outline" 
-                      className="flex-1"
-                      onClick={() => setBasketOpen(false)}
-                    >
-                      Отмена
-                    </Button>
-                    <Button 
-                      className="flex-1 bg-hotel-dark text-white"
-                      onClick={handleSubmitServices}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? 'Отправка...' : 'Отправить заказ'}
-                    </Button>
-                  </div>
-                </>
-              )}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <h3 className="font-medium">Контактная информация</h3>
+              <input
+                type="text"
+                name="name"
+                value={contactInfo.name}
+                onChange={handleInputChange}
+                placeholder="Ваше имя"
+                className="w-full px-4 py-2 border rounded-md"
+              />
+              <input
+                type="text"
+                name="roomNumber"
+                value={contactInfo.roomNumber}
+                onChange={handleInputChange}
+                placeholder="Номер комнаты"
+                className="w-full px-4 py-2 border rounded-md"
+              />
+              <input
+                type="tel"
+                name="phone"
+                value={contactInfo.phone}
+                onChange={handleInputChange}
+                placeholder="Контактный телефон"
+                className="w-full px-4 py-2 border rounded-md"
+              />
+              <textarea
+                name="comment"
+                value={contactInfo.comment}
+                onChange={handleInputChange}
+                placeholder="Комментарий (необязательно)"
+                className="w-full px-4 py-2 border rounded-md"
+                rows={3}
+              />
             </div>
           </div>
-        </div>
-      )}
+
+          <DrawerFooter>
+            <Button 
+              onClick={handleSubmitOrder} 
+              className="w-full"
+              disabled={isSubmitting}
+            >
+              <Check className="mr-2" size={18} />
+              {isSubmitting ? 'Отправка...' : 'Отправить заказ'}
+            </Button>
+            <Button variant="outline" onClick={() => setIsDrawerOpen(false)}>
+              Отмена
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };
