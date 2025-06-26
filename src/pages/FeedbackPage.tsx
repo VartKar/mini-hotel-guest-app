@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { User, Mail, LogOut, Loader2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
@@ -125,6 +126,37 @@ const PersonalAccountPage = () => {
           <ExternalLink className="w-3 h-3" />
         </a>
       </div>
+
+      {/* Compact login section at the top */}
+      {!isPersonalized && (
+        <div className="bg-blue-50 rounded-lg p-3 mb-4 border border-blue-200">
+          <form onSubmit={handleEmailLookup} className="flex gap-2">
+            <Input
+              type="email"
+              placeholder="Email для персонализации"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="flex-1 text-sm"
+              disabled={isLookingUp}
+            />
+            <Button
+              type="submit"
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap"
+              disabled={isLookingUp || !email.trim()}
+            >
+              {isLookingUp ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                'Найти'
+              )}
+            </Button>
+          </form>
+          {error && (
+            <p className="text-xs text-red-600 mt-1">{error}</p>
+          )}
+        </div>
+      )}
       
       <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
         <div className="flex items-center mb-6">
@@ -204,57 +236,6 @@ const PersonalAccountPage = () => {
           />
         )}
       </div>
-
-      {!isPersonalized && (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 shadow-sm border border-blue-100">
-          <div className="text-center mb-4">
-            <Mail className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-            <h3 className="text-lg font-semibold text-gray-800 mb-1">
-              Персонализация
-            </h3>
-            <p className="text-sm text-gray-600">
-              Введите email для доступа к вашим данным бронирования
-            </p>
-          </div>
-
-          <form onSubmit={handleEmailLookup} className="space-y-4">
-            <div>
-              <Input
-                type="email"
-                placeholder="Ваш email адрес"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full"
-                disabled={isLookingUp}
-              />
-              {error && (
-                <p className="text-sm text-red-600 mt-2">{error}</p>
-              )}
-            </div>
-            
-            <Button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={isLookingUp || !email.trim()}
-            >
-              {isLookingUp ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Поиск бронирования...
-                </>
-              ) : (
-                'Найти мое бронирование'
-              )}
-            </Button>
-          </form>
-
-          <div className="mt-4 pt-4 border-t border-blue-200">
-            <p className="text-xs text-gray-500 text-center">
-              Сейчас отображаются демо-данные. Введите свой email для персонализированной информации.
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

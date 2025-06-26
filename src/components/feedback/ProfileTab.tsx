@@ -122,20 +122,6 @@ const ProfileTab = ({ profile, onProfileChange }: ProfileTabProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <div className="text-sm text-hotel-neutral mb-1">Даты проживания:</div>
-        <div className="flex justify-between">
-          <div>
-            <div className="text-sm text-hotel-neutral">Заезд:</div>
-            <div contentEditable suppressContentEditableWarning>{profile.checkInDate}</div>
-          </div>
-          <div>
-            <div className="text-sm text-hotel-neutral">Выезд:</div>
-            <div contentEditable suppressContentEditableWarning>{profile.checkOutDate}</div>
-          </div>
-        </div>
-      </div>
-      
       <div>
         <h3 className="font-medium mb-2">История заказов</h3>
         {isLoading ? (
@@ -143,8 +129,8 @@ const ProfileTab = ({ profile, onProfileChange }: ProfileTabProps) => {
         ) : orders.length === 0 ? (
           <div className="text-center py-4 text-gray-500">Заказов пока нет</div>
         ) : (
-          <div className="space-y-2">
-            {orders.slice(0, 3).map((order) => (
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {orders.map((order) => (
               <div key={order.id} className="bg-gray-50 p-3 rounded-lg flex justify-between items-center">
                 <div>
                   <div className="font-medium">{getOrderTitle(order)}</div>
