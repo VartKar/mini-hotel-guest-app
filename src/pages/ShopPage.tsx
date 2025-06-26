@@ -1,9 +1,8 @@
 
 import React, { useState } from "react";
-import { Gift, Coffee, Apple, ShoppingBag, Check, X, Plus } from "lucide-react";
+import { Gift, Coffee, Apple, Check, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoomData } from "@/hooks/useRoomData";
@@ -29,7 +28,7 @@ const ShopPage = () => {
   
   const { data: shopItems, isLoading } = useShopItems(city, propertyId);
   
-  const [basketItems, setBasketItems] = useState<ShopItemWithPrice[]>([]);
+  const [selectedItem, setSelectedItem] = useState<ShopItemWithPrice | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [contactInfo, setContactInfo] = useState({
     name: "",
@@ -49,21 +48,9 @@ const ShopPage = () => {
     }
   }, [roomData]);
 
-  const addToBasket = (item: ShopItemWithPrice) => {
-    if (!basketItems.some(basketItem => basketItem.id === item.id)) {
-      setBasketItems([...basketItems, item]);
-      toast(`"${item.name}" добавлен в корзину`);
-    } else {
-      toast(`"${item.name}" уже добавлен в корзину`);
-    }
-  };
-
-  const removeFromBasket = (itemId: string) => {
-    const item = basketItems.find(i => i.id === itemId);
-    setBasketItems(basketItems.filter(i => i.id !== itemId));
-    if (item) {
-      toast(`"${item.name}" удален из корзины`);
-    }
+  const handleItemClick = (item: ShopItemWithPrice) => {
+    setSelectedItem(item);
+    setIsDrawerOpen(true);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,8 +67,8 @@ const ShopPage = () => {
       return;
     }
 
-    if (basketItems.length === 0) {
-      toast.error("Ваша корзина пуста");
+    if (!selectedItem) {
+      toast.error("Товар не выбран");
       return;
     }
 
@@ -92,12 +79,12 @@ const ShopPage = () => {
         customerName: contactInfo.name,
         customerPhone: contactInfo.phone,
         roomNumber: contactInfo.roomNumber,
-        items: basketItems.map(item => ({
-          name: item.name,
-          price: `${item.final_price}₽`,
-          category: item.category
-        })),
-        totalPrice: totalPrice,
+        items: [{
+          name: selectedItem.name,
+          price: `${selectedItem.final_price}₽`,
+          category: selectedItem.category
+        }],
+        totalPrice: selectedItem.final_price,
         bookingIdKey: roomData?.id_key || null
       };
 
@@ -111,9 +98,8 @@ const ShopPage = () => {
 
       if (data.success) {
         toast.success("Ваш заказ успешно отправлен!");
-        setBasketItems([]);
         setIsDrawerOpen(false);
-        setContactInfo({ name: "", roomNumber: "", phone: "" });
+        setSelectedItem(null);
       } else {
         throw new Error(data.error || 'Failed to submit order');
       }
@@ -125,11 +111,6 @@ const ShopPage = () => {
       setIsSubmitting(false);
     }
   };
-
-  // Calculate total price
-  const totalPrice = basketItems.reduce((total, item) => {
-    return total + item.final_price;
-  }, 0);
 
   // Group items by category
   const itemsByCategory = shopItems ? shopItems.reduce((acc, item) => {
@@ -153,22 +134,7 @@ const ShopPage = () => {
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-light">Магазин</h1>
-        
-        {basketItems.length > 0 && (
-          <Button 
-            variant="outline" 
-            className="relative"
-            onClick={() => setIsDrawerOpen(true)}
-          >
-            <ShoppingBag size={24} />
-            <Badge className="absolute -top-2 -right-2 bg-hotel-accent text-hotel-dark">
-              {basketItems.length}
-            </Badge>
-          </Button>
-        )}
-      </div>
+      <h1 className="text-3xl font-light mb-6">Магазин</h1>
       
       <div className="w-full h-48 mb-6 rounded-lg bg-cover bg-center" 
            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1607083206968-13611e3d76db?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80')" }}>
@@ -200,7 +166,7 @@ const ShopPage = () => {
                     <span className="mr-3 font-medium">{item.final_price}₽</span>
                     <button 
                       className="w-8 h-8 rounded-full bg-hotel-dark flex items-center justify-center text-white disabled:bg-gray-300"
-                      onClick={() => addToBasket(item)}
+                      onClick={() => handleItemClick(item)}
                       disabled={!item.is_available}
                     >
                       <Plus size={16} />
@@ -217,82 +183,69 @@ const ShopPage = () => {
         Для заказа товаров обратитесь к консьержу или на ресепшн.
       </div>
 
-      {/* Checkout Drawer */}
+      {/* Order Drawer */}
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <DrawerContent className="px-4">
           <DrawerHeader>
-            <DrawerTitle>Ваша корзина</DrawerTitle>
+            <DrawerTitle>Заказ товара</DrawerTitle>
           </DrawerHeader>
           
           <div className="space-y-4 py-4">
-            {basketItems.length === 0 ? (
-              <p className="text-center text-hotel-neutral">Ваша корзина пуста</p>
-            ) : (
-              <>
-                {basketItems.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <span className="block">{item.name}</span>
-                      <span className="text-sm text-gray-500">{item.category}</span>
-                      <span className="block font-medium">{item.final_price}₽</span>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => removeFromBasket(item.id)}>
-                      <X size={18} />
-                    </Button>
+            {selectedItem && (
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <span className="block font-medium">{selectedItem.name}</span>
+                    <span className="text-sm text-gray-500">{selectedItem.category}</span>
+                    {selectedItem.description && (
+                      <p className="text-sm text-gray-600 mt-1">{selectedItem.description}</p>
+                    )}
                   </div>
-                ))}
-
-                <div className="border-t border-gray-200 pt-4 mt-4">
-                  <div className="flex justify-between font-medium">
-                    <span>Итого:</span>
-                    <span>{totalPrice}₽</span>
-                  </div>
+                  <span className="font-medium text-lg">{selectedItem.final_price}₽</span>
                 </div>
-
-                <div className="space-y-3 mt-6">
-                  <h3 className="font-medium">Контактная информация</h3>
-                  <input
-                    type="text"
-                    name="name"
-                    value={contactInfo.name}
-                    onChange={handleInputChange}
-                    placeholder="Ваше имя"
-                    className="w-full px-4 py-2 border rounded-md"
-                  />
-                  <input
-                    type="text"
-                    name="roomNumber"
-                    value={contactInfo.roomNumber}
-                    onChange={handleInputChange}
-                    placeholder="Номер комнаты"
-                    className="w-full px-4 py-2 border rounded-md"
-                  />
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={contactInfo.phone}
-                    onChange={handleInputChange}
-                    placeholder="Контактный телефон"
-                    className="w-full px-4 py-2 border rounded-md"
-                  />
-                </div>
-              </>
+              </div>
             )}
+
+            <div className="space-y-3">
+              <h3 className="font-medium">Контактная информация</h3>
+              <input
+                type="text"
+                name="name"
+                value={contactInfo.name}
+                onChange={handleInputChange}
+                placeholder="Ваше имя"
+                className="w-full px-4 py-2 border rounded-md"
+              />
+              <input
+                type="text"
+                name="roomNumber"
+                value={contactInfo.roomNumber}
+                onChange={handleInputChange}
+                placeholder="Номер комнаты"
+                className="w-full px-4 py-2 border rounded-md"
+              />
+              <input
+                type="tel"
+                name="phone"
+                value={contactInfo.phone}
+                onChange={handleInputChange}
+                placeholder="Контактный телефон"
+                className="w-full px-4 py-2 border rounded-md"
+              />
+            </div>
           </div>
 
           <DrawerFooter>
-            {basketItems.length > 0 && (
-              <Button 
-                onClick={handleSubmitOrder} 
-                className="w-full"
-                disabled={isSubmitting}
-              >
-                <Check className="mr-2" size={18} />
-                {isSubmitting ? 'Отправка...' : 'Оформить заказ'}
-              </Button>
-            )}
+            <Button 
+              onClick={handleSubmitOrder} 
+              className="w-full"
+              disabled={isSubmitting}
+            >
+              <Check className="mr-2" size={18} />
+              {isSubmitting ? 'Отправка...' : 'Оформить заказ'}
+            </Button>
             <Button variant="outline" onClick={() => setIsDrawerOpen(false)}>
-              Закрыть
+              Отмена
             </Button>
           </DrawerFooter>
         </DrawerContent>

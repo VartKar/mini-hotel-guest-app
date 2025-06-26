@@ -1,9 +1,8 @@
 
 import React, { useState } from "react";
-import { Bed, UtensilsCrossed, Shirt, Award, ShoppingBag, X, Check } from "lucide-react";
+import { Bed, UtensilsCrossed, Shirt, Award, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoomData } from "@/hooks/useRoomData";
@@ -44,7 +43,7 @@ const services: ServiceItem[] = [
 
 const ServicesPage = () => {
   const { roomData } = useRoomData();
-  const [basketItems, setBasketItems] = useState<ServiceItem[]>([]);
+  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [contactInfo, setContactInfo] = useState({
@@ -64,18 +63,9 @@ const ServicesPage = () => {
     }
   }, [roomData]);
 
-  const addToBasket = (service: ServiceItem) => {
-    if (!basketItems.some(item => item.title === service.title)) {
-      setBasketItems([...basketItems, service]);
-      toast(`"${service.title}" добавлен в корзину`);
-    } else {
-      toast(`"${service.title}" уже добавлен в корзину`);
-    }
-  };
-
-  const removeFromBasket = (serviceTitle: string) => {
-    setBasketItems(basketItems.filter(item => item.title !== serviceTitle));
-    toast(`"${serviceTitle}" удален из корзины`);
+  const handleServiceClick = (service: ServiceItem) => {
+    setSelectedService(service);
+    setIsDrawerOpen(true);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,6 +82,11 @@ const ServicesPage = () => {
       return;
     }
 
+    if (!selectedService) {
+      toast.error("Услуга не выбрана");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -99,11 +94,11 @@ const ServicesPage = () => {
         customerName: contactInfo.name,
         customerPhone: contactInfo.phone,
         roomNumber: contactInfo.roomNumber,
-        services: basketItems.map(item => ({
-          title: item.title,
-          description: item.description,
-          buttonText: item.buttonText
-        })),
+        services: [{
+          title: selectedService.title,
+          description: selectedService.description,
+          buttonText: selectedService.buttonText
+        }],
         bookingIdKey: roomData?.id_key || null
       };
 
@@ -121,9 +116,8 @@ const ServicesPage = () => {
       console.log('Service order submitted successfully:', data);
       
       toast.success("Ваш заказ успешно отправлен!");
-      setBasketItems([]);
       setIsDrawerOpen(false);
-      setContactInfo({ name: "", roomNumber: "", phone: "" });
+      setSelectedService(null);
       
     } catch (error) {
       console.error('Error submitting service order:', error);
@@ -135,22 +129,7 @@ const ServicesPage = () => {
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-light">Сервисы в номере</h1>
-        
-        {basketItems.length > 0 && (
-          <Button 
-            variant="outline" 
-            className="relative"
-            onClick={() => setIsDrawerOpen(true)}
-          >
-            <ShoppingBag size={24} />
-            <Badge className="absolute -top-2 -right-2 bg-hotel-accent text-hotel-dark">
-              {basketItems.length}
-            </Badge>
-          </Button>
-        )}
-      </div>
+      <h1 className="text-3xl font-light mb-6">Сервисы в номере</h1>
       
       <div className="space-y-4">
         {services.map((service, index) => (
@@ -166,7 +145,7 @@ const ServicesPage = () => {
             </div>
             <button 
               className="w-full py-2 px-4 bg-hotel-dark text-white rounded-lg font-medium"
-              onClick={() => addToBasket(service)}
+              onClick={() => handleServiceClick(service)}
             >
               {service.buttonText}
             </button>
@@ -177,78 +156,68 @@ const ServicesPage = () => {
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <DrawerContent className="px-4">
           <DrawerHeader>
-            <DrawerTitle>Ваш заказ</DrawerTitle>
+            <DrawerTitle>Заказ услуги</DrawerTitle>
           </DrawerHeader>
           
           <div className="space-y-4 py-4">
-            {basketItems.length === 0 ? (
-              <p className="text-center text-hotel-neutral">Ваша корзина пуста</p>
-            ) : (
-              <>
-                {basketItems.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-hotel-accent rounded-full flex items-center justify-center">
-                        {item.icon}
-                      </div>
-                      <span>{item.title}</span>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => removeFromBasket(item.title)}>
-                      <X size={18} />
-                    </Button>
+            {selectedService && (
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-hotel-accent rounded-full flex items-center justify-center">
+                    {selectedService.icon}
                   </div>
-                ))}
-
-                <div className="space-y-3 mt-6">
-                  <h3 className="font-medium">Контактная информация</h3>
-                  <input
-                    type="text"
-                    name="name"
-                    value={contactInfo.name}
-                    onChange={handleInputChange}
-                    placeholder="Ваше имя"
-                    className="w-full px-4 py-2 border rounded-md"
-                  />
-                  <input
-                    type="text"
-                    name="roomNumber"
-                    value={contactInfo.roomNumber}
-                    onChange={handleInputChange}
-                    placeholder="Номер комнаты"
-                    className="w-full px-4 py-2 border rounded-md"
-                  />
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={contactInfo.phone}
-                    onChange={handleInputChange}
-                    placeholder="Контактный телефон"
-                    className="w-full px-4 py-2 border rounded-md"
-                  />
+                  <span className="font-medium">{selectedService.title}</span>
                 </div>
-              </>
+                <p className="text-sm text-gray-600">{selectedService.description}</p>
+              </div>
             )}
+
+            <div className="space-y-3">
+              <h3 className="font-medium">Контактная информация</h3>
+              <input
+                type="text"
+                name="name"
+                value={contactInfo.name}
+                onChange={handleInputChange}
+                placeholder="Ваше имя"
+                className="w-full px-4 py-2 border rounded-md"
+              />
+              <input
+                type="text"
+                name="roomNumber"
+                value={contactInfo.roomNumber}
+                onChange={handleInputChange}
+                placeholder="Номер комнаты"
+                className="w-full px-4 py-2 border rounded-md"
+              />
+              <input
+                type="tel"
+                name="phone"
+                value={contactInfo.phone}
+                onChange={handleInputChange}
+                placeholder="Контактный телефон"
+                className="w-full px-4 py-2 border rounded-md"
+              />
+            </div>
           </div>
 
           <DrawerFooter>
-            {basketItems.length > 0 && (
-              <Button 
-                onClick={handleSubmitOrder} 
-                className="w-full"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>Отправка...</>
-                ) : (
-                  <>
-                    <Check className="mr-2" size={18} />
-                    Отправить заказ
-                  </>
-                )}
-              </Button>
-            )}
+            <Button 
+              onClick={handleSubmitOrder} 
+              className="w-full"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>Отправка...</>
+              ) : (
+                <>
+                  <Check className="mr-2" size={18} />
+                  Отправить заказ
+                </>
+              )}
+            </Button>
             <Button variant="outline" onClick={() => setIsDrawerOpen(false)}>
-              Закрыть
+              Отмена
             </Button>
           </DrawerFooter>
         </DrawerContent>
