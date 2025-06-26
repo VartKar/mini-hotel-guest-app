@@ -51,20 +51,18 @@ const FeedbackTab = ({
       // Ensure we always have a valid customer name
       const customerName = roomData?.guest_name || 'Гость';
       
-      // Store feedback in database
-      const feedbackData = {
-        bookingIdKey: roomData?.id_key || null,
-        customerName: customerName,
-        rating: feedbackForm.rating,
-        message: feedbackForm.message,
-        roomNumber: roomData?.room_number || null
-      };
-
-      console.log('Submitting feedback:', feedbackData);
-
-      const { data, error } = await supabase.functions.invoke('submit-feedback', {
-        body: feedbackData
-      });
+      // Store feedback in the dedicated feedback table
+      const { data, error } = await supabase
+        .from('feedback')
+        .insert({
+          booking_id_key: roomData?.id_key || null,
+          customer_name: customerName,
+          room_number: roomData?.room_number || null,
+          rating: feedbackForm.rating,
+          message: feedbackForm.message
+        })
+        .select()
+        .single();
 
       if (error) {
         console.error('Feedback submission error:', error);

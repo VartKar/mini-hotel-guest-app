@@ -101,6 +101,25 @@ const TravelExpertChat = () => {
           }}
         />
         
+        {/* Custom CSS to hide the n8n widget default text */}
+        <style jsx>{`
+          iframe[src*="rubikinn.ru"] {
+            filter: none;
+          }
+          
+          /* Hide the default n8n greeting text */
+          iframe[src*="rubikinn.ru"]::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: transparent;
+            pointer-events: none;
+          }
+        `}</style>
+        
         {/* Loading state overlay */}
         <div className="absolute inset-0 bg-gray-50 flex items-center justify-center text-gray-500 pointer-events-none opacity-0 transition-opacity duration-300" id="chat-loading">
           <div className="text-center">

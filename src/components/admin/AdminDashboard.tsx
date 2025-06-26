@@ -5,6 +5,7 @@ import BookingsManagement from "./BookingsManagement";
 import ChangeRequestsManagement from "./ChangeRequestsManagement";
 import TravelOrdersManagement from "./TravelOrdersManagement";
 import ShopOrdersManagement from "./ShopOrdersManagement";
+import FeedbackManagement from "./FeedbackManagement";
 
 const AdminDashboard = () => {
   return (
@@ -17,6 +18,7 @@ const AdminDashboard = () => {
           <TabsTrigger value="change-requests">Запросы изменений</TabsTrigger>
           <TabsTrigger value="travel-orders">Заказы путешествий</TabsTrigger>
           <TabsTrigger value="shop-orders">Заказы магазина</TabsTrigger>
+          <TabsTrigger value="feedback">Отзывы</TabsTrigger>
         </TabsList>
         
         <TabsContent value="bookings" className="mt-6">
@@ -33,6 +35,10 @@ const AdminDashboard = () => {
         
         <TabsContent value="shop-orders" className="mt-6">
           <ShopOrdersManagement />
+        </TabsContent>
+        
+        <TabsContent value="feedback" className="mt-6">
+          <FeedbackManagement />
         </TabsContent>
       </Tabs>
     </div>

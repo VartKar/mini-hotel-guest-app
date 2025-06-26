@@ -141,6 +141,47 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          booking_id_key: string | null
+          created_at: string
+          customer_name: string
+          id: string
+          message: string | null
+          rating: number
+          room_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          booking_id_key?: string | null
+          created_at?: string
+          customer_name: string
+          id?: string
+          message?: string | null
+          rating: number
+          room_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          booking_id_key?: string | null
+          created_at?: string
+          customer_name?: string
+          id?: string
+          message?: string | null
+          rating?: number
+          room_number?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_booking_id_key_fkey"
+            columns: ["booking_id_key"]
+            isOneToOne: false
+            referencedRelation: "combined"
+            referencedColumns: ["id_key"]
+          },
+        ]
+      }
       host_change_requests: {
         Row: {
           booking_id: string | null
