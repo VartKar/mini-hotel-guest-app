@@ -18,9 +18,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     )
 
-    const { customerName, customerPhone, roomNumber, items, totalPrice, bookingIdKey } = await req.json()
+    const { customerName, customerPhone, roomNumber, items, totalAmount, bookingIdKey, customerComment } = await req.json()
 
-    console.log('Received shop order:', { customerName, customerPhone, items, totalPrice })
+    console.log('Received shop order:', { customerName, customerPhone, items, totalAmount, customerComment })
 
     // Insert the order into the database
     const { data: orderData, error: orderError } = await supabaseClient
@@ -31,7 +31,7 @@ serve(async (req) => {
         customer_phone: customerPhone,
         room_number: roomNumber,
         ordered_items: items,
-        total_amount: totalPrice,
+        total_amount: totalAmount, // Now using the correct field name
         order_status: 'pending'
       })
       .select()
@@ -64,12 +64,13 @@ serve(async (req) => {
             <p><strong>Имя клиента:</strong> ${customerName}</p>
             <p><strong>Телефон:</strong> ${customerPhone}</p>
             <p><strong>Номер комнаты:</strong> ${roomNumber || 'Не указан'}</p>
-            <p><strong>Общая сумма:</strong> ${totalPrice} ₽</p>
+            <p><strong>Общая сумма:</strong> ${totalAmount} ₽</p>
             <p><strong>Заказ ID:</strong> ${orderData.id}</p>
+            ${customerComment ? `<p><strong>Комментарий:</strong> ${customerComment}</p>` : ''}
             <h3>Заказанные товары:</h3>
             <ul>
               ${items.map((item: any) => `
-                <li>${item.name} - ${item.price} ₽ (${item.category})</li>
+                <li>${item.name} - ${item.price} ₽ x ${item.quantity} (${item.category})</li>
               `).join('')}
             </ul>
           `,

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,6 +40,8 @@ const ShopPage = () => {
     setIsSubmitting(true);
 
     try {
+      const totalAmount = selectedItem.final_price * quantity;
+      
       const orderData = {
         customerName: roomData.guest_name,
         customerPhone: roomData.host_phone,
@@ -52,7 +53,7 @@ const ShopPage = () => {
           quantity: quantity,
           category: selectedItem.category
         }],
-        totalAmount: selectedItem.final_price * quantity,
+        totalAmount: totalAmount, // Fixed: now using totalAmount instead of totalPrice
         bookingIdKey: roomData?.id_key || null
       };
 
