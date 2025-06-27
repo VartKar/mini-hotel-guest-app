@@ -127,12 +127,19 @@ const ShopOrdersManagement = () => {
                     <span className="font-medium">ID заказа:</span> {order.id.slice(0, 8)}...
                   </div>
                   
+                  {order.customer_comment && (
+                    <div className="text-sm">
+                      <span className="font-medium">Комментарий:</span>
+                      <p className="mt-1 p-2 bg-gray-50 rounded text-gray-700">{order.customer_comment}</p>
+                    </div>
+                  )}
+                  
                   <div>
                     <span className="font-medium text-sm">Заказанные товары:</span>
                     <ul className="list-disc list-inside text-sm mt-1 space-y-1">
                       {(order.ordered_items as any[]).map((item: any, index: number) => (
                         <li key={index}>
-                          {item.name} - {item.price} ({item.category})
+                          {item.name} - {item.price} ₽ x {item.quantity} ({item.category})
                         </li>
                       ))}
                     </ul>

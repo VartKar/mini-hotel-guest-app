@@ -379,6 +379,7 @@ export type Database = {
         Row: {
           booking_id_key: string | null
           created_at: string
+          customer_comment: string | null
           customer_name: string
           customer_phone: string
           id: string
@@ -391,6 +392,7 @@ export type Database = {
         Insert: {
           booking_id_key?: string | null
           created_at?: string
+          customer_comment?: string | null
           customer_name: string
           customer_phone: string
           id?: string
@@ -403,6 +405,7 @@ export type Database = {
         Update: {
           booking_id_key?: string | null
           created_at?: string
+          customer_comment?: string | null
           customer_name?: string
           customer_phone?: string
           id?: string

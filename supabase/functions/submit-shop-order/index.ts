@@ -31,7 +31,8 @@ serve(async (req) => {
         customer_phone: customerPhone,
         room_number: roomNumber,
         ordered_items: items,
-        total_amount: totalAmount, // Now using the correct field name
+        total_amount: totalAmount,
+        customer_comment: customerComment, // Now using the separate field
         order_status: 'pending'
       })
       .select()
