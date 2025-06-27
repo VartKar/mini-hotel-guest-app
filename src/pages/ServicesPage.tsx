@@ -114,7 +114,7 @@ const ServicesPage = () => {
       return;
     }
 
-    if (!roomData?.guest_name || !roomData?.room_number || !roomData?.guest_phone) {
+    if (!roomData?.guest_name || !roomData?.room_number || !roomData?.host_phone) {
       toast.error("Данные гостя не найдены");
       return;
     }
@@ -124,7 +124,7 @@ const ServicesPage = () => {
     try {
       const orderData = {
         customerName: roomData.guest_name,
-        customerPhone: roomData.guest_phone,
+        customerPhone: roomData.host_phone,
         roomNumber: roomData.room_number,
         customerComment: comment,
         services: [{

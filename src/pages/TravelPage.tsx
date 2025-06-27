@@ -77,7 +77,7 @@ const TravelPage = () => {
       return;
     }
     
-    if (!roomData?.guest_name || !roomData?.guest_phone) {
+    if (!roomData?.guest_name || !roomData?.host_phone) {
       toast.error("Данные гостя не найдены");
       return;
     }
@@ -95,7 +95,7 @@ const TravelPage = () => {
       
       const orderData = {
         customerName: roomData.guest_name,
-        customerPhone: roomData.guest_phone,
+        customerPhone: roomData.host_phone,
         customerComment: comment,
         services: [service],
         totalPrice,
