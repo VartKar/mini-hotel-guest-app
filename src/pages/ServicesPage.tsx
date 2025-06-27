@@ -1,8 +1,9 @@
 
 import React, { useState } from "react";
-import { Bed, UtensilsCrossed, Shirt, Award, Check } from "lucide-react";
+import { Bed, UtensilsCrossed, Shirt, Award, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoomData } from "@/hooks/useRoomData";
@@ -102,6 +103,15 @@ const ServicesPage = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [comment, setComment] = useState("");
+  const [expandedServices, setExpandedServices] = useState<number[]>([]);
+
+  const toggleServiceDetails = (index: number) => {
+    setExpandedServices(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    );
+  };
 
   const handleServiceClick = (service: ServiceItem) => {
     setSelectedService(service);
@@ -175,12 +185,33 @@ const ServicesPage = () => {
               <div className="ml-4 flex-1">
                 <h2 className="text-xl font-medium">{service.title}</h2>
                 <p className="text-hotel-neutral">{service.description}</p>
+                
                 {service.details && (
-                  <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="text-sm text-gray-700 whitespace-pre-line">
-                      {service.details}
-                    </div>
-                  </div>
+                  <Collapsible 
+                    open={expandedServices.includes(index)} 
+                    onOpenChange={() => toggleServiceDetails(index)}
+                  >
+                    <CollapsibleTrigger className="flex items-center gap-2 mt-3 text-sm text-hotel-dark hover:text-hotel-accent">
+                      {expandedServices.includes(index) ? (
+                        <>
+                          <ChevronUp size={16} />
+                          Скрыть подробности
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown size={16} />
+                          Показать подробности
+                        </>
+                      )}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="text-sm text-gray-700 whitespace-pre-line">
+                          {service.details}
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 )}
               </div>
             </div>
