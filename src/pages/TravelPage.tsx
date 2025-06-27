@@ -42,26 +42,10 @@ const TravelPage = () => {
 
   const [selectedService, setSelectedService] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [contactInfo, setContactInfo] = useState({
-    name: "",
-    roomNumber: "",
-    phone: "",
-    comment: ""
-  });
+  const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const activitiesCount = itineraries.length;
-
-  // Pre-fill with room data if available
-  React.useEffect(() => {
-    if (roomData) {
-      setContactInfo(prev => ({
-        ...prev,
-        name: roomData.guest_name || prev.name,
-        roomNumber: roomData.room_number || prev.roomNumber,
-      }));
-    }
-  }, [roomData]);
 
   const getDayLabel = (count: number) => {
     if (count === 1) return 'день';
@@ -86,23 +70,15 @@ const TravelPage = () => {
     setIsDrawerOpen(true);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setContactInfo({
-      ...contactInfo,
-      [name]: value
-    });
-  };
-
   // Handle submission of selected service
   const handleSubmitOrder = async () => {
-    if (!contactInfo.name || !contactInfo.phone) {
-      toast.error("Пожалуйста, заполните все обязательные поля");
+    if (!selectedService) {
+      toast.error("Услуга не выбрана");
       return;
     }
     
-    if (!selectedService) {
-      toast.error("Услуга не выбрана");
+    if (!roomData?.guest_name || !roomData?.guest_phone) {
+      toast.error("Данные гостя не найдены");
       return;
     }
     
@@ -118,9 +94,9 @@ const TravelPage = () => {
       const totalPrice = 'service_price' in selectedService ? selectedService.service_price : selectedService.final_price;
       
       const orderData = {
-        customerName: contactInfo.name,
-        customerPhone: contactInfo.phone,
-        customerComment: contactInfo.comment,
+        customerName: roomData.guest_name,
+        customerPhone: roomData.guest_phone,
+        customerComment: comment,
         services: [service],
         totalPrice,
         bookingIdKey: roomData?.id_key || null
@@ -138,11 +114,7 @@ const TravelPage = () => {
         toast.success("Ваш заказ успешно отправлен!");
         setIsDrawerOpen(false);
         setSelectedService(null);
-        // Reset form
-        setContactInfo(prev => ({
-          ...prev,
-          comment: ""
-        }));
+        setComment("");
       } else {
         throw new Error(data.error || 'Failed to submit order');
       }
@@ -313,7 +285,7 @@ const TravelPage = () => {
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <DrawerContent className="px-4">
           <DrawerHeader>
-            <DrawerTitle>Заказ услуги</DrawerTitle>
+            <DrawerTitle>Подтверждение заказа</DrawerTitle>
           </DrawerHeader>
           
           <div className="space-y-4 py-4">
@@ -342,35 +314,9 @@ const TravelPage = () => {
             )}
 
             <div className="space-y-3">
-              <h3 className="font-medium">Контактная информация</h3>
-              <input
-                type="text"
-                name="name"
-                value={contactInfo.name}
-                onChange={handleInputChange}
-                placeholder="Ваше имя"
-                className="w-full px-4 py-2 border rounded-md"
-              />
-              <input
-                type="text"
-                name="roomNumber"
-                value={contactInfo.roomNumber}
-                onChange={handleInputChange}
-                placeholder="Номер комнаты"
-                className="w-full px-4 py-2 border rounded-md"
-              />
-              <input
-                type="tel"
-                name="phone"
-                value={contactInfo.phone}
-                onChange={handleInputChange}
-                placeholder="Контактный телефон"
-                className="w-full px-4 py-2 border rounded-md"
-              />
               <textarea
-                name="comment"
-                value={contactInfo.comment}
-                onChange={handleInputChange}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
                 placeholder="Комментарий (необязательно)"
                 className="w-full px-4 py-2 border rounded-md"
                 rows={3}
@@ -385,7 +331,7 @@ const TravelPage = () => {
               disabled={isSubmitting}
             >
               <Check className="mr-2" size={18} />
-              {isSubmitting ? 'Отправка...' : 'Отправить заказ'}
+              {isSubmitting ? 'Отправка...' : 'Подтвердить заказ'}
             </Button>
             <Button variant="outline" onClick={() => setIsDrawerOpen(false)}>
               Отмена

@@ -12,6 +12,7 @@ interface ServiceItem {
   description: string;
   icon: React.ReactNode;
   buttonText: string;
+  details?: string; // Additional details for some services
 }
 
 const services: ServiceItem[] = [
@@ -25,7 +26,35 @@ const services: ServiceItem[] = [
     title: "Еда в номер",
     description: "Широкий выбор блюд и напитков с доставкой в ваш номер.",
     icon: <UtensilsCrossed size={24} />,
-    buttonText: "Посмотреть меню"
+    buttonText: "Заказать",
+    details: `
+**МЕНЮ ДОСТАВКИ В НОМЕР**
+
+**Завтраки (8:00-11:00)**
+• Континентальный завтрак - 850₽
+• Омлет с беконом - 450₽
+• Блинчики с медом - 380₽
+• Каша овсяная - 250₽
+
+**Обеды и ужины (12:00-22:00)**
+• Борщ украинский - 320₽
+• Стейк из говядины - 1200₽
+• Паста карбонара - 680₽
+• Салат Цезарь - 520₽
+
+**Напитки**
+• Кофе американо - 180₽
+• Чай травяной - 150₽
+• Сок апельсиновый - 220₽
+• Вода минеральная - 120₽
+
+**Десерты**
+• Тирамису - 420₽
+• Мороженое - 280₽
+• Фруктовая тарелка - 350₽
+
+*Доставка в номер бесплатно при заказе от 500₽*
+    `
   }, 
   {
     title: "Услуги прачечной",
@@ -34,10 +63,36 @@ const services: ServiceItem[] = [
     buttonText: "Заказать"
   }, 
   {
-    title: "Специальные предложения",
-    description: "Скидка 10% на спа-услуги по средам.",
+    title: "Спа-услуги",
+    description: "Расслабляющие процедуры и массаж в номере или спа-центре.",
     icon: <Award size={24} />,
-    buttonText: "Подробнее"
+    buttonText: "Заказать",
+    details: `
+**СПА-УСЛУГИ**
+
+**Массаж**
+• Классический массаж (60 мин) - 2500₽
+• Расслабляющий массаж (90 мин) - 3200₽
+• Массаж стоп (30 мин) - 1200₽
+• Антицеллюлитный массаж (60 мин) - 2800₽
+
+**Процедуры для лица**
+• Очищающая маска - 1500₽
+• Увлажняющая процедура - 1800₽
+• Антивозрастной уход - 2200₽
+
+**Процедуры для тела**
+• Скраб для тела - 1600₽
+• Обертывание водорослями - 2000₽
+• Ароматерапия - 1400₽
+
+**Специальные предложения**
+• Скидка 10% по средам на все услуги
+• Парный массаж - скидка 15%
+• Комплекс "Релакс" (3 процедуры) - 5500₽
+
+*Процедуры доступны в спа-центре или в номере по запросу*
+    `
   }
 ];
 
@@ -46,44 +101,21 @@ const ServicesPage = () => {
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [contactInfo, setContactInfo] = useState({
-    name: "",
-    roomNumber: "",
-    phone: ""
-  });
-
-  // Pre-fill with room data if available
-  React.useEffect(() => {
-    if (roomData) {
-      setContactInfo(prev => ({
-        ...prev,
-        name: roomData.guest_name || prev.name,
-        roomNumber: roomData.room_number || prev.roomNumber,
-      }));
-    }
-  }, [roomData]);
+  const [comment, setComment] = useState("");
 
   const handleServiceClick = (service: ServiceItem) => {
     setSelectedService(service);
     setIsDrawerOpen(true);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setContactInfo({
-      ...contactInfo,
-      [name]: value
-    });
-  };
-
   const handleSubmitOrder = async () => {
-    if (!contactInfo.name || !contactInfo.roomNumber || !contactInfo.phone) {
-      toast.error("Пожалуйста, заполните все поля контактной информации");
+    if (!selectedService) {
+      toast.error("Услуга не выбрана");
       return;
     }
 
-    if (!selectedService) {
-      toast.error("Услуга не выбрана");
+    if (!roomData?.guest_name || !roomData?.room_number || !roomData?.guest_phone) {
+      toast.error("Данные гостя не найдены");
       return;
     }
 
@@ -91,9 +123,10 @@ const ServicesPage = () => {
 
     try {
       const orderData = {
-        customerName: contactInfo.name,
-        customerPhone: contactInfo.phone,
-        roomNumber: contactInfo.roomNumber,
+        customerName: roomData.guest_name,
+        customerPhone: roomData.guest_phone,
+        roomNumber: roomData.room_number,
+        customerComment: comment,
         services: [{
           title: selectedService.title,
           description: selectedService.description,
@@ -118,6 +151,7 @@ const ServicesPage = () => {
       toast.success("Ваш заказ успешно отправлен!");
       setIsDrawerOpen(false);
       setSelectedService(null);
+      setComment("");
       
     } catch (error) {
       console.error('Error submitting service order:', error);
@@ -141,13 +175,20 @@ const ServicesPage = () => {
               <div className="ml-4 flex-1">
                 <h2 className="text-xl font-medium">{service.title}</h2>
                 <p className="text-hotel-neutral">{service.description}</p>
+                {service.details && (
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="text-sm text-gray-700 whitespace-pre-line">
+                      {service.details}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <button 
               className="w-full py-2 px-4 bg-hotel-dark text-white rounded-lg font-medium"
               onClick={() => handleServiceClick(service)}
             >
-              {service.buttonText}
+              Заказать
             </button>
           </div>
         ))}
@@ -156,7 +197,7 @@ const ServicesPage = () => {
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <DrawerContent className="px-4">
           <DrawerHeader>
-            <DrawerTitle>Заказ услуги</DrawerTitle>
+            <DrawerTitle>Подтверждение заказа</DrawerTitle>
           </DrawerHeader>
           
           <div className="space-y-4 py-4">
@@ -173,30 +214,12 @@ const ServicesPage = () => {
             )}
 
             <div className="space-y-3">
-              <h3 className="font-medium">Контактная информация</h3>
-              <input
-                type="text"
-                name="name"
-                value={contactInfo.name}
-                onChange={handleInputChange}
-                placeholder="Ваше имя"
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Комментарий (необязательно)"
                 className="w-full px-4 py-2 border rounded-md"
-              />
-              <input
-                type="text"
-                name="roomNumber"
-                value={contactInfo.roomNumber}
-                onChange={handleInputChange}
-                placeholder="Номер комнаты"
-                className="w-full px-4 py-2 border rounded-md"
-              />
-              <input
-                type="tel"
-                name="phone"
-                value={contactInfo.phone}
-                onChange={handleInputChange}
-                placeholder="Контактный телефон"
-                className="w-full px-4 py-2 border rounded-md"
+                rows={3}
               />
             </div>
           </div>
@@ -212,7 +235,7 @@ const ServicesPage = () => {
               ) : (
                 <>
                   <Check className="mr-2" size={18} />
-                  Отправить заказ
+                  Подтвердить заказ
                 </>
               )}
             </Button>

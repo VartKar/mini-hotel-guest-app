@@ -1,25 +1,12 @@
 
 import React, { useState } from "react";
-import { Gift, Coffee, Apple, Check, Plus } from "lucide-react";
+import { ShoppingCart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
 import { toast } from "@/components/ui/sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useShopItems } from "@/hooks/useShopItems";
 import { useRoomData } from "@/hooks/useRoomData";
-import { useShopItems, ShopItemWithPrice } from "@/hooks/useShopItems";
-
-const getCategoryIcon = (category: string) => {
-  switch (category) {
-    case 'Сувениры':
-      return <Gift size={24} />;
-    case 'Мини-бар':
-      return <Coffee size={24} />;
-    case 'Локальные продукты':
-      return <Apple size={24} />;
-    default:
-      return <Gift size={24} />;
-  }
-};
+import { supabase } from "@/integrations/supabase/client";
 
 const ShopPage = () => {
   const { roomData } = useRoomData();
@@ -28,47 +15,26 @@ const ShopPage = () => {
   
   const { data: shopItems, isLoading } = useShopItems(city, propertyId);
   
-  const [selectedItem, setSelectedItem] = useState<ShopItemWithPrice | null>(null);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [quantity, setQuantity] = useState(1);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [contactInfo, setContactInfo] = useState({
-    name: "",
-    roomNumber: "",
-    phone: ""
-  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [comment, setComment] = useState("");
 
-  // Pre-fill with room data if available
-  React.useEffect(() => {
-    if (roomData) {
-      setContactInfo(prev => ({
-        ...prev,
-        name: roomData.guest_name || prev.name,
-        roomNumber: roomData.room_number || prev.roomNumber,
-      }));
-    }
-  }, [roomData]);
-
-  const handleItemClick = (item: ShopItemWithPrice) => {
+  const handleItemClick = (item: any) => {
     setSelectedItem(item);
+    setQuantity(1);
     setIsDrawerOpen(true);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setContactInfo({
-      ...contactInfo,
-      [name]: value
-    });
-  };
-
   const handleSubmitOrder = async () => {
-    if (!contactInfo.name || !contactInfo.phone) {
-      toast.error("Пожалуйста, заполните все обязательные поля");
+    if (!selectedItem) {
+      toast.error("Товар не выбран");
       return;
     }
 
-    if (!selectedItem) {
-      toast.error("Товар не выбран");
+    if (!roomData?.guest_name || !roomData?.room_number || !roomData?.guest_phone) {
+      toast.error("Данные гостя не найдены");
       return;
     }
 
@@ -76,50 +42,46 @@ const ShopPage = () => {
 
     try {
       const orderData = {
-        customerName: contactInfo.name,
-        customerPhone: contactInfo.phone,
-        roomNumber: contactInfo.roomNumber,
+        customerName: roomData.guest_name,
+        customerPhone: roomData.guest_phone,
+        roomNumber: roomData.room_number,
+        customerComment: comment,
         items: [{
           name: selectedItem.name,
-          price: `${selectedItem.final_price}₽`,
+          price: selectedItem.final_price,
+          quantity: quantity,
           category: selectedItem.category
         }],
-        totalPrice: selectedItem.final_price,
+        totalAmount: selectedItem.final_price * quantity,
         bookingIdKey: roomData?.id_key || null
       };
+
+      console.log('Submitting shop order:', orderData);
 
       const { data, error } = await supabase.functions.invoke('submit-shop-order', {
         body: orderData
       });
 
       if (error) {
+        console.error('Shop order submission error:', error);
         throw error;
       }
 
-      if (data.success) {
-        toast.success("Ваш заказ успешно отправлен!");
-        setIsDrawerOpen(false);
-        setSelectedItem(null);
-      } else {
-        throw new Error(data.error || 'Failed to submit order');
-      }
+      console.log('Shop order submitted successfully:', data);
+      
+      toast.success("Ваш заказ успешно отправлен!");
+      setIsDrawerOpen(false);
+      setSelectedItem(null);
+      setQuantity(1);
+      setComment("");
       
     } catch (error) {
-      console.error("Error submitting order:", error);
-      toast.error("Ошибка при отправке заказа. Пожалуйста, попробуйте позже.");
+      console.error('Error submitting shop order:', error);
+      toast.error("Ошибка при отправке заказа. Попробуйте еще раз.");
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  // Group items by category
-  const itemsByCategory = shopItems ? shopItems.reduce((acc, item) => {
-    if (!acc[item.category]) {
-      acc[item.category] = [];
-    }
-    acc[item.category].push(item);
-    return acc;
-  }, {} as Record<string, ShopItemWithPrice[]>) : {};
 
   if (isLoading) {
     return (
@@ -134,60 +96,46 @@ const ShopPage = () => {
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
-      <h1 className="text-3xl font-light mb-6">Магазин</h1>
+      <h1 className="text-3xl font-light mb-6">Магазин отеля</h1>
       
-      <div className="w-full h-48 mb-6 rounded-lg bg-cover bg-center" 
-           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1607083206968-13611e3d76db?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80')" }}>
-        <div className="w-full h-full flex items-center justify-center bg-black/30 rounded-lg">
-          <h2 className="text-white text-xl font-medium">Сувенирный киоск отеля</h2>
-        </div>
-      </div>
-      
-      <div className="space-y-6">
-        {Object.entries(itemsByCategory).map(([categoryName, items]) => (
-          <div key={categoryName} className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center mb-4">
+      <div className="space-y-4">
+        {shopItems?.map((item) => (
+          <div key={item.id} className="bg-white rounded-lg p-6 shadow-sm">
+            <div className="flex items-start mb-4">
               <div className="flex-shrink-0 w-10 h-10 rounded-full bg-hotel-accent flex items-center justify-center text-hotel-dark">
-                {getCategoryIcon(categoryName)}
+                <ShoppingCart size={24} />
               </div>
-              <h2 className="ml-3 text-xl font-medium">{categoryName}</h2>
-            </div>
-            
-            <div className="space-y-3">
-              {items.map((item) => (
-                <div key={item.id} className="flex justify-between items-center">
-                  <div className="flex-1">
-                    <p className="text-hotel-neutral">{item.name}</p>
-                    {item.description && (
-                      <p className="text-sm text-gray-500">{item.description}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center">
-                    <span className="mr-3 font-medium">{item.final_price}₽</span>
-                    <button 
-                      className="w-8 h-8 rounded-full bg-hotel-dark flex items-center justify-center text-white disabled:bg-gray-300"
-                      onClick={() => handleItemClick(item)}
-                      disabled={!item.is_available}
-                    >
-                      <Plus size={16} />
-                    </button>
-                  </div>
+              <div className="ml-4 flex-1">
+                <h2 className="text-xl font-medium">{item.name}</h2>
+                <p className="text-hotel-neutral">{item.description}</p>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-lg font-semibold text-hotel-dark">{item.final_price} ₽</span>
+                  <span className="text-sm text-gray-500">{item.category}</span>
                 </div>
-              ))}
+              </div>
             </div>
+            <button 
+              className="w-full py-2 px-4 bg-hotel-dark text-white rounded-lg font-medium"
+              onClick={() => handleItemClick(item)}
+              disabled={!item.is_available}
+            >
+              {item.is_available ? 'Заказать' : 'Недоступно'}
+            </button>
           </div>
         ))}
-      </div>
-      
-      <div className="mt-6 text-center text-sm text-hotel-neutral">
-        Для заказа товаров обратитесь к консьержу или на ресепшн.
+
+        {(!shopItems || shopItems.length === 0) && (
+          <div className="text-center py-8">
+            <ShoppingCart size={48} className="mx-auto mb-4 text-gray-300" />
+            <p className="text-gray-500">Товары загружаются...</p>
+          </div>
+        )}
       </div>
 
-      {/* Order Drawer */}
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <DrawerContent className="px-4">
           <DrawerHeader>
-            <DrawerTitle>Заказ товара</DrawerTitle>
+            <DrawerTitle>Подтверждение заказа</DrawerTitle>
           </DrawerHeader>
           
           <div className="space-y-4 py-4">
@@ -197,9 +145,7 @@ const ShopPage = () => {
                   <div>
                     <span className="block font-medium">{selectedItem.name}</span>
                     <span className="text-sm text-gray-500">{selectedItem.category}</span>
-                    {selectedItem.description && (
-                      <p className="text-sm text-gray-600 mt-1">{selectedItem.description}</p>
-                    )}
+                    <p className="text-sm text-gray-600 mt-1">{selectedItem.description}</p>
                   </div>
                   <span className="font-medium text-lg">{selectedItem.final_price}₽</span>
                 </div>
@@ -207,30 +153,36 @@ const ShopPage = () => {
             )}
 
             <div className="space-y-3">
-              <h3 className="font-medium">Контактная информация</h3>
-              <input
-                type="text"
-                name="name"
-                value={contactInfo.name}
-                onChange={handleInputChange}
-                placeholder="Ваше имя"
+              <div>
+                <label className="block text-sm font-medium mb-2">Количество</label>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"
+                  >
+                    -
+                  </button>
+                  <span className="font-medium">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Общая стоимость</label>
+                <span className="text-lg font-semibold">{selectedItem ? selectedItem.final_price * quantity : 0} ₽</span>
+              </div>
+
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Комментарий (необязательно)"
                 className="w-full px-4 py-2 border rounded-md"
-              />
-              <input
-                type="text"
-                name="roomNumber"
-                value={contactInfo.roomNumber}
-                onChange={handleInputChange}
-                placeholder="Номер комнаты"
-                className="w-full px-4 py-2 border rounded-md"
-              />
-              <input
-                type="tel"
-                name="phone"
-                value={contactInfo.phone}
-                onChange={handleInputChange}
-                placeholder="Контактный телефон"
-                className="w-full px-4 py-2 border rounded-md"
+                rows={3}
               />
             </div>
           </div>
@@ -242,7 +194,7 @@ const ShopPage = () => {
               disabled={isSubmitting}
             >
               <Check className="mr-2" size={18} />
-              {isSubmitting ? 'Отправка...' : 'Оформить заказ'}
+              {isSubmitting ? 'Отправка...' : 'Подтвердить заказ'}
             </Button>
             <Button variant="outline" onClick={() => setIsDrawerOpen(false)}>
               Отмена
