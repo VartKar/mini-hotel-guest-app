@@ -6,6 +6,7 @@ import ChangeRequestsManagement from "./ChangeRequestsManagement";
 import TravelOrdersManagement from "./TravelOrdersManagement";
 import ShopOrdersManagement from "./ShopOrdersManagement";
 import FeedbackManagement from "./FeedbackManagement";
+import DatabaseManagement from "./DatabaseManagement";
 
 const AdminDashboard = () => {
   return (
@@ -13,12 +14,13 @@ const AdminDashboard = () => {
       <h1 className="text-3xl font-bold mb-6">Панель администратора</h1>
       
       <Tabs defaultValue="bookings" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="bookings">Бронирования</TabsTrigger>
           <TabsTrigger value="change-requests">Запросы изменений</TabsTrigger>
           <TabsTrigger value="travel-orders">Заказы путешествий</TabsTrigger>
           <TabsTrigger value="shop-orders">Заказы магазина</TabsTrigger>
           <TabsTrigger value="feedback">Отзывы</TabsTrigger>
+          <TabsTrigger value="database">База данных</TabsTrigger>
         </TabsList>
         
         <TabsContent value="bookings" className="mt-6">
@@ -39,6 +41,10 @@ const AdminDashboard = () => {
         
         <TabsContent value="feedback" className="mt-6">
           <FeedbackManagement />
+        </TabsContent>
+        
+        <TabsContent value="database" className="mt-6">
+          <DatabaseManagement />
         </TabsContent>
       </Tabs>
     </div>
