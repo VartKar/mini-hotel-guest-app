@@ -83,29 +83,73 @@ const ConciergeChat = ({ onOpenJivochat }: { onOpenJivochat: () => void }) => {
 
 const TravelExpertChat = () => {
   useEffect(() => {
-    // Add CSS to hide the default n8n greeting text
+    // Initialize the n8n chat widget with custom configuration
+    const initializeChat = () => {
+      // Create a custom script to initialize n8n chat with options
+      const script = document.createElement('script');
+      script.innerHTML = `
+        window.addEventListener('load', function() {
+          if (window.n8nChatWidget) {
+            window.n8nChatWidget.init({
+              webhookUrl: 'https://rubikinn.ru/webhook/de012477-bbe8-44fc-8b10-4ecadf13cd66/chat',
+              initialMessages: [
+                {
+                  text: 'Привет! 👋 Я ваш AI-помощник по путешествиям. Готов помочь вам спланировать незабываемое путешествие!',
+                  sender: 'bot'
+                }
+              ],
+              theme: {
+                primaryColor: '#1e40af',
+                backgroundColor: '#ffffff'
+              },
+              i18n: {
+                en: {
+                  title: 'AI эксперт по путешествиям',
+                  subtitle: 'Планируем ваше идеальное путешествие',
+                  footer: '',
+                  getStarted: 'Начать планирование',
+                  inputPlaceholder: 'Напишите ваш вопрос...'
+                }
+              }
+            });
+          }
+        });
+      `;
+      document.head.appendChild(script);
+    };
+
+    initializeChat();
+
+    // Add CSS to customize the chat widget appearance
     const style = document.createElement('style');
     style.textContent = `
       iframe[src*="rubikinn.ru"] {
         filter: none;
       }
       
-      /* Try to hide the default n8n greeting text */
-      iframe[src*="rubikinn.ru"]::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: transparent;
-        pointer-events: none;
+      /* Custom styling for n8n chat widget */
+      .n8n-chat-widget {
+        --chat-primary-color: #1e40af;
+        --chat-background: #ffffff;
       }
     `;
     document.head.appendChild(style);
 
     return () => {
-      document.head.removeChild(style);
+      // Cleanup script and style elements
+      const scripts = document.querySelectorAll('script');
+      scripts.forEach(script => {
+        if (script.innerHTML.includes('n8nChatWidget')) {
+          document.head.removeChild(script);
+        }
+      });
+      
+      const styles = document.querySelectorAll('style');
+      styles.forEach(styleEl => {
+        if (styleEl.textContent?.includes('n8n-chat-widget')) {
+          document.head.removeChild(styleEl);
+        }
+      });
     };
   }, []);
 
@@ -116,7 +160,7 @@ const TravelExpertChat = () => {
         <h3 className="text-sm font-medium">AI эксперт по путешествиям</h3>
       </div>
       
-      {/* Chat iframe with custom styling to hide default text */}
+      {/* Chat iframe with custom styling */}
       <div className="flex-1 relative">
         <iframe
           src="https://rubikinn.ru/webhook/de012477-bbe8-44fc-8b10-4ecadf13cd66/chat"
@@ -140,12 +184,15 @@ const TravelExpertChat = () => {
   );
 };
 
-// Extend window interface for Jivochat
+// Extend window interface for Jivochat and n8n
 declare global {
   interface Window {
     jivo_api?: {
       open: () => void;
       close: () => void;
+    };
+    n8nChatWidget?: {
+      init: (config: any) => void;
     };
   }
 }
