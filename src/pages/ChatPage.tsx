@@ -5,21 +5,6 @@ import { Send, MessageCircle, User, Bot } from "lucide-react";
 const ChatPage = () => {
   const [activeTab, setActiveTab] = useState<'concierge' | 'travel'>('concierge');
 
-  useEffect(() => {
-    // Initialize Jivochat when component mounts
-    if (window.jivo_api) {
-      window.jivo_api.open();
-    }
-  }, []);
-
-  const openJivochat = () => {
-    if (window.jivo_api) {
-      window.jivo_api.open();
-    } else {
-      console.log('Jivochat is loading...');
-    }
-  };
-
   return (
     <div className="w-full max-w-md mx-auto pt-4 h-[calc(100vh-120px)] flex flex-col">
       <h1 className="text-3xl font-light mb-6">Чат с поддержкой</h1>
@@ -53,7 +38,7 @@ const ChatPage = () => {
       {/* Content */}
       <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
         {activeTab === 'concierge' ? (
-          <ConciergeChat onOpenJivochat={openJivochat} />
+          <ConciergeChat />
         ) : (
           <TravelExpertChat />
         )}
@@ -62,7 +47,22 @@ const ChatPage = () => {
   );
 };
 
-const ConciergeChat = ({ onOpenJivochat }: { onOpenJivochat: () => void }) => {
+const ConciergeChat = () => {
+  const openJivochat = () => {
+    if (window.jivo_api) {
+      window.jivo_api.open();
+    } else {
+      console.log('Jivochat is loading...');
+    }
+  };
+
+  useEffect(() => {
+    // Initialize Jivochat when component mounts
+    if (window.jivo_api) {
+      window.jivo_api.open();
+    }
+  }, []);
+
   return (
     <div className="h-full flex flex-col items-center justify-center p-6 text-center">
       <MessageCircle size={64} className="text-hotel-dark mb-4" />
@@ -71,7 +71,7 @@ const ConciergeChat = ({ onOpenJivochat }: { onOpenJivochat: () => void }) => {
         Свяжитесь с нашим консьержем для получения помощи и информации
       </p>
       <button
-        onClick={onOpenJivochat}
+        onClick={openJivochat}
         className="bg-hotel-dark text-white px-6 py-3 rounded-lg hover:bg-opacity-90 transition-colors flex items-center space-x-2"
       >
         <MessageCircle size={18} />
@@ -82,30 +82,9 @@ const ConciergeChat = ({ onOpenJivochat }: { onOpenJivochat: () => void }) => {
 };
 
 const TravelExpertChat = () => {
-  useEffect(() => {
-    // Add CSS to customize the chat widget appearance
-    const style = document.createElement('style');
-    style.textContent = `
-      iframe[src*="rubikinn.ru"] {
-        filter: none;
-      }
-    `;
-    document.head.appendChild(style);
-
-    return () => {
-      // Cleanup style elements
-      const styles = document.querySelectorAll('style');
-      styles.forEach(styleEl => {
-        if (styleEl.textContent?.includes('iframe[src*="rubikinn.ru"]')) {
-          document.head.removeChild(styleEl);
-        }
-      });
-    };
-  }, []);
-
   return (
     <div className="h-full flex flex-col">
-      {/* Compact header for mobile */}
+      {/* Header */}
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 text-center">
         <h3 className="text-sm font-medium">AI эксперт по путешествиям</h3>
       </div>
