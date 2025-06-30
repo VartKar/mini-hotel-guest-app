@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Mail, LogOut, Loader2, Building, Calendar, User } from "lucide-react";
 import { toast } from "sonner";
@@ -24,6 +23,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import { translateStatus, getStatusBadgeVariant } from "@/lib/statusTranslations";
 
 const HostPage = () => {
   const { hostData, isAuthenticated, loginWithEmail, logout, requestChange, loading, error, clearError } = useHostData();
@@ -80,16 +80,11 @@ const HostPage = () => {
   };
 
   const getStatusBadge = (status: string | null) => {
-    switch (status) {
-      case 'confirmed':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Подтверждено</Badge>;
-      case 'pending':
-        return <Badge variant="secondary">Ожидает</Badge>;
-      case 'demo':
-        return <Badge variant="outline">Демо</Badge>;
-      default:
-        return <Badge variant="secondary">{status || 'Неизвестно'}</Badge>;
-    }
+    return (
+      <Badge variant={getStatusBadgeVariant(status)}>
+        {translateStatus(status)}
+      </Badge>
+    );
   };
 
   if (!isAuthenticated) {

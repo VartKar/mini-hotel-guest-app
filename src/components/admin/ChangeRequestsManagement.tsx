@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { translateStatus, getStatusBadgeVariant } from "@/lib/statusTranslations";
 
 interface ChangeRequest {
   id: string;
@@ -114,10 +115,12 @@ const ChangeRequestsManagement = () => {
   };
 
   const getStatusColor = (status: string | null) => {
-    switch (status) {
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
+    const variant = getStatusBadgeVariant(status);
+    switch (variant) {
+      case 'default': return 'bg-green-100 text-green-800';
+      case 'secondary': return 'bg-yellow-100 text-yellow-800';
+      case 'destructive': return 'bg-red-100 text-red-800';
+      case 'outline': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -165,7 +168,7 @@ const ChangeRequestsManagement = () => {
                 className="border border-gray-300 rounded-md px-3 py-2 bg-white"
               >
                 <option value="all">Все статусы</option>
-                <option value="pending">Ожидает</option>
+                <option value="pending">В ожидании</option>
                 <option value="approved">Одобрено</option>
                 <option value="rejected">Отклонено</option>
               </select>
@@ -216,7 +219,7 @@ const ChangeRequestsManagement = () => {
                     </TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(request.status)}`}>
-                        {request.status || 'pending'}
+                        {translateStatus(request.status)}
                       </span>
                     </TableCell>
                     <TableCell>

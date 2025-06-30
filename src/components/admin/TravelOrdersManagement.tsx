@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
 import { Tables } from "@/integrations/supabase/types";
+import { translateStatus, getStatusBadgeVariant } from "@/lib/statusTranslations";
 
 type TravelServiceOrder = Tables<'travel_service_orders'>;
 
@@ -60,26 +61,6 @@ const TravelOrdersManagement = () => {
     }
   };
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'pending': return 'default';
-      case 'processing': return 'secondary';
-      case 'completed': return 'default';
-      case 'cancelled': return 'destructive';
-      default: return 'default';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'pending': return 'Ожидает';
-      case 'processing': return 'В обработке';
-      case 'completed': return 'Выполнен';
-      case 'cancelled': return 'Отменен';
-      default: return status;
-    }
-  };
-
   if (isLoading) {
     return <div className="text-center py-8">Загрузка заказов...</div>;
   }
@@ -106,7 +87,7 @@ const TravelOrdersManagement = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant={getStatusBadgeVariant(order.order_status)}>
-                      {getStatusLabel(order.order_status)}
+                      {translateStatus(order.order_status)}
                     </Badge>
                     <span className="font-bold text-lg">{order.total_amount} ₽</span>
                   </div>
@@ -149,7 +130,7 @@ const TravelOrdersManagement = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pending">Ожидает</SelectItem>
+                        <SelectItem value="pending">В ожидании</SelectItem>
                         <SelectItem value="processing">В обработке</SelectItem>
                         <SelectItem value="completed">Выполнен</SelectItem>
                         <SelectItem value="cancelled">Отменен</SelectItem>
