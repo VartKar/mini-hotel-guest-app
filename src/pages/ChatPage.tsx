@@ -3,45 +3,18 @@ import React, { useState, useEffect } from "react";
 import { Send, MessageCircle, User, Bot } from "lucide-react";
 
 const ChatPage = () => {
-  const [activeTab, setActiveTab] = useState<'concierge' | 'travel'>('concierge');
-
   return (
-    <div className="w-full max-w-md mx-auto pt-4 h-[calc(100vh-120px)] flex flex-col">
+    <div className="w-full max-w-4xl mx-auto pt-4 h-[calc(100vh-120px)] flex flex-col">
       <h1 className="text-3xl font-light mb-6">Чат с поддержкой</h1>
       
-      {/* Tab Navigation */}
-      <div className="flex mb-4 bg-white rounded-lg shadow-sm overflow-hidden">
-        <button
-          onClick={() => setActiveTab('concierge')}
-          className={`flex-1 px-4 py-3 flex items-center justify-center space-x-2 transition-colors ${
-            activeTab === 'concierge' 
-              ? 'bg-hotel-dark text-white' 
-              : 'bg-white text-hotel-dark hover:bg-hotel-accent'
-          }`}
-        >
-          <User size={18} />
-          <span>Консьерж</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('travel')}
-          className={`flex-1 px-4 py-3 flex items-center justify-center space-x-2 transition-colors ${
-            activeTab === 'travel' 
-              ? 'bg-hotel-dark text-white' 
-              : 'bg-white text-hotel-dark hover:bg-hotel-accent'
-          }`}
-        >
-          <Bot size={18} />
-          <span>Эксперт по путешествиям</span>
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
-        {activeTab === 'concierge' ? (
+      {/* Both chats in one view */}
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <ConciergeChat />
-        ) : (
+        </div>
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <TravelExpertChat />
-        )}
+        </div>
       </div>
     </div>
   );
@@ -64,19 +37,30 @@ const ConciergeChat = () => {
   }, []);
 
   return (
-    <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-      <MessageCircle size={64} className="text-hotel-dark mb-4" />
-      <h3 className="text-xl font-medium mb-2">Чат с консьержем</h3>
-      <p className="text-gray-600 mb-6">
-        Свяжитесь с нашим консьержем для получения помощи и информации
-      </p>
-      <button
-        onClick={openJivochat}
-        className="bg-hotel-dark text-white px-6 py-3 rounded-lg hover:bg-opacity-90 transition-colors flex items-center space-x-2"
-      >
-        <MessageCircle size={18} />
-        <span>Открыть чат</span>
-      </button>
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="bg-hotel-dark text-white p-3 text-center">
+        <h3 className="text-sm font-medium flex items-center justify-center space-x-2">
+          <User size={18} />
+          <span>Консьерж</span>
+        </h3>
+      </div>
+      
+      {/* Content */}
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+        <MessageCircle size={48} className="text-hotel-dark mb-4" />
+        <h4 className="text-lg font-medium mb-2">Чат с консьержем</h4>
+        <p className="text-gray-600 mb-6 text-sm">
+          Свяжитесь с нашим консьержем для получения помощи и информации
+        </p>
+        <button
+          onClick={openJivochat}
+          className="bg-hotel-dark text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors flex items-center space-x-2 text-sm"
+        >
+          <MessageCircle size={16} />
+          <span>Открыть чат</span>
+        </button>
+      </div>
     </div>
   );
 };
@@ -86,7 +70,10 @@ const TravelExpertChat = () => {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 text-center">
-        <h3 className="text-sm font-medium">AI эксперт по путешествиям</h3>
+        <h3 className="text-sm font-medium flex items-center justify-center space-x-2">
+          <Bot size={18} />
+          <span>AI эксперт по путешествиям</span>
+        </h3>
       </div>
       
       {/* Chat iframe */}
