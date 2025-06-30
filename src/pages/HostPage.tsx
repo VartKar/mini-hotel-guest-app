@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { translateStatus, getStatusBadgeVariant } from "@/lib/statusTranslations";
+import HotelServiceOrders from "@/components/host/HotelServiceOrders";
 
 const HostPage = () => {
   const { hostData, isAuthenticated, loginWithEmail, logout, requestChange, loading, error, clearError } = useHostData();
@@ -205,6 +206,11 @@ const HostPage = () => {
             <div className="text-sm">{hostData?.host_email}</div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Hotel Service Orders Section */}
+      <div className="mb-6">
+        <HotelServiceOrders hostEmail={hostData?.host_email || ''} />
       </div>
 
       {/* Bookings Table */}
