@@ -9,13 +9,7 @@ export const statusTranslations = {
   confirmed: 'Подтверждено',
   rejected: 'Отклонено',
   approved: 'Одобрено',
-  demo: 'Демо',
-  
-  // Order statuses
-  'pending': 'Ожидает',
-  'processing': 'В обработке',
-  'completed': 'Выполнен', 
-  'cancelled': 'Отменен'
+  demo: 'Демо'
 } as const;
 
 // Reverse mapping for API calls (if needed)
