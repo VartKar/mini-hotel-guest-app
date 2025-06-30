@@ -2,14 +2,9 @@
 // Status translation mappings
 export const statusTranslations = {
   // Booking statuses
-  pending: 'В ожидании',
-  processing: 'В обработке', 
-  completed: 'Выполнен',
-  cancelled: 'Отменен',
   confirmed: 'Подтверждено',
-  rejected: 'Отклонено',
-  approved: 'Одобрено',
-  demo: 'Демо'
+  paid: 'Оплачено',
+  completed: 'Завершено'
 } as const;
 
 // Reverse mapping for API calls (if needed)
@@ -29,17 +24,10 @@ export const getStatusBadgeVariant = (status: string | null | undefined) => {
   
   switch (status) {
     case 'confirmed':
-    case 'completed':
-    case 'approved':
+      return 'secondary';
+    case 'paid':
       return 'default';
-    case 'pending':
-      return 'secondary';
-    case 'processing':
-      return 'secondary';
-    case 'cancelled':
-    case 'rejected':
-      return 'destructive';
-    case 'demo':
+    case 'completed':
       return 'outline';
     default:
       return 'secondary';
