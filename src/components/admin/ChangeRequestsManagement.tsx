@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { FileText, Check, Trash2, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -119,7 +118,6 @@ const ChangeRequestsManagement = () => {
     switch (variant) {
       case 'default': return 'bg-green-100 text-green-800';
       case 'secondary': return 'bg-yellow-100 text-yellow-800';
-      case 'destructive': return 'bg-red-100 text-red-800';
       case 'outline': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }

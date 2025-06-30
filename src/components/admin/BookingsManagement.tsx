@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Calendar, Search, Filter, Edit, Trash2, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,7 +85,6 @@ const BookingsManagement = () => {
     switch (variant) {
       case 'default': return 'bg-green-100 text-green-800';
       case 'secondary': return 'bg-yellow-100 text-yellow-800';
-      case 'destructive': return 'bg-red-100 text-red-800';
       case 'outline': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -132,9 +130,8 @@ const BookingsManagement = () => {
               >
                 <option value="all">Все статусы</option>
                 <option value="confirmed">Подтверждено</option>
-                <option value="pending">В ожидании</option>
-                <option value="cancelled">Отменено</option>
-                <option value="demo">Демо</option>
+                <option value="paid">Оплачено</option>
+                <option value="completed">Завершено</option>
               </select>
             </div>
           </div>
