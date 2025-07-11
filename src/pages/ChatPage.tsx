@@ -18,16 +18,24 @@ const ChatPage = () => {
 };
 
 const ConciergeChat = () => {
+  const [webimReady, setWebimReady] = useState(false);
+
   const openWebimChat = () => {
-    if (window.webim && window.webim.open) {
+    if (window.webim && typeof window.webim.open === 'function') {
       window.webim.open();
     } else {
-      console.log('Webim is loading...');
+      // Try to trigger webim button click as fallback
+      const webimButton = document.querySelector('.webim_button') as HTMLElement;
+      if (webimButton) {
+        webimButton.click();
+      } else {
+        console.log('Webim не готов. Попробуйте еще раз через несколько секунд.');
+      }
     }
   };
 
   useEffect(() => {
-    // Set webim configuration
+    // Set webim configuration before loading script
     window.webim = {
       accountName: "previewminihotelguestapplovableapp", 
       domain: "previewminihotelguestapplovableapp.webim.ru",
@@ -40,9 +48,15 @@ const ConciergeChat = () => {
     script.src = 'https://previewminihotelguestapplovableapp.webim.ru/js/button.js';
     script.async = true;
     
+    // Wait for script to load
+    script.onload = () => {
+      console.log('Webim script loaded');
+      setWebimReady(true);
+    };
+    
     document.getElementsByTagName('head')[0].appendChild(script);
     
-    // Add webim button HTML
+    // Add webim button HTML but keep it hidden
     const webimButton = document.createElement('a');
     webimButton.className = 'webim_button';
     webimButton.href = '#';
@@ -106,6 +120,7 @@ declare global {
       location: string;
       open?: () => void;
       close?: () => void;
+      [key: string]: any; // Allow for other webim properties
     };
   }
 }
