@@ -27,24 +27,42 @@ const ConciergeChat = () => {
   };
 
   useEffect(() => {
+    // Set webim configuration
+    window.webim = {
+      accountName: "previewminihotelguestapplovableapp", 
+      domain: "previewminihotelguestapplovableapp.webim.ru",
+      location: "default"
+    };
+
     // Initialize Webim script when component mounts
     const script = document.createElement('script');
     script.type = 'text/javascript';
     script.src = 'https://previewminihotelguestapplovableapp.webim.ru/js/button.js';
-    
-    // Set webim configuration
-    window.webim = {
-      accountName: "previewminihotelguestapplovableapp",
-      domain: "previewminihotelguestapplovableapp.webim.ru",
-      location: "default"
-    };
+    script.async = true;
     
     document.getElementsByTagName('head')[0].appendChild(script);
     
-    // Cleanup function to remove script when component unmounts
+    // Add webim button HTML
+    const webimButton = document.createElement('a');
+    webimButton.className = 'webim_button';
+    webimButton.href = '#';
+    webimButton.rel = 'webim';
+    webimButton.style.display = 'none'; // Hide the default button
+    
+    const webimImg = document.createElement('img');
+    webimImg.src = 'https://previewminihotelguestapplovableapp.webim.ru/button.php';
+    webimImg.border = '0';
+    
+    webimButton.appendChild(webimImg);
+    document.body.appendChild(webimButton);
+    
+    // Cleanup function to remove script and button when component unmounts
     return () => {
       if (script.parentNode) {
         script.parentNode.removeChild(script);
+      }
+      if (webimButton.parentNode) {
+        webimButton.parentNode.removeChild(webimButton);
       }
     };
   }, []);
