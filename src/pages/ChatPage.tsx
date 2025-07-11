@@ -34,7 +34,7 @@ const ChatPage = () => {
             Свяжитесь с нами прямо сейчас
           </h2>
           
-          <p className="text-muted-foreground text-lg leading-relaxed">
+          <p className="text-muted-foreground text-lg leading-relaxed mb-8">
             Наши операторы готовы ответить на любые ваши вопросы о бронировании, 
             услугах мини-отеля и достопримечательностях города
           </p>
@@ -43,7 +43,7 @@ const ChatPage = () => {
         {/* Стандартная кнопка Webim */}
         <div id="webim-button-container">
           <a className="webim_button" href="#" rel="webim">
-            <img src="https://previewminihotelguestapplovableapp.webim.ru/button.php" alt="Чат с оператором"/>
+            <img src="https://previewminihotelguestapplovableapp.webim.ru/button.php" alt="Webim Chat Button" />
           </a>
         </div>
       </div>
