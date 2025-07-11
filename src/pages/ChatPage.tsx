@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from "react";
-import { MessageCircle, User } from "lucide-react";
+import React, { useEffect } from "react";
+import { MessageCircle, User, Clock, Star } from "lucide-react";
 
 const ChatPage = () => {
   return (
@@ -17,9 +17,6 @@ const ChatPage = () => {
 };
 
 const WebimChat = () => {
-  const [isWebimReady, setIsWebimReady] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
   useEffect(() => {
     // Настройка Webim перед загрузкой скрипта
     window.webim = {
@@ -35,21 +32,7 @@ const WebimChat = () => {
     script.async = true;
 
     script.onload = () => {
-      setIsWebimReady(true);
-      
-      // Создаем скрытую кнопку Webim
-      const webimButton = document.createElement('a');
-      webimButton.className = 'webim_button';
-      webimButton.href = '#';
-      webimButton.rel = 'webim';
-      webimButton.style.display = 'none';
-      
-      const webimImg = document.createElement('img');
-      webimImg.src = 'https://previewminihotelguestapplovableapp.webim.ru/button.php';
-      webimImg.border = '0';
-      
-      webimButton.appendChild(webimImg);
-      document.body.appendChild(webimButton);
+      console.log('Webim скрипт успешно загружен');
     };
 
     script.onerror = () => {
@@ -63,95 +46,85 @@ const WebimChat = () => {
       if (script.parentNode) {
         script.parentNode.removeChild(script);
       }
-      const existingButton = document.querySelector('.webim_button');
-      if (existingButton && existingButton.parentNode) {
-        existingButton.parentNode.removeChild(existingButton);
-      }
     };
   }, []);
-
-  const handleOpenChat = async () => {
-    setIsLoading(true);
-    
-    try {
-      // Попытка открыть через API
-      if (window.webim && typeof window.webim.open === 'function') {
-        window.webim.open();
-      } else {
-        // Fallback через скрытую кнопку
-        const webimButton = document.querySelector('.webim_button') as HTMLAnchorElement;
-        if (webimButton) {
-          webimButton.click();
-        } else {
-          throw new Error('Webim не готов');
-        }
-      }
-    } catch (error) {
-      console.error('Ошибка открытия чата:', error);
-      alert('Не удалось открыть чат. Попробуйте еще раз через несколько секунд.');
-    } finally {
-      setTimeout(() => setIsLoading(false), 1000);
-    }
-  };
 
   return (
     <div className="h-full flex flex-col">
       {/* Заголовок */}
-      <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-4 text-center">
-        <h3 className="text-lg font-medium flex items-center justify-center gap-2">
-          <User size={20} />
-          <span>Консьерж</span>
+      <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-6 text-center">
+        <h3 className="text-xl font-medium flex items-center justify-center gap-3 mb-2">
+          <User size={24} />
+          <span>Консьерж отеля</span>
         </h3>
+        <p className="text-red-100 text-sm">Мы всегда готовы помочь!</p>
       </div>
       
       {/* Контент */}
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-gray-50 to-white">
+        {/* Иконка и основной текст */}
         <div className="mb-8">
-          <MessageCircle size={64} className="text-red-600 mb-4 mx-auto" />
-          <h4 className="text-2xl font-semibold mb-3 text-gray-800">Чат с консьержем</h4>
-          <p className="text-gray-600 mb-2 text-base max-w-md">
-            Наши операторы готовы ответить на любые ваши вопросы о бронировании, услугах мини-отеля и достопримечательностях города
-          </p>
-          <p className="text-sm text-gray-500">
-            Среднее время ответа: 2-3 минуты
+          <div className="mb-6 relative">
+            <MessageCircle size={80} className="text-red-600 mx-auto mb-4" />
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full animate-pulse"></div>
+          </div>
+          
+          <h4 className="text-3xl font-bold mb-4 text-gray-800">
+            Свяжитесь с нами прямо сейчас
+          </h4>
+          
+          <p className="text-gray-600 mb-6 text-lg leading-relaxed max-w-2xl">
+            Наши операторы готовы ответить на любые ваши вопросы о бронировании, 
+            услугах мини-отеля и достопримечательностях города
           </p>
         </div>
 
-        {/* Кастомная кнопка */}
-        <button
-          onClick={handleOpenChat}
-          disabled={!isWebimReady || isLoading}
-          className={`
-            inline-flex items-center gap-3 px-8 py-4 
-            bg-gradient-to-r from-red-500 to-red-600 
-            hover:from-red-600 hover:to-red-700
-            text-white font-medium text-lg
-            rounded-full shadow-lg hover:shadow-xl
-            transform hover:-translate-y-0.5 
-            transition-all duration-300 ease-in-out
-            disabled:opacity-50 disabled:cursor-not-allowed
-            disabled:hover:transform-none
-            ${isLoading ? 'animate-pulse' : ''}
-          `}
-        >
-          {isLoading ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span>Открываем чат...</span>
-            </>
-          ) : (
-            <>
-              <MessageCircle size={20} />
-              <span>Открыть чат</span>
-            </>
-          )}
-        </button>
+        {/* Преимущества чата */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 max-w-4xl">
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <Clock className="text-red-600 mb-3 mx-auto" size={32} />
+            <h5 className="font-semibold text-gray-800 mb-2">Быстрый ответ</h5>
+            <p className="text-gray-600 text-sm">Среднее время ответа: 2-3 минуты</p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <User className="text-red-600 mb-3 mx-auto" size={32} />
+            <h5 className="font-semibold text-gray-800 mb-2">Личный подход</h5>
+            <p className="text-gray-600 text-sm">Индивидуальные рекомендации для каждого гостя</p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <Star className="text-red-600 mb-3 mx-auto" size={32} />
+            <h5 className="font-semibold text-gray-800 mb-2">Высокое качество</h5>
+            <p className="text-gray-600 text-sm">Профессиональная помощь 24/7</p>
+          </div>
+        </div>
 
-        {!isWebimReady && (
-          <p className="text-sm text-gray-500 mt-4">
-            Загрузка чата...
+        {/* Призыв к действию */}
+        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-8 max-w-2xl">
+          <h5 className="text-xl font-semibold text-red-800 mb-3">
+            Кнопка чата появится в правом нижнем углу
+          </h5>
+          <p className="text-red-700 mb-4">
+            Ищите красную кнопку чата в правом нижнем углу экрана. 
+            Нажмите на неё, чтобы начать общение с нашими операторами.
           </p>
-        )}
+          <div className="flex items-center justify-center gap-2 text-red-600">
+            <span className="text-2xl">👉</span>
+            <span className="font-medium">Кнопка чата находится там</span>
+            <span className="text-2xl">👇</span>
+          </div>
+        </div>
+
+        {/* Дополнительная информация */}
+        <div className="mt-8 text-center">
+          <p className="text-gray-500 text-sm mb-2">
+            Если кнопка не появилась, попробуйте обновить страницу
+          </p>
+          <p className="text-gray-400 text-xs">
+            Мы работаем над улучшением сервиса для вашего комфорта
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -164,8 +137,6 @@ declare global {
       accountName: string;
       domain: string;
       location: string;
-      open?: () => void;
-      close?: () => void;
       [key: string]: any;
     };
   }
