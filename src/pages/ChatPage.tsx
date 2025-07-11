@@ -18,19 +18,35 @@ const ChatPage = () => {
 };
 
 const ConciergeChat = () => {
-  const openJivochat = () => {
-    if (window.jivo_api) {
-      window.jivo_api.open();
+  const openWebimChat = () => {
+    if (window.webim && window.webim.open) {
+      window.webim.open();
     } else {
-      console.log('Jivochat is loading...');
+      console.log('Webim is loading...');
     }
   };
 
   useEffect(() => {
-    // Initialize Jivochat when component mounts
-    if (window.jivo_api) {
-      window.jivo_api.open();
-    }
+    // Initialize Webim script when component mounts
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://previewminihotelguestapplovableapp.webim.ru/js/button.js';
+    
+    // Set webim configuration
+    window.webim = {
+      accountName: "previewminihotelguestapplovableapp",
+      domain: "previewminihotelguestapplovableapp.webim.ru",
+      location: "default"
+    };
+    
+    document.getElementsByTagName('head')[0].appendChild(script);
+    
+    // Cleanup function to remove script when component unmounts
+    return () => {
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
   }, []);
 
   return (
@@ -51,7 +67,7 @@ const ConciergeChat = () => {
           Свяжитесь с нашим консьержем для получения помощи и информации
         </p>
         <button
-          onClick={openJivochat}
+          onClick={openWebimChat}
           className="bg-hotel-dark text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors flex items-center space-x-2 text-sm"
         >
           <MessageCircle size={16} />
@@ -63,12 +79,15 @@ const ConciergeChat = () => {
 };
 
 
-// Extend window interface for Jivochat
+// Extend window interface for Webim
 declare global {
   interface Window {
-    jivo_api?: {
-      open: () => void;
-      close: () => void;
+    webim?: {
+      accountName: string;
+      domain: string;
+      location: string;
+      open?: () => void;
+      close?: () => void;
     };
   }
 }
