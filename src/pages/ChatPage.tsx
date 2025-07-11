@@ -28,15 +28,13 @@ const ChatPage = () => {
 
   return (
     <div className="w-full max-w-4xl mx-auto pt-8 h-[calc(100vh-120px)] flex flex-col">
-      <h1 className="text-3xl font-light mb-6 text-hotel-dark">Чат с поддержкой</h1>
-      
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-hotel-light">
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
         <div className="mb-8 max-w-2xl">
-          <h2 className="text-2xl font-semibold mb-4 text-hotel-dark">
+          <h2 className="text-2xl font-semibold mb-4 text-foreground">
             Свяжитесь с нами прямо сейчас
           </h2>
           
-          <p className="text-hotel-neutral text-lg leading-relaxed">
+          <p className="text-muted-foreground text-lg leading-relaxed">
             Наши операторы готовы ответить на любые ваши вопросы о бронировании, 
             услугах мини-отеля и достопримечательностях города
           </p>
@@ -45,7 +43,7 @@ const ChatPage = () => {
         {/* Стандартная кнопка Webim */}
         <div id="webim-button-container">
           <a className="webim_button" href="#" rel="webim">
-            <img src="https://previewminihotelguestapplovableapp.webim.ru/button.php" border="0" alt="Чат с оператором"/>
+            <img src="https://previewminihotelguestapplovableapp.webim.ru/button.php" alt="Чат с оператором"/>
           </a>
         </div>
       </div>
