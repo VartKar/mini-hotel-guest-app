@@ -96,36 +96,7 @@
   }
 }
 
-/* Стили для кнопки Webim */
-.webim_button {
-  display: inline-block !important;
-  padding: 15px 30px !important;
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8)) !important;
-  color: hsl(var(--primary-foreground)) !important;
-  text-decoration: none !important;
-  border-radius: 50px !important;
-  box-shadow: 0 4px 15px hsl(var(--primary) / 0.3) !important;
-  transition: all 0.3s ease !important;
-  font-weight: 500 !important;
-  font-size: 16px !important;
-  border: none !important;
-}
-
-.webim_button:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 25px hsl(var(--primary) / 0.4) !important;
-}
-
-.webim_button img {
-  display: none !important;
-}
-
-.webim_button::after {
-  content: 'Открыть чат' !important;
-  font-family: 'Inter', sans-serif !important;
-}
-
-/* Контейнер для кнопки */
+/* Контейнер для кнопки Webim */
 #webim-button-container {
   margin-top: 30px;
 }
