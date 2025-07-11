@@ -21,26 +21,35 @@ const ConciergeChat = () => {
   const [webimReady, setWebimReady] = useState(false);
 
   const openWebimChat = () => {
+    console.log('Кнопка "Открыть чат" нажата');
+    console.log('window.webim:', window.webim);
+    
     if (window.webim && typeof window.webim.open === 'function') {
+      console.log('Вызываем window.webim.open()');
       window.webim.open();
     } else {
+      console.log('webim.open не найден, ищем кнопку webim_button');
       // Try to trigger webim button click as fallback
       const webimButton = document.querySelector('.webim_button') as HTMLElement;
+      console.log('webimButton найден:', !!webimButton);
       if (webimButton) {
+        console.log('Кликаем по webim button');
         webimButton.click();
       } else {
-        console.log('Webim не готов. Попробуйте еще раз через несколько секунд.');
+        console.log('Webim кнопка не найдена. Webim не готов.');
       }
     }
   };
 
   useEffect(() => {
+    console.log('ChatPage useEffect запущен');
     // Set webim configuration before loading script
     window.webim = {
       accountName: "previewminihotelguestapplovableapp", 
       domain: "previewminihotelguestapplovableapp.webim.ru",
       location: "default"
     };
+    console.log('Webim конфигурация установлена:', window.webim);
 
     // Initialize Webim script when component mounts
     const script = document.createElement('script');
@@ -50,10 +59,16 @@ const ConciergeChat = () => {
     
     // Wait for script to load
     script.onload = () => {
-      console.log('Webim script loaded');
+      console.log('Webim script загружен успешно');
+      console.log('window.webim после загрузки:', window.webim);
       setWebimReady(true);
     };
     
+    script.onerror = () => {
+      console.error('Ошибка загрузки Webim script');
+    };
+    
+    console.log('Добавляем webim script в head');
     document.getElementsByTagName('head')[0].appendChild(script);
     
     // Add webim button HTML but keep it hidden
