@@ -7,8 +7,58 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   public: {
     Tables: {
+      actions: {
+        Row: {
+          action_id: string
+          action_type: Database["public"]["Enums"]["action_type"]
+          date_created: string | null
+          player_id: string | null
+          quantity: number
+          result: Json | null
+          round_id: string | null
+        }
+        Insert: {
+          action_id?: string
+          action_type: Database["public"]["Enums"]["action_type"]
+          date_created?: string | null
+          player_id?: string | null
+          quantity?: number
+          result?: Json | null
+          round_id?: string | null
+        }
+        Update: {
+          action_id?: string
+          action_type?: Database["public"]["Enums"]["action_type"]
+          date_created?: string | null
+          player_id?: string | null
+          quantity?: number
+          result?: Json | null
+          round_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "actions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "actions_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["round_id"]
+          },
+        ]
+      }
       combined: {
         Row: {
           ac_instructions: string | null
@@ -263,6 +313,107 @@ export type Database = {
         }
         Relationships: []
       }
+      logic_rules: {
+        Row: {
+          action_type: Database["public"]["Enums"]["action_type"]
+          cost_per_unit: number
+          date_created: string | null
+          new_product_impact: number
+          old_product_impact: number
+          rule_id: string
+          time_per_unit: number
+        }
+        Insert: {
+          action_type: Database["public"]["Enums"]["action_type"]
+          cost_per_unit: number
+          date_created?: string | null
+          new_product_impact: number
+          old_product_impact: number
+          rule_id?: string
+          time_per_unit: number
+        }
+        Update: {
+          action_type?: Database["public"]["Enums"]["action_type"]
+          cost_per_unit?: number
+          date_created?: string | null
+          new_product_impact?: number
+          old_product_impact?: number
+          rule_id?: string
+          time_per_unit?: number
+        }
+        Relationships: []
+      }
+      players: {
+        Row: {
+          current_round: number | null
+          date_created: string | null
+          is_active: boolean | null
+          player_id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          current_round?: number | null
+          date_created?: string | null
+          is_active?: boolean | null
+          player_id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          current_round?: number | null
+          date_created?: string | null
+          is_active?: boolean | null
+          player_id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["session_id"]
+          },
+          {
+            foreignKeyName: "players_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          date_created: string | null
+          metadata: Json | null
+          profile_id: string
+          user_id: string | null
+        }
+        Insert: {
+          date_created?: string | null
+          metadata?: Json | null
+          profile_id?: string
+          user_id?: string | null
+        }
+        Update: {
+          date_created?: string | null
+          metadata?: Json | null
+          profile_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       property_item_pricing: {
         Row: {
           created_at: string
@@ -336,6 +487,76 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "travel_services"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      rounds: {
+        Row: {
+          date_created: string | null
+          round_id: string
+          round_number: number
+          session_id: string | null
+        }
+        Insert: {
+          date_created?: string | null
+          round_id?: string
+          round_number: number
+          session_id?: string | null
+        }
+        Update: {
+          date_created?: string | null
+          round_id?: string
+          round_number?: number
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rounds_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["session_id"]
+          },
+        ]
+      }
+      sessions: {
+        Row: {
+          date_created: string | null
+          date_updated: string | null
+          moderator_id: string | null
+          name: string
+          session_id: string
+          settings: Json | null
+          status: Database["public"]["Enums"]["session_status"] | null
+          total_rounds: number | null
+        }
+        Insert: {
+          date_created?: string | null
+          date_updated?: string | null
+          moderator_id?: string | null
+          name: string
+          session_id?: string
+          settings?: Json | null
+          status?: Database["public"]["Enums"]["session_status"] | null
+          total_rounds?: number | null
+        }
+        Update: {
+          date_created?: string | null
+          date_updated?: string | null
+          moderator_id?: string | null
+          name?: string
+          session_id?: string
+          settings?: Json | null
+          status?: Database["public"]["Enums"]["session_status"] | null
+          total_rounds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_moderator_id_fkey"
+            columns: ["moderator_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -579,6 +800,30 @@ export type Database = {
         }
         Relationships: []
       }
+      users: {
+        Row: {
+          date_created: string | null
+          email: string | null
+          name: string
+          role: Database["public"]["Enums"]["user_role"] | null
+          user_id: string
+        }
+        Insert: {
+          date_created?: string | null
+          email?: string | null
+          name: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          user_id?: string
+        }
+        Update: {
+          date_created?: string | null
+          email?: string | null
+          name?: string
+          role?: Database["public"]["Enums"]["user_role"] | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -587,7 +832,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      action_type: "training" | "visit" | "promotion" | "research"
+      session_status: "waiting" | "in_progress" | "completed"
+      user_role: "player" | "moderator" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -595,21 +842,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -627,14 +878,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -650,14 +903,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -673,14 +928,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -688,20 +945,26 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      action_type: ["training", "visit", "promotion", "research"],
+      session_status: ["waiting", "in_progress", "completed"],
+      user_role: ["player", "moderator", "admin"],
+    },
   },
 } as const

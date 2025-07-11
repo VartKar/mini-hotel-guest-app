@@ -13,7 +13,7 @@ const menuItems = [{
   icon: <Home size={32} />,
   path: "/room"
 }, {
-  name: "Путешествие",
+  name: "План поездки",
   icon: <Map size={32} />,
   path: "/travel"
 }, {

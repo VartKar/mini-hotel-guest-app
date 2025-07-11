@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { MapPin, Calendar, Sun, Compass, Check, PlusCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { MapPin, Calendar, Sun, Compass, Check, PlusCircle, Bot } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
@@ -140,7 +140,14 @@ const TravelPage = () => {
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
-      <h1 className="text-3xl font-light mb-6">Путешествие в г. {city}</h1>
+      <h1 className="text-3xl font-light mb-6">План поездки в г. {city}</h1>
+      
+      {/* Disclaimer */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <p className="text-sm text-blue-800">
+          Мы составили для вас набор рекомендаций по активностям во время вашего путешествия, основываясь на нашем прекрасном знании города и любви к нему.
+        </p>
+      </div>
       
       {/* Banner */}
       <div className="w-full h-48 mb-6 rounded-lg bg-cover bg-center" style={{
@@ -169,14 +176,6 @@ const TravelPage = () => {
                 </div>
                 <div className="ml-4 flex-1">
                   <div className="flex items-center">
-                    <div className="text-lg font-medium p-1 rounded focus:bg-gray-50 focus:outline-none" 
-                      contentEditable 
-                      suppressContentEditableWarning 
-                      onBlur={e => handleItineraryEdit(item.id, 'day_number', parseInt(e.currentTarget.innerText.replace('День ', '')) || item.day_number)}
-                    >
-                      День {item.day_number}
-                    </div>
-                    <span className="mx-1">:</span>
                     <div className="text-lg font-medium p-1 rounded focus:bg-gray-50 focus:outline-none" 
                       contentEditable 
                       suppressContentEditableWarning 
@@ -281,6 +280,11 @@ const TravelPage = () => {
         )}
       </div>
       
+      {/* Travel Expert Chat */}
+      <div className="bg-white rounded-lg shadow-sm mb-6">
+        <TravelExpertChat />
+      </div>
+      
       {/* Order Drawer */}
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <DrawerContent className="px-4">
@@ -296,9 +300,6 @@ const TravelPage = () => {
                     <span className="block font-medium">
                       {'service_title' in selectedService ? selectedService.service_title : selectedService.title}
                     </span>
-                    {'day_number' in selectedService && (
-                      <span className="text-sm text-gray-500">День {selectedService.day_number}</span>
-                    )}
                     {selectedService.category && (
                       <span className="text-sm text-gray-500">{selectedService.category}</span>
                     )}
@@ -339,6 +340,41 @@ const TravelPage = () => {
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
+    </div>
+  );
+};
+
+const TravelExpertChat = () => {
+  return (
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 text-center">
+        <h3 className="text-sm font-medium flex items-center justify-center space-x-2">
+          <Bot size={18} />
+          <span>AI эксперт по путешествиям</span>
+        </h3>
+      </div>
+      
+      {/* Chat iframe */}
+      <div className="flex-1 relative">
+        <iframe
+          src="https://rubikinn.ru/webhook/de012477-bbe8-44fc-8b10-4ecadf13cd66/chat"
+          className="w-full h-full border-0"
+          title="Виртуальный эксперт по путешествиям"
+          allow="microphone; camera"
+          style={{
+            minHeight: '400px'
+          }}
+        />
+        
+        {/* Loading state overlay */}
+        <div className="absolute inset-0 bg-gray-50 flex items-center justify-center text-gray-500 pointer-events-none opacity-0 transition-opacity duration-300" id="chat-loading">
+          <div className="text-center">
+            <Bot size={32} className="mx-auto mb-2 text-blue-500" />
+            <p className="text-sm">Загрузка чата...</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
