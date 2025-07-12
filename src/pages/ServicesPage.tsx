@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Bed, UtensilsCrossed, Shirt, Award, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -140,51 +141,67 @@ const ServicesPage = () => {
       
       <div className="space-y-4">
         {hotelServices?.map((service, index) => (
-          <div key={service.id} className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-start mb-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-hotel-accent flex items-center justify-center text-hotel-dark">
-                {getIconForService(service.icon_type)}
+          <div key={service.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+            {service.image_url && (
+              <div className="w-full h-48 relative">
+                <img 
+                  src={service.image_url} 
+                  alt={service.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <div className="ml-4 flex-1">
-                <h2 className="text-xl font-medium">{service.title}</h2>
-                <p className="text-hotel-neutral">{service.description}</p>
-                
-                {service.has_details && service.details_content && (
-                  <Collapsible 
-                    open={expandedServices.includes(index)} 
-                    onOpenChange={() => toggleServiceDetails(index)}
-                  >
-                    <CollapsibleTrigger className="flex items-center gap-2 mt-3 text-sm text-hotel-dark hover:text-hotel-accent">
-                      {expandedServices.includes(index) ? (
-                        <>
-                          <ChevronUp size={16} />
-                          Скрыть подробности
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown size={16} />
-                          Показать подробности
-                        </>
-                      )}
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="text-sm text-gray-700 whitespace-pre-line">
-                          {service.details_content}
+            )}
+            <div className="p-6">
+              <div className="flex items-start mb-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-hotel-accent flex items-center justify-center text-hotel-dark">
+                  {getIconForService(service.icon_type)}
+                </div>
+                <div className="ml-4 flex-1">
+                  <h2 className="text-xl font-medium">{service.title}</h2>
+                  <p className="text-hotel-neutral">{service.description}</p>
+                  <div className="mt-2">
+                    <span className="text-lg font-semibold text-hotel-dark">
+                      {service.final_price} ₽
+                    </span>
+                  </div>
+                  
+                  {service.has_details && service.details_content && (
+                    <Collapsible 
+                      open={expandedServices.includes(index)} 
+                      onOpenChange={() => toggleServiceDetails(index)}
+                    >
+                      <CollapsibleTrigger className="flex items-center gap-2 mt-3 text-sm text-hotel-dark hover:text-hotel-accent">
+                        {expandedServices.includes(index) ? (
+                          <>
+                            <ChevronUp size={16} />
+                            Скрыть подробности
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown size={16} />
+                            Показать подробности
+                          </>
+                        )}
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                          <div className="text-sm text-gray-700 whitespace-pre-line">
+                            {service.details_content}
+                          </div>
                         </div>
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                )}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+                </div>
               </div>
+              <button 
+                className="w-full py-2 px-4 bg-hotel-dark text-white rounded-lg font-medium"
+                onClick={() => handleServiceClick(service)}
+                disabled={!service.is_available}
+              >
+                {service.is_available ? 'Заказать' : 'Недоступно'}
+              </button>
             </div>
-            <button 
-              className="w-full py-2 px-4 bg-hotel-dark text-white rounded-lg font-medium"
-              onClick={() => handleServiceClick(service)}
-              disabled={!service.is_available}
-            >
-              {service.is_available ? 'Заказать' : 'Недоступно'}
-            </button>
           </div>
         ))}
 
@@ -211,6 +228,15 @@ const ServicesPage = () => {
           <div className="space-y-4 py-4">
             {selectedService && (
               <div className="p-3 bg-gray-50 rounded-lg">
+                {selectedService.image_url && (
+                  <div className="w-full h-32 mb-3 rounded-lg overflow-hidden">
+                    <img 
+                      src={selectedService.image_url} 
+                      alt={selectedService.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-8 h-8 bg-hotel-accent rounded-full flex items-center justify-center">
                     {getIconForService(selectedService.icon_type)}
@@ -218,6 +244,11 @@ const ServicesPage = () => {
                   <span className="font-medium">{selectedService.title}</span>
                 </div>
                 <p className="text-sm text-gray-600">{selectedService.description}</p>
+                <div className="mt-2">
+                  <span className="text-lg font-semibold text-hotel-dark">
+                    {selectedService.final_price} ₽
+                  </span>
+                </div>
               </div>
             )}
 

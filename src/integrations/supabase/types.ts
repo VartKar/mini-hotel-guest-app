@@ -279,6 +279,7 @@ export type Database = {
           has_details: boolean | null
           icon_type: string | null
           id: string
+          image_url: string | null
           is_active: boolean
           title: string
           updated_at: string
@@ -293,6 +294,7 @@ export type Database = {
           has_details?: boolean | null
           icon_type?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           title: string
           updated_at?: string
@@ -307,6 +309,7 @@ export type Database = {
           has_details?: boolean | null
           icon_type?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           title?: string
           updated_at?: string
@@ -568,6 +571,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          image_url: string | null
           is_active: boolean
           name: string
           updated_at: string
@@ -579,6 +583,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           name: string
           updated_at?: string
@@ -590,6 +595,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           name?: string
           updated_at?: string
@@ -768,6 +774,7 @@ export type Database = {
           difficulty_level: string | null
           duration_hours: number | null
           id: string
+          image_url: string | null
           is_active: boolean
           title: string
           updated_at: string
@@ -781,6 +788,7 @@ export type Database = {
           difficulty_level?: string | null
           duration_hours?: number | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           title: string
           updated_at?: string
@@ -794,6 +802,7 @@ export type Database = {
           difficulty_level?: string | null
           duration_hours?: number | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           title?: string
           updated_at?: string
