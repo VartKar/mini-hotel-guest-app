@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -121,27 +122,38 @@ const ShopPage = () => {
       
       <div className="space-y-4">
         {shopItems?.map((item) => (
-          <div key={item.id} className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-start mb-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-hotel-accent flex items-center justify-center text-hotel-dark">
-                <ShoppingCart size={24} />
+          <div key={item.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+            {item.image_url && (
+              <div className="w-full h-48 relative">
+                <img 
+                  src={item.image_url} 
+                  alt={item.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <div className="ml-4 flex-1">
-                <h2 className="text-xl font-medium">{item.name}</h2>
-                <p className="text-hotel-neutral">{item.description}</p>
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-lg font-semibold text-hotel-dark">{item.final_price} ₽</span>
-                  <span className="text-sm text-gray-500">{item.category}</span>
+            )}
+            <div className="p-6">
+              <div className="flex items-start mb-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-hotel-accent flex items-center justify-center text-hotel-dark">
+                  <ShoppingCart size={24} />
+                </div>
+                <div className="ml-4 flex-1">
+                  <h2 className="text-xl font-medium">{item.name}</h2>
+                  <p className="text-hotel-neutral">{item.description}</p>
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="text-lg font-semibold text-hotel-dark">{item.final_price} ₽</span>
+                    <span className="text-sm text-gray-500">{item.category}</span>
+                  </div>
                 </div>
               </div>
+              <button 
+                className="w-full py-2 px-4 bg-hotel-dark text-white rounded-lg font-medium"
+                onClick={() => handleItemClick(item)}
+                disabled={!item.is_available}
+              >
+                {item.is_available ? 'Заказать' : 'Недоступно'}
+              </button>
             </div>
-            <button 
-              className="w-full py-2 px-4 bg-hotel-dark text-white rounded-lg font-medium"
-              onClick={() => handleItemClick(item)}
-              disabled={!item.is_available}
-            >
-              {item.is_available ? 'Заказать' : 'Недоступно'}
-            </button>
           </div>
         ))}
 
@@ -168,6 +180,15 @@ const ShopPage = () => {
           <div className="space-y-4 py-4">
             {selectedItem && (
               <div className="p-3 bg-gray-50 rounded-lg">
+                {selectedItem.image_url && (
+                  <div className="w-full h-32 mb-3 rounded-lg overflow-hidden">
+                    <img 
+                      src={selectedItem.image_url} 
+                      alt={selectedItem.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <span className="block font-medium">{selectedItem.name}</span>
