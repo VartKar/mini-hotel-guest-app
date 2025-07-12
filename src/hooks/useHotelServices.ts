@@ -26,6 +26,7 @@ export const useHotelServices = (city: string = 'Сочи', propertyId?: string 
   return useQuery({
     queryKey: ['hotel-services', city, propertyId],
     queryFn: async () => {
+      console.log('=== HOTEL SERVICES DEBUG ===');
       console.log('Fetching hotel services for city:', city, 'property:', propertyId);
       
       // First, get all hotel services for the city
@@ -36,18 +37,28 @@ export const useHotelServices = (city: string = 'Сочи', propertyId?: string 
         .eq('is_active', true)
         .order('category', { ascending: true });
 
+      console.log('Hotel services query result:', { services, servicesError });
+
       if (servicesError) {
         console.error('Error fetching hotel services:', servicesError);
         throw servicesError;
       }
 
+      if (!services || services.length === 0) {
+        console.log('No hotel services found for city:', city);
+        return [];
+      }
+
       // If we have a property ID, get property-specific pricing
       let propertyPricing: any[] = [];
       if (propertyId) {
+        console.log('Fetching service pricing for property:', propertyId);
         const { data: pricing, error: pricingError } = await supabase
           .from('property_service_pricing')
           .select('hotel_service_id, price_override, is_available')
           .eq('property_id', propertyId);
+
+        console.log('Service pricing query result:', { pricing, pricingError });
 
         if (pricingError) {
           console.error('Error fetching service pricing:', pricingError);
@@ -59,14 +70,17 @@ export const useHotelServices = (city: string = 'Сочи', propertyId?: string 
       // Combine services with pricing
       const servicesWithPricing: HotelServiceWithPrice[] = services.map(service => {
         const pricing = propertyPricing.find(p => p.hotel_service_id === service.id);
-        return {
+        const finalService = {
           ...service,
           final_price: pricing?.price_override || service.base_price,
           is_available: pricing?.is_available !== false // Default to true if no override
         };
+        console.log('Service with pricing:', finalService);
+        return finalService;
       });
 
-      console.log('Hotel services with pricing:', servicesWithPricing.length);
+      console.log('Final hotel services with pricing:', servicesWithPricing.length, 'services');
+      console.log('=== END HOTEL SERVICES DEBUG ===');
       return servicesWithPricing;
     },
   });

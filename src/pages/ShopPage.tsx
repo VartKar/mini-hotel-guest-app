@@ -12,7 +12,16 @@ const ShopPage = () => {
   const city = roomData?.city || 'Сочи';
   const propertyId = roomData?.property_id;
   
-  const { data: shopItems, isLoading } = useShopItems(city, propertyId);
+  console.log('=== SHOP PAGE DEBUG ===');
+  console.log('Room data:', roomData);
+  console.log('City:', city);
+  console.log('Property ID:', propertyId);
+  console.log('Guest email:', roomData?.guest_email);
+  
+  const { data: shopItems, isLoading, error } = useShopItems(city, propertyId);
+  
+  console.log('Shop items result:', { shopItems, isLoading, error });
+  console.log('=== END SHOP PAGE DEBUG ===');
   
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
@@ -53,7 +62,7 @@ const ShopPage = () => {
           quantity: quantity,
           category: selectedItem.category
         }],
-        totalAmount: totalAmount, // Fixed: now using totalAmount instead of totalPrice
+        totalAmount: totalAmount,
         bookingIdKey: roomData?.id_key || null
       };
 
@@ -95,6 +104,17 @@ const ShopPage = () => {
     );
   }
 
+  if (error) {
+    console.error('Shop page error:', error);
+    return (
+      <div className="w-full max-w-md mx-auto pt-4">
+        <div className="text-center py-8">
+          <p className="text-red-500">Ошибка загрузки товаров: {error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-md mx-auto pt-4">
       <h1 className="text-3xl font-light mb-6">Магазин отеля</h1>
@@ -128,7 +148,13 @@ const ShopPage = () => {
         {(!shopItems || shopItems.length === 0) && (
           <div className="text-center py-8">
             <ShoppingCart size={48} className="mx-auto mb-4 text-gray-300" />
-            <p className="text-gray-500">Товары загружаются...</p>
+            <p className="text-gray-500">
+              Товары не найдены для города "{city}"
+              {propertyId && ` и объекта "${propertyId}"`}
+            </p>
+            <p className="text-sm text-gray-400 mt-2">
+              Email: {roomData?.guest_email}
+            </p>
           </div>
         )}
       </div>

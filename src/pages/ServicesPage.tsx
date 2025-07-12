@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Bed, UtensilsCrossed, Shirt, Award, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,16 @@ const ServicesPage = () => {
   const city = roomData?.city || 'Сочи';
   const propertyId = roomData?.property_id;
   
-  const { data: hotelServices, isLoading } = useHotelServices(city, propertyId);
+  console.log('=== SERVICES PAGE DEBUG ===');
+  console.log('Room data:', roomData);
+  console.log('City:', city);
+  console.log('Property ID:', propertyId);
+  console.log('Guest email:', roomData?.guest_email);
+  
+  const { data: hotelServices, isLoading, error } = useHotelServices(city, propertyId);
+  
+  console.log('Hotel services result:', { hotelServices, isLoading, error });
+  console.log('=== END SERVICES PAGE DEBUG ===');
   
   const [selectedService, setSelectedService] = useState<HotelServiceWithPrice | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -115,6 +123,17 @@ const ServicesPage = () => {
     );
   }
 
+  if (error) {
+    console.error('Services page error:', error);
+    return (
+      <div className="w-full max-w-md mx-auto pt-4">
+        <div className="text-center py-8">
+          <p className="text-red-500">Ошибка загрузки услуг: {error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-md mx-auto pt-4">
       <h1 className="text-3xl font-light mb-6">Сервисы в номере</h1>
@@ -172,7 +191,13 @@ const ServicesPage = () => {
         {(!hotelServices || hotelServices.length === 0) && (
           <div className="text-center py-8">
             <Award size={48} className="mx-auto mb-4 text-gray-300" />
-            <p className="text-gray-500">Услуги загружаются...</p>
+            <p className="text-gray-500">
+              Услуги не найдены для города "{city}"
+              {propertyId && ` и объекта "${propertyId}"`}
+            </p>
+            <p className="text-sm text-gray-400 mt-2">
+              Email: {roomData?.guest_email}
+            </p>
           </div>
         )}
       </div>
