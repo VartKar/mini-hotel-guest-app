@@ -1,23 +1,23 @@
-
-import React from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Suspense, lazy } from "react";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import RoomPage from "./pages/RoomPage";
-import TravelPage from "./pages/TravelPage";
-import ServicesPage from "./pages/ServicesPage";
-import ShopPage from "./pages/ShopPage";
-import ChatPage from "./pages/ChatPage";
-import PersonalAccountPage from "./pages/FeedbackPage";
-import HostPage from "./pages/HostPage";
-import AdminPage from "./pages/AdminPage";
 import Layout from "./components/Layout";
 
-// Create a client
+// Lazy load pages
+const Index = lazy(() => import("./pages/Index"));
+const RoomPage = lazy(() => import("./pages/RoomPage"));
+const TravelPage = lazy(() => import("./pages/TravelPage"));
+const ServicesPage = lazy(() => import("./pages/ServicesPage"));
+const ShopPage = lazy(() => import("./pages/ShopPage"));
+const ChatPage = lazy(() => import("./pages/ChatPage"));
+const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
+const HostPage = lazy(() => import("./pages/HostPage"));
+const GuestPage = lazy(() => import("./pages/GuestPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
 const queryClient = new QueryClient();
 
 function App() {
@@ -25,20 +25,65 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Layout><Index /></Layout>} />
-            <Route path="/room" element={<Layout><RoomPage /></Layout>} />
-            <Route path="/travel" element={<Layout><TravelPage /></Layout>} />
-            <Route path="/services" element={<Layout><ServicesPage /></Layout>} />
-            <Route path="/shop" element={<Layout><ShopPage /></Layout>} />
-            <Route path="/chat" element={<Layout><ChatPage /></Layout>} />
-            <Route path="/feedback" element={<Layout><PersonalAccountPage /></Layout>} />
-            <Route path="/host" element={<Layout><HostPage /></Layout>} />
-            <Route path="/admin" element={<Layout><AdminPage /></Layout>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            <Route path="/guest/:token" element={
+              <Suspense fallback={<div>Загрузка...</div>}>
+                <GuestPage />
+              </Suspense>
+            } />
+            <Route path="/" element={<Layout />}>
+              <Route index element={
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <Index />
+                </Suspense>
+              } />
+              <Route path="/room" element={
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <RoomPage />
+                </Suspense>
+              } />
+              <Route path="/travel" element={
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <TravelPage />
+                </Suspense>
+              } />
+              <Route path="/services" element={
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <ServicesPage />
+                </Suspense>
+              } />
+              <Route path="/shop" element={
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <ShopPage />
+                </Suspense>
+              } />
+              <Route path="/chat" element={
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <ChatPage />
+                </Suspense>
+              } />
+              <Route path="/feedback" element={
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <FeedbackPage />
+                </Suspense>
+              } />
+              <Route path="/admin" element={
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <AdminPage />
+                </Suspense>
+              } />
+              <Route path="/host" element={
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <HostPage />
+                </Suspense>
+              } />
+            </Route>
+            <Route path="*" element={
+              <Suspense fallback={<div>Загрузка...</div>}>
+                <NotFound />
+              </Suspense>
+            } />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
