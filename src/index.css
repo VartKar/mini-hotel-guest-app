@@ -95,8 +95,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-/* Контейнер для кнопки Webim */
-#webim-button-container {
-  margin-top: 30px;
-}

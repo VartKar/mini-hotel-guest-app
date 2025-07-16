@@ -3,25 +3,27 @@ import React, { useEffect } from "react";
 
 const ChatPage = () => {
   useEffect(() => {
-    // Настройка Webim
-    window.webim = {
-      accountName: "previewminihotelguestapplovableapp",
-      domain: "previewminihotelguestapplovableapp.webim.ru",
-      location: "default"
-    };
-
-    // Создаем и загружаем Webim скрипт
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = 'https://previewminihotelguestapplovableapp.webim.ru/js/button.js';
-    script.async = true;
-
-    document.head.appendChild(script);
+    // Настройка Talk-Me виджета
+    (function(){(function c(d,w,m,i) {
+        window.supportAPIMethod = m;
+        var s = d.createElement('script');
+        s.id = 'supportScript'; 
+        var id = 'cf7b0e55935033f0dc53ee586faa18f0';
+        s.src = (!i ? 'https://lcab.talk-me.ru/support/support.js' : 'https://static.site-chat.me/support/support.int.js') + '?h=' + id;
+        s.onerror = i ? undefined : function(){c(d,w,m,true)};
+        w[m] = w[m] ? w[m] : function(){(w[m].q = w[m].q ? w[m].q : []).push(arguments);};
+        (d.head ? d.head : d.body).appendChild(s);
+    })(document,window,'TalkMe')})();
 
     // Очистка при размонтировании
     return () => {
-      if (script.parentNode) {
+      const script = document.getElementById('supportScript');
+      if (script && script.parentNode) {
         script.parentNode.removeChild(script);
+      }
+      // Очищаем глобальную переменную
+      if (window.TalkMe) {
+        delete window.TalkMe;
       }
     };
   }, []);
@@ -40,26 +42,23 @@ const ChatPage = () => {
           </p>
         </div>
 
-        {/* Стандартная кнопка Webim */}
-        <div id="webim-button-container">
-          <a className="webim_button" href="#" rel="webim">
-            <img src="https://previewminihotelguestapplovableapp.webim.ru/button.php" alt="Webim Chat Button" />
-          </a>
+        <div className="text-muted-foreground">
+          <p>Виджет чата загружается...</p>
+          <p className="text-sm mt-2">Если виджет не появился, обновите страницу</p>
         </div>
       </div>
     </div>
   );
 };
 
-// Расширяем типы для Webim
+// Расширяем типы для Talk-Me
 declare global {
   interface Window {
-    webim?: {
-      accountName: string;
-      domain: string;
-      location: string;
+    TalkMe?: {
+      q?: any[];
       [key: string]: any;
     };
+    supportAPIMethod?: string;
   }
 }
 
