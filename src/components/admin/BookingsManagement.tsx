@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { Calendar, Search, Filter, Edit, Trash2, User, Link, Copy } from "lucide-react";
+import { Calendar, Search, Filter, Edit, Trash2, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -81,12 +80,6 @@ const BookingsManagement = () => {
     }
   };
 
-  const copyGuestLink = (token: string) => {
-    const guestUrl = `${window.location.origin}?token=${token}`;
-    navigator.clipboard.writeText(guestUrl);
-    toast.success('Ссылка гостя скопирована');
-  };
-
   const getStatusColor = (status: string | null) => {
     const variant = getStatusBadgeVariant(status);
     switch (variant) {
@@ -156,8 +149,8 @@ const BookingsManagement = () => {
                   <TableHead>Гость</TableHead>
                   <TableHead>Объект</TableHead>
                   <TableHead>Даты</TableHead>
+                  <TableHead>Хост</TableHead>
                   <TableHead>Статус</TableHead>
-                  <TableHead>Персональная ссылка</TableHead>
                   <TableHead>Действия</TableHead>
                 </TableRow>
               </TableHeader>
@@ -184,27 +177,16 @@ const BookingsManagement = () => {
                       </div>
                     </TableCell>
                     <TableCell>
+                      <div>
+                        <div className="font-medium">{booking.host_name}</div>
+                        <div className="text-sm text-gray-500">{booking.host_email}</div>
+                        <div className="text-xs text-gray-400">{booking.host_company}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(booking.booking_status)}`}>
                         {translateStatus(booking.booking_status)}
                       </span>
-                    </TableCell>
-                    <TableCell>
-                      {booking.access_token ? (
-                        <div className="flex items-center gap-2">
-                          <Link className="w-4 h-4 text-green-600" />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => copyGuestLink(booking.access_token)}
-                            className="text-xs"
-                          >
-                            <Copy className="w-3 h-3 mr-1" />
-                            Копировать
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="text-xs text-gray-500">Нет ссылки</div>
-                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
