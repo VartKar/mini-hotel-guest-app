@@ -1,149 +1,147 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { Home, Map, Coffee, ShoppingBag, MessageCircle, User, Info } from "lucide-react";
+
+import React, { useEffect, useState } from "react";
 import { useRoomData } from "@/hooks/useRoomData";
-import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-
-// Placeholder image
-const DEFAULT_IMG = "https://i.postimg.cc/NFprr3hY/valse.png";
-// For user context: You can replace the above URL with any good placeholder image.
-
-const menuItems = [{
-  name: "Мой номер",
-  icon: <Home size={32} />,
-  path: "/room"
-}, {
-  name: "План поездки",
-  icon: <Map size={32} />,
-  path: "/travel"
-}, {
-  name: "Сервисы",
-  icon: <Coffee size={32} />,
-  path: "/services"
-}, {
-  name: "Магазин",
-  icon: <ShoppingBag size={32} />,
-  path: "/shop"
-}, {
-  name: "Чат с консьержем",
-  icon: <MessageCircle size={32} />,
-  path: "/chat"
-}, {
-  name: "Личный кабинет",
-  icon: <User size={32} />,
-  path: "/feedback"
-}];
+import { useTokenAuth } from "@/hooks/useTokenAuth";
+import RoomPage from "./RoomPage";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { MapPin, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const Index = () => {
-  const { roomData, loading, isPersonalized } = useRoomData();
+  const { roomData, loading, error, lookupByEmail, logOut, clearError } = useRoomData();
+  const { 
+    booking: tokenBooking, 
+    loading: tokenLoading, 
+    error: tokenError, 
+    authenticateWithToken, 
+    logout: tokenLogout,
+    clearError: clearTokenError,
+    isAuthenticated: isTokenAuthenticated 
+  } = useTokenAuth();
+  
+  const [email, setEmail] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const apartmentName = roomData?.apartment_name || 'Апартаменты "Вальс"';
-  const guestName = roomData?.guest_name || "Иван";
+  // Check for token in URL on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    
+    if (token) {
+      console.log('Token found in URL:', token);
+      authenticateWithToken(token);
+      // Clean URL after processing token
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [authenticateWithToken]);
 
-  // Only pick URLs that are non-empty strings
-  const getValidImage = () => {
-    // Returns the main should-be-seen image URL or fallback
-    if (roomData?.main_image_url && roomData.main_image_url.trim() !== '') {
-      return roomData.main_image_url;
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      toast.error("Введите email адрес");
+      return;
     }
-    if (roomData?.room_image_url && roomData.room_image_url.trim() !== '') {
-      return roomData.room_image_url;
+
+    setIsLoggingIn(true);
+    clearError();
+    clearTokenError();
+    
+    const success = await lookupByEmail(email);
+    
+    if (success) {
+      toast.success("Добро пожаловать!");
+      setEmail("");
     }
-    return DEFAULT_IMG;
+    
+    setIsLoggingIn(false);
   };
 
-  // We use component state to handle load failure
-  const [imgError, setImgError] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(false);
+  const handleLogout = () => {
+    logOut();
+    tokenLogout();
+    toast.success("Вы вышли из системы");
+  };
 
-  // Reset error state if hotelImage changes
-  React.useEffect(() => {
-    setImgError(false);
-    setImgLoaded(false);
-  }, [roomData?.main_image_url, roomData?.room_image_url]);
+  // Show room page if authenticated via email or token
+  if (roomData || tokenBooking) {
+    const currentBooking = roomData || tokenBooking;
+    return (
+      <RoomPage 
+        roomData={currentBooking} 
+        onLogout={handleLogout}
+        isPersonalized={true}
+      />
+    );
+  }
 
-  const hotelImage = getValidImage();
+  // Show loading state
+  if (loading || tokenLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
 
-  const documentTitle = roomData?.apartment_name
-    ? `RubikInn - ${roomData.apartment_name}`
-    : 'RubikInn';
-
-  useDocumentTitle(documentTitle);
-
+  // Show login form
   return (
-    <div className="flex flex-col items-center">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="py-8">
-          <h1 className="font-light mb-3 text-center text-2xl">
-            <span>Добро пожаловать, </span>
-            <span className="border-b border-dashed border-gray-300 px-1">
-              {guestName}
-            </span>
-          </h1>
-          <p className="text-xl text-hotel-neutral text-center">
-            {apartmentName}
-          </p>
-        </div>
-
-        {/* Main hotel image section */}
-        <div className="w-full h-48 mb-8 rounded-lg overflow-hidden flex items-center justify-center bg-hotel-light relative">
-          {loading && (
-            <div className="w-full h-full animate-pulse bg-gray-200" />
-          )}
-          {!loading && !imgError && (
-            <img
-              src={hotelImage}
-              alt="Фото апартаментов"
-              className={`object-cover w-full h-full transition-opacity duration-500 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
-              loading="lazy"
-              onLoad={() => setImgLoaded(true)}
-              onError={() => setImgError(true)}
-              style={{ minHeight: "8rem", minWidth: "8rem" }}
-            />
-          )}
-          {!loading && imgError && (
-            <div className="w-full h-full bg-gray-100 flex flex-col justify-center items-center">
-              <span className="text-gray-400 text-xs">Ошибка загрузки изображения</span>
-              <img
-                src={DEFAULT_IMG}
-                alt="Фото по умолчанию"
-                className="w-20 h-20 opacity-40 mt-2"
-                draggable={false}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Menu section */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          {menuItems.map(item => (
-            <Link
-              key={item.name}
-              to={item.path}
-              className="flex flex-col items-center justify-center bg-white rounded-lg p-6 shadow-sm transition-all hover:shadow-md"
-            >
-              <div className="text-hotel-dark mb-3">{item.icon}</div>
-              <span className="text-center font-medium">{item.name}</span>
-            </Link>
-          ))}
-        </div>
-
-        {/* Demo info for non-personalized */}
-        {!isPersonalized && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3">
-            <div className="flex items-center gap-2">
-              <Info size={16} className="text-blue-600 flex-shrink-0" />
-              <div>
-                <p className="text-xs text-blue-800 font-medium">
-                  Просмотр демо-данных
-                </p>
-                <p className="text-xs text-blue-600 mt-0.5">
-                  Введите свой email в личном кабинете для персонализированной информации
-                </p>
+        <Card className="shadow-lg">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
+                <MapPin className="w-8 h-8 text-white" />
               </div>
             </div>
-          </div>
-        )}
+            <CardTitle className="text-2xl font-light text-gray-800">
+              Добро пожаловать
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Введите email для доступа к информации о вашем размещении
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleEmailLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Input
+                  type="email"
+                  placeholder="Ваш email адрес"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full"
+                  disabled={isLoggingIn}
+                />
+                {(error || tokenError) && (
+                  <p className="text-sm text-red-600">{error || tokenError}</p>
+                )}
+              </div>
+              
+              <Button
+                type="submit"
+                className="w-full bg-red-600 hover:bg-red-700 text-white"
+                disabled={isLoggingIn || !email.trim()}
+              >
+                {isLoggingIn ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Поиск...
+                  </>
+                ) : (
+                  'Найти мое бронирование'
+                )}
+              </Button>
+            </form>
+            
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <p className="text-xs text-gray-500 text-center">
+                Если у вас есть персональная ссылка, просто перейдите по ней для автоматического входа
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

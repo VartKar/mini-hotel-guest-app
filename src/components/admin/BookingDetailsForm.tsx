@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
+import AccessTokenManager from "./AccessTokenManager";
 
 type Booking = Database['public']['Tables']['combined']['Row'];
 
@@ -179,6 +181,12 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Access Token Manager */}
+      <AccessTokenManager
+        bookingId={booking.id_key}
+        currentToken={booking.access_token}
+      />
+
       {/* Guest Information */}
       <Card>
         <CardHeader>
