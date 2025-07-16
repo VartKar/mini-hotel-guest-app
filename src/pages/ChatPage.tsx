@@ -42,9 +42,15 @@ const ChatPage = () => {
           </p>
         </div>
 
-        <div className="text-muted-foreground">
-          <p>Виджет чата загружается...</p>
-          <p className="text-sm mt-2">Если виджет не появился, обновите страницу</p>
+        {/* Контейнер для виджета Talk-Me */}
+        <div 
+          id="onlineSupportContainer" 
+          style={{ height: '400px', width: '100%' }}
+          className="border border-border rounded-lg bg-card"
+        />
+
+        <div className="text-muted-foreground mt-4">
+          <p className="text-sm">Если чат не загружается, попробуйте обновить страницу</p>
         </div>
       </div>
     </div>
