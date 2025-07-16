@@ -1,16 +1,18 @@
-
 import React from "react";
 import { Wifi, Car, Coffee, Tv, Shield, Bed } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { RoomData } from "@/hooks/useRoomData";
+import { useRoomData } from "@/hooks/useRoomData";
 
-interface RoomPageProps {
-  roomData?: RoomData;
-  onLogout?: () => void;
-  isPersonalized?: boolean;
-}
+const RoomPage = () => {
+  const { roomData, loading } = useRoomData();
 
-const RoomPage: React.FC<RoomPageProps> = ({ roomData, onLogout, isPersonalized }) => {
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-lg">Загрузка...</div>
+      </div>
+    );
+  }
+
   if (!roomData) {
     return (
       <div className="text-center py-8">
@@ -23,19 +25,7 @@ const RoomPage: React.FC<RoomPageProps> = ({ roomData, onLogout, isPersonalized 
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-light">Ваш номер</h1>
-        {onLogout && isPersonalized && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onLogout}
-            className="text-sm"
-          >
-            Выйти
-          </Button>
-        )}
-      </div>
+      <h1 className="text-3xl font-light mb-6">Ваш номер</h1>
       
       {imageUrl && (
         <div className="mb-6">
