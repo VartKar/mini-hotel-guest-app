@@ -1,3 +1,4 @@
+
 import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -32,53 +33,69 @@ function App() {
                 <GuestPage />
               </Suspense>
             } />
-            <Route path="/" element={<Layout />}>
-              <Route index element={
+            <Route path="/" element={
+              <Layout>
                 <Suspense fallback={<div>Загрузка...</div>}>
                   <Index />
                 </Suspense>
-              } />
-              <Route path="/room" element={
+              </Layout>
+            } />
+            <Route path="/room" element={
+              <Layout>
                 <Suspense fallback={<div>Загрузка...</div>}>
                   <RoomPage />
                 </Suspense>
-              } />
-              <Route path="/travel" element={
+              </Layout>
+            } />
+            <Route path="/travel" element={
+              <Layout>
                 <Suspense fallback={<div>Загрузка...</div>}>
                   <TravelPage />
                 </Suspense>
-              } />
-              <Route path="/services" element={
+              </Layout>
+            } />
+            <Route path="/services" element={
+              <Layout>
                 <Suspense fallback={<div>Загрузка...</div>}>
                   <ServicesPage />
                 </Suspense>
-              } />
-              <Route path="/shop" element={
+              </Layout>
+            } />
+            <Route path="/shop" element={
+              <Layout>
                 <Suspense fallback={<div>Загрузка...</div>}>
                   <ShopPage />
                 </Suspense>
-              } />
-              <Route path="/chat" element={
+              </Layout>
+            } />
+            <Route path="/chat" element={
+              <Layout>
                 <Suspense fallback={<div>Загрузка...</div>}>
                   <ChatPage />
                 </Suspense>
-              } />
-              <Route path="/feedback" element={
+              </Layout>
+            } />
+            <Route path="/feedback" element={
+              <Layout>
                 <Suspense fallback={<div>Загрузка...</div>}>
                   <FeedbackPage />
                 </Suspense>
-              } />
-              <Route path="/admin" element={
+              </Layout>
+            } />
+            <Route path="/admin" element={
+              <Layout>
                 <Suspense fallback={<div>Загрузка...</div>}>
                   <AdminPage />
                 </Suspense>
-              } />
-              <Route path="/host" element={
+              </Layout>
+            } />
+            <Route path="/host" element={
+              <Layout>
                 <Suspense fallback={<div>Загрузка...</div>}>
                   <HostPage />
                 </Suspense>
-              } />
-            </Route>
+              </Layout>
+            } />
             <Route path="*" element={
               <Suspense fallback={<div>Загрузка...</div>}>
                 <NotFound />
