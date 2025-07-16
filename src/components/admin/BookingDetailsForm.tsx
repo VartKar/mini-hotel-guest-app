@@ -1,409 +1,447 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import AccessTokenManager from "./AccessTokenManager";
+import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
 
-interface BookingData {
-  id_key: string;
-  property_id?: string;
-  booking_id?: string;
-  guest_name?: string;
-  guest_email?: string;
-  room_number?: string;
-  apartment_name?: string;
-  check_in_date?: string;
-  check_out_date?: string;
-  number_of_guests?: number;
-  booking_status?: string;
-  host_name?: string;
-  host_email?: string;
-  host_phone?: string;
-  host_company?: string;
-  wifi_network?: string;
-  wifi_password?: string;
-  notes_for_guests?: string;
-  notes_internal?: string;
-  main_image_url?: string;
-  room_image_url?: string;
-  visible_to_guests?: boolean;
-  visible_to_hosts?: boolean;
-  visible_to_admin?: boolean;
-  is_archived?: boolean;
-  city?: string;
-  access_token?: string;
-}
+type Booking = Database['public']['Tables']['combined']['Row'];
 
 interface BookingDetailsFormProps {
-  booking: BookingData;
+  booking: Booking;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-const BookingDetailsForm = ({ booking, onClose, onSuccess }: BookingDetailsFormProps) => {
-  const [formData, setFormData] = useState<BookingData>(booking);
-  const { toast } = useToast();
+const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
+  booking,
+  onClose,
+  onSuccess,
+}) => {
+  const queryClient = useQueryClient();
+  
+  const [formData, setFormData] = useState({
+    guest_name: booking.guest_name || '',
+    guest_email: booking.guest_email || '',
+    room_number: booking.room_number || '',
+    apartment_name: booking.apartment_name || '',
+    check_in_date: booking.check_in_date || '',
+    check_out_date: booking.check_out_date || '',
+    booking_status: booking.booking_status || '',
+    booking_id: booking.booking_id || '',
+    host_name: booking.host_name || '',
+    host_email: booking.host_email || '',
+    host_company: booking.host_company || '',
+    wifi_network: booking.wifi_network || '',
+    wifi_password: booking.wifi_password || '',
+    checkout_time: booking.checkout_time || '',
+    ac_instructions: booking.ac_instructions || '',
+    coffee_instructions: booking.coffee_instructions || '',
+    tv_instructions: booking.tv_instructions || '',
+    safe_instructions: booking.safe_instructions || '',
+    parking_info: booking.parking_info || '',
+    extra_bed_info: booking.extra_bed_info || '',
+    notes_internal: booking.notes_internal || '',
+    notes_for_guests: booking.notes_for_guests || '',
+  });
 
-  useEffect(() => {
-    if (booking) {
-      setFormData(booking);
+  const updateBookingMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      console.log('=== STARTING BOOKING UPDATE ===');
+      console.log('Original booking object:', booking);
+      console.log('Booking ID being updated:', booking.id_key);
+      console.log('Form data being sent:', data);
+      
+      // First, check if the record exists
+      console.log('Checking if record exists...');
+      const { data: existingRecord, error: checkError } = await supabase
+        .from('combined')
+        .select('id_key')
+        .eq('id_key', booking.id_key)
+        .single();
+      
+      console.log('Existing record check:', existingRecord);
+      console.log('Check error:', checkError);
+      
+      if (checkError) {
+        console.error('Record not found or error checking:', checkError);
+        throw new Error(`Record not found: ${checkError.message}`);
+      }
+      
+      // Check if there are any actual changes
+      const hasChanges = Object.keys(data).some(key => {
+        const originalValue = booking[key as keyof typeof booking];
+        const newValue = data[key as keyof typeof data];
+        const changed = originalValue !== newValue;
+        if (changed) {
+          console.log(`Field "${key}" changed from "${originalValue}" to "${newValue}"`);
+        }
+        return changed;
+      });
+      
+      console.log('Has changes detected:', hasChanges);
+      
+      if (!hasChanges) {
+        console.log('No changes detected, skipping update');
+        return booking;
+      }
+      
+      const updatePayload = {
+        ...data,
+        last_updated_at: new Date().toISOString(),
+        last_updated_by: 'admin'
+      };
+      
+      console.log('Final update payload:', updatePayload);
+      console.log('Calling supabase update...');
+      
+      const { data: result, error } = await supabase
+        .from('combined')
+        .update(updatePayload)
+        .eq('id_key', booking.id_key)
+        .select();
+      
+      console.log('Supabase response - data:', result);
+      console.log('Supabase response - error:', error);
+      
+      if (error) {
+        console.error('=== SUPABASE UPDATE ERROR ===');
+        console.error('Error details:', error);
+        console.error('Error message:', error.message);
+        console.error('Error code:', error.code);
+        throw error;
+      }
+      
+      if (!result || result.length === 0) {
+        console.error('=== NO ROWS AFFECTED ===');
+        console.error('Update succeeded but no rows were returned');
+        console.error('This might indicate the row was not found or not updated');
+        
+        // Try to fetch the record again to see if it still exists
+        const { data: recheckRecord, error: recheckError } = await supabase
+          .from('combined')
+          .select('id_key, last_updated_at')
+          .eq('id_key', booking.id_key)
+          .single();
+        
+        console.log('Recheck record after failed update:', recheckRecord);
+        console.log('Recheck error:', recheckError);
+        
+        throw new Error(`No rows were updated. Record ${recheckError ? 'not found' : 'still exists but was not updated'}`);
+      }
+      
+      console.log('=== UPDATE SUCCESSFUL ===');
+      console.log('Updated booking:', result[0]);
+      return result[0];
+    },
+    onSuccess: (result) => {
+      console.log('=== MUTATION SUCCESS ===');
+      console.log('Mutation success with result:', result);
+      
+      // Invalidate and refetch admin queries
+      queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-change-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
+      
+      toast.success('Бронирование обновлено');
+      onSuccess();
+    },
+    onError: (error) => {
+      console.error('=== MUTATION ERROR ===');
+      console.error('Error updating booking:', error);
+      toast.error(`Ошибка при обновлении бронирования: ${error.message}`);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('=== FORM SUBMIT TRIGGERED ===');
+    console.log('Current form data:', formData);
+    
+    if (updateBookingMutation.isPending) {
+      console.log('Mutation already in progress, skipping');
+      return;
     }
-  }, [booking]);
-
-  const handleInputChange = (field: keyof BookingData, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    
+    updateBookingMutation.mutate(formData);
   };
 
-  const handleSave = async () => {
-    try {
-      const { error } = await supabase
-        .from('combined')
-        .update(formData)
-        .eq('id_key', formData.id_key);
-
-      if (error) throw error;
-
-      onSuccess();
-      toast({
-        title: "Бронирование обновлено",
-        description: "Изменения сохранены успешно",
-      });
-    } catch (error) {
-      console.error('Error saving booking:', error);
-      toast({
-        title: "Ошибка",
-        description: "Не удалось сохранить изменения",
-        variant: "destructive",
-      });
-    }
+  const handleInputChange = (field: string, value: string) => {
+    console.log(`Input changed - Field: ${field}, New value: "${value}"`);
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      console.log('Updated form data:', updated);
+      return updated;
+    });
   };
 
   return (
-    <div className="space-y-6">
-      {/* Guest Information Card */}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Guest Information */}
       <Card>
         <CardHeader>
           <CardTitle>Информация о госте</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="guest_name">Имя гостя</Label>
-              <Input
-                id="guest_name"
-                value={formData.guest_name || ''}
-                onChange={(e) => handleInputChange('guest_name', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="guest_email">Email гостя</Label>
-              <Input
-                id="guest_email"
-                type="email"
-                value={formData.guest_email || ''}
-                onChange={(e) => handleInputChange('guest_email', e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="number_of_guests">Количество гостей</Label>
-              <Input
-                id="number_of_guests"
-                type="number"
-                value={formData.number_of_guests || 2}
-                onChange={(e) => handleInputChange('number_of_guests', parseInt(e.target.value))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="check_in_date">Дата заезда</Label>
-              <Input
-                id="check_in_date"
-                type="date"
-                value={formData.check_in_date || ''}
-                onChange={(e) => handleInputChange('check_in_date', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="check_out_date">Дата выезда</Label>
-              <Input
-                id="check_out_date"
-                type="date"
-                value={formData.check_out_date || ''}
-                onChange={(e) => handleInputChange('check_out_date', e.target.value)}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Access Token Management */}
-      {formData.id_key && (
-        <AccessTokenManager
-          bookingId={formData.id_key}
-          currentToken={formData.access_token}
-          onTokenUpdated={(token) => handleInputChange('access_token', token)}
-        />
-      )}
-
-      {/* Property Information Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Информация о недвижимости</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="property_id">ID недвижимости</Label>
-              <Input
-                id="property_id"
-                value={formData.property_id || ''}
-                onChange={(e) => handleInputChange('property_id', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="booking_id">ID бронирования</Label>
-              <Input
-                id="booking_id"
-                value={formData.booking_id || ''}
-                onChange={(e) => handleInputChange('booking_id', e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="room_number">Номер комнаты</Label>
-              <Input
-                id="room_number"
-                value={formData.room_number || ''}
-                onChange={(e) => handleInputChange('room_number', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="apartment_name">Название апартаментов</Label>
-              <Input
-                id="apartment_name"
-                value={formData.apartment_name || ''}
-                onChange={(e) => handleInputChange('apartment_name', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="city">Город</Label>
-              <Select value={formData.city || 'Сочи'} onValueChange={(value) => handleInputChange('city', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Сочи">Сочи</SelectItem>
-                  <SelectItem value="Москва">Москва</SelectItem>
-                  <SelectItem value="Санкт-Петербург">Санкт-Петербург</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Имя гостя</label>
+            <Input
+              value={formData.guest_name}
+              onChange={(e) => handleInputChange('guest_name', e.target.value)}
+              placeholder="Имя гостя"
+            />
           </div>
           <div>
-            <Label htmlFor="booking_status">Статус бронирования</Label>
-            <Select value={formData.booking_status || 'confirmed'} onValueChange={(value) => handleInputChange('booking_status', value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="confirmed">Подтверждено</SelectItem>
-                <SelectItem value="pending">В ожидании</SelectItem>
-                <SelectItem value="cancelled">Отменено</SelectItem>
-                <SelectItem value="completed">Завершено</SelectItem>
-              </SelectContent>
-            </Select>
+            <label className="block text-sm font-medium mb-2">Email гостя</label>
+            <Input
+              type="email"
+              value={formData.guest_email}
+              onChange={(e) => handleInputChange('guest_email', e.target.value)}
+              placeholder="email@example.com"
+            />
           </div>
         </CardContent>
       </Card>
 
-      {/* Host Information Card */}
+      {/* Booking Details */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Детали бронирования</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">ID бронирования</label>
+            <Input
+              value={formData.booking_id}
+              onChange={(e) => handleInputChange('booking_id', e.target.value)}
+              placeholder="Booking ID"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Статус</label>
+            <select
+              value={formData.booking_status}
+              onChange={(e) => handleInputChange('booking_status', e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+            >
+              <option value="confirmed">Подтверждено</option>
+              <option value="pending">Ожидает</option>
+              <option value="cancelled">Отменено</option>
+              <option value="demo">Демо</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Дата заезда</label>
+            <Input
+              value={formData.check_in_date}
+              onChange={(e) => handleInputChange('check_in_date', e.target.value)}
+              placeholder="YYYY-MM-DD"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Дата выезда</label>
+            <Input
+              value={formData.check_out_date}
+              onChange={(e) => handleInputChange('check_out_date', e.target.value)}
+              placeholder="YYYY-MM-DD"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Время выезда</label>
+            <Input
+              value={formData.checkout_time}
+              onChange={(e) => handleInputChange('checkout_time', e.target.value)}
+              placeholder="11:00"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Property Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Информация об объекте</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Название объекта</label>
+            <Input
+              value={formData.apartment_name}
+              onChange={(e) => handleInputChange('apartment_name', e.target.value)}
+              placeholder="Название апартаментов"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Номер комнаты</label>
+            <Input
+              value={formData.room_number}
+              onChange={(e) => handleInputChange('room_number', e.target.value)}
+              placeholder="101"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">WiFi сеть</label>
+            <Input
+              value={formData.wifi_network}
+              onChange={(e) => handleInputChange('wifi_network', e.target.value)}
+              placeholder="Название WiFi"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">WiFi пароль</label>
+            <Input
+              value={formData.wifi_password}
+              onChange={(e) => handleInputChange('wifi_password', e.target.value)}
+              placeholder="WiFi пароль"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Host Information */}
       <Card>
         <CardHeader>
           <CardTitle>Информация о хосте</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="host_name">Имя хоста</Label>
-              <Input
-                id="host_name"
-                value={formData.host_name || ''}
-                onChange={(e) => handleInputChange('host_name', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="host_email">Email хоста</Label>
-              <Input
-                id="host_email"
-                type="email"
-                value={formData.host_email || ''}
-                onChange={(e) => handleInputChange('host_email', e.target.value)}
-              />
-            </div>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Имя хоста</label>
+            <Input
+              value={formData.host_name}
+              onChange={(e) => handleInputChange('host_name', e.target.value)}
+              placeholder="Имя хоста"
+            />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="host_phone">Телефон хоста</Label>
-              <Input
-                id="host_phone"
-                value={formData.host_phone || ''}
-                onChange={(e) => handleInputChange('host_phone', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="host_company">Компания хоста</Label>
-              <Input
-                id="host_company"
-                value={formData.host_company || ''}
-                onChange={(e) => handleInputChange('host_company', e.target.value)}
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Email хоста</label>
+            <Input
+              type="email"
+              value={formData.host_email}
+              onChange={(e) => handleInputChange('host_email', e.target.value)}
+              placeholder="host@example.com"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium mb-2">Компания хоста</label>
+            <Input
+              value={formData.host_company}
+              onChange={(e) => handleInputChange('host_company', e.target.value)}
+              placeholder="Название компании"
+            />
           </div>
         </CardContent>
       </Card>
 
-      {/* WiFi and Access Card */}
+      {/* Instructions */}
       <Card>
         <CardHeader>
-          <CardTitle>WiFi и доступ</CardTitle>
+          <CardTitle>Инструкции для гостей</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="wifi_network">Сеть WiFi</Label>
-              <Input
-                id="wifi_network"
-                value={formData.wifi_network || ''}
-                onChange={(e) => handleInputChange('wifi_network', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="wifi_password">Пароль WiFi</Label>
-              <Input
-                id="wifi_password"
-                value={formData.wifi_password || ''}
-                onChange={(e) => handleInputChange('wifi_password', e.target.value)}
-              />
-            </div>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Кондиционер</label>
+            <textarea
+              value={formData.ac_instructions}
+              onChange={(e) => handleInputChange('ac_instructions', e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 h-20"
+              placeholder="Инструкции по использованию кондиционера"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Кофемашина</label>
+            <textarea
+              value={formData.coffee_instructions}
+              onChange={(e) => handleInputChange('coffee_instructions', e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 h-20"
+              placeholder="Инструкции по использованию кофемашины"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Телевизор</label>
+            <textarea
+              value={formData.tv_instructions}
+              onChange={(e) => handleInputChange('tv_instructions', e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 h-20"
+              placeholder="Инструкции по использованию телевизора"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Сейф</label>
+            <textarea
+              value={formData.safe_instructions}
+              onChange={(e) => handleInputChange('safe_instructions', e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 h-20"
+              placeholder="Инструкции по использованию сейфа"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Парковка</label>
+            <textarea
+              value={formData.parking_info}
+              onChange={(e) => handleInputChange('parking_info', e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 h-20"
+              placeholder="Информация о парковке"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Дополнительные кровати</label>
+            <textarea
+              value={formData.extra_bed_info}
+              onChange={(e) => handleInputChange('extra_bed_info', e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 h-20"
+              placeholder="Информация о дополнительных кроватях"
+            />
           </div>
         </CardContent>
       </Card>
 
-      {/* Notes Card */}
+      {/* Notes */}
       <Card>
         <CardHeader>
           <CardTitle>Заметки</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="notes_for_guests">Заметки для гостей</Label>
-            <Textarea
-              id="notes_for_guests"
-              value={formData.notes_for_guests || ''}
-              onChange={(e) => handleInputChange('notes_for_guests', e.target.value)}
-              rows={3}
-            />
-          </div>
-          <div>
-            <Label htmlFor="notes_internal">Внутренние заметки</Label>
-            <Textarea
-              id="notes_internal"
-              value={formData.notes_internal || ''}
+            <label className="block text-sm font-medium mb-2">Внутренние заметки</label>
+            <textarea
+              value={formData.notes_internal}
               onChange={(e) => handleInputChange('notes_internal', e.target.value)}
-              rows={3}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 h-24"
+              placeholder="Внутренние заметки (не видны гостям)"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Заметки для гостей</label>
+            <textarea
+              value={formData.notes_for_guests}
+              onChange={(e) => handleInputChange('notes_for_guests', e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 h-24"
+              placeholder="Заметки для гостей"
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* Images Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Изображения</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="main_image_url">URL основного изображения</Label>
-            <Input
-              id="main_image_url"
-              value={formData.main_image_url || ''}
-              onChange={(e) => handleInputChange('main_image_url', e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="room_image_url">URL изображения комнаты</Label>
-            <Input
-              id="room_image_url"
-              value={formData.room_image_url || ''}
-              onChange={(e) => handleInputChange('room_image_url', e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Visibility Settings Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Настройки видимости</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="visible_to_guests">Видимо для гостей</Label>
-            <Switch
-              id="visible_to_guests"
-              checked={formData.visible_to_guests || false}
-              onCheckedChange={(checked) => handleInputChange('visible_to_guests', checked)}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="visible_to_hosts">Видимо для хостов</Label>
-            <Switch
-              id="visible_to_hosts"
-              checked={formData.visible_to_hosts || false}
-              onCheckedChange={(checked) => handleInputChange('visible_to_hosts', checked)}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="visible_to_admin">Видимо для администраторов</Label>
-            <Switch
-              id="visible_to_admin"
-              checked={formData.visible_to_admin || false}
-              onCheckedChange={(checked) => handleInputChange('visible_to_admin', checked)}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="is_archived">Архивировано</Label>
-            <Switch
-              id="is_archived"
-              checked={formData.is_archived || false}
-              onCheckedChange={(checked) => handleInputChange('is_archived', checked)}
-            />
-          </div>
-        </CardContent>
-      </Card>
-      
-      <div className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={onClose}>
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-3 pt-4 border-t">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onClose}
+        >
           Отмена
         </Button>
-        <Button onClick={handleSave}>
-          Сохранить
+        <Button
+          type="submit"
+          disabled={updateBookingMutation.isPending}
+          className="bg-red-600 hover:bg-red-700"
+        >
+          {updateBookingMutation.isPending ? 'Сохранение...' : 'Сохранить изменения'}
         </Button>
       </div>
-    </div>
+    </form>
   );
 };
 

@@ -62,7 +62,6 @@ export type Database = {
       combined: {
         Row: {
           ac_instructions: string | null
-          access_token: string | null
           apartment_name: string | null
           booking_id: string | null
           booking_status: string | null
@@ -106,7 +105,6 @@ export type Database = {
         }
         Insert: {
           ac_instructions?: string | null
-          access_token?: string | null
           apartment_name?: string | null
           booking_id?: string | null
           booking_status?: string | null
@@ -150,7 +148,6 @@ export type Database = {
         }
         Update: {
           ac_instructions?: string | null
-          access_token?: string | null
           apartment_name?: string | null
           booking_id?: string | null
           booking_status?: string | null
