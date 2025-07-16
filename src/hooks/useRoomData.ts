@@ -207,13 +207,21 @@ export const useRoomData = () => {
     fetchDefaultData();
   };
 
+  // Add compatibility methods for the Index component
+  const loginWithEmail = lookupByEmail;
+  const logout = logOut;
+  const isAuthenticated = isPersonalized;
+
   return { 
     roomData, 
     loading, 
     error, 
-    isPersonalized, 
+    isPersonalized,
+    isAuthenticated, 
     lookupByEmail, 
+    loginWithEmail,
     logOut,
+    logout,
     clearError: () => setError(null)
   };
 };

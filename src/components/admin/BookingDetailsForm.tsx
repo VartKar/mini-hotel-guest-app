@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,43 +43,13 @@ interface BookingData {
 }
 
 interface BookingDetailsFormProps {
-  booking: BookingData | null;
-  isEditing: boolean;
-  onSave: (booking: BookingData) => void;
-  onCancel: () => void;
+  booking: BookingData;
+  onClose: () => void;
+  onSuccess: () => void;
 }
 
-const BookingDetailsForm = ({ booking, isEditing, onSave, onCancel }: BookingDetailsFormProps) => {
-  const [formData, setFormData] = useState<BookingData>({
-    id_key: '',
-    property_id: '',
-    booking_id: '',
-    guest_name: '',
-    guest_email: '',
-    room_number: '',
-    apartment_name: '',
-    check_in_date: '',
-    check_out_date: '',
-    number_of_guests: 2,
-    booking_status: 'confirmed',
-    host_name: '',
-    host_email: '',
-    host_phone: '',
-    host_company: '',
-    wifi_network: '',
-    wifi_password: '',
-    notes_for_guests: '',
-    notes_internal: '',
-    main_image_url: '',
-    room_image_url: '',
-    visible_to_guests: true,
-    visible_to_hosts: true,
-    visible_to_admin: true,
-    is_archived: false,
-    city: 'Сочи',
-    access_token: ''
-  });
-
+const BookingDetailsForm = ({ booking, onClose, onSuccess }: BookingDetailsFormProps) => {
+  const [formData, setFormData] = useState<BookingData>(booking);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -96,24 +67,16 @@ const BookingDetailsForm = ({ booking, isEditing, onSave, onCancel }: BookingDet
 
   const handleSave = async () => {
     try {
-      if (isEditing) {
-        const { error } = await supabase
-          .from('combined')
-          .update(formData)
-          .eq('id_key', formData.id_key);
+      const { error } = await supabase
+        .from('combined')
+        .update(formData)
+        .eq('id_key', formData.id_key);
 
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('combined')
-          .insert([formData]);
+      if (error) throw error;
 
-        if (error) throw error;
-      }
-
-      onSave(formData);
+      onSuccess();
       toast({
-        title: isEditing ? "Бронирование обновлено" : "Бронирование создано",
+        title: "Бронирование обновлено",
         description: "Изменения сохранены успешно",
       });
     } catch (error) {
@@ -186,7 +149,7 @@ const BookingDetailsForm = ({ booking, isEditing, onSave, onCancel }: BookingDet
       </Card>
 
       {/* Access Token Management */}
-      {isEditing && formData.id_key && (
+      {formData.id_key && (
         <AccessTokenManager
           bookingId={formData.id_key}
           currentToken={formData.access_token}
@@ -433,11 +396,11 @@ const BookingDetailsForm = ({ booking, isEditing, onSave, onCancel }: BookingDet
       </Card>
       
       <div className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={onCancel}>
+        <Button variant="outline" onClick={onClose}>
           Отмена
         </Button>
         <Button onClick={handleSave}>
-          {isEditing ? 'Сохранить' : 'Создать'}
+          Сохранить
         </Button>
       </div>
     </div>
