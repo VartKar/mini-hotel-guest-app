@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { RoomAccessData } from '@/utils/roomAccessUtils';
 
 export interface RoomData {
   id_key: string | null;
@@ -67,6 +68,52 @@ const STORAGE_KEYS = {
   IS_PERSONALIZED: 'rubikinn_is_personalized'
 };
 
+// Функция для конвертации данных из room_access в формат RoomData
+const convertRoomAccessToRoomData = (roomAccessData: RoomAccessData): RoomData => {
+  return {
+    id_key: roomAccessData.id,
+    property_id: roomAccessData.property_id,
+    booking_id: null,
+    guest_email: null,
+    guest_name: null,
+    room_number: roomAccessData.room_number,
+    stay_duration: null,
+    check_in_date: null,
+    check_out_date: null,
+    wifi_network: roomAccessData.wifi_network,
+    wifi_password: roomAccessData.wifi_password,
+    checkout_time: roomAccessData.checkout_time,
+    room_image_url: roomAccessData.room_image_url,
+    ac_instructions: roomAccessData.ac_instructions,
+    coffee_instructions: roomAccessData.coffee_instructions,
+    tv_instructions: roomAccessData.tv_instructions,
+    safe_instructions: roomAccessData.safe_instructions,
+    parking_info: roomAccessData.parking_info,
+    extra_bed_info: roomAccessData.extra_bed_info,
+    apartment_name: roomAccessData.apartment_name,
+    host_id: null,
+    host_name: roomAccessData.host_name,
+    host_email: roomAccessData.host_email,
+    host_phone: roomAccessData.host_phone,
+    host_company: null,
+    property_manager_name: roomAccessData.property_manager_name,
+    property_manager_phone: roomAccessData.property_manager_phone,
+    property_manager_email: roomAccessData.property_manager_email,
+    visible_to_guests: true,
+    visible_to_hosts: true,
+    visible_to_admin: true,
+    is_archived: false,
+    booking_status: 'confirmed',
+    last_updated_by: null,
+    last_updated_at: roomAccessData.updated_at,
+    notes_internal: null,
+    notes_for_guests: roomAccessData.notes_for_guests,
+    main_image_url: roomAccessData.main_image_url,
+    city: roomAccessData.city,
+    number_of_guests: null
+  };
+};
+
 // Load data from localStorage
 const loadFromStorage = () => {
   try {
@@ -76,6 +123,18 @@ const loadFromStorage = () => {
     if (storedRoomData && storedIsPersonalized) {
       globalRoomData = JSON.parse(storedRoomData);
       globalIsPersonalized = storedIsPersonalized === 'true';
+      return true;
+    }
+    
+    // Проверяем новую систему доступа по номерам
+    const roomToken = localStorage.getItem('rubikinn_room_token');
+    const roomAccessData = localStorage.getItem('rubikinn_room_data');
+    const isGuestRegistered = localStorage.getItem('rubikinn_guest_registered') === 'true';
+    
+    if (roomToken && roomAccessData && isGuestRegistered) {
+      const parsedRoomData = JSON.parse(roomAccessData);
+      globalRoomData = convertRoomAccessToRoomData(parsedRoomData);
+      globalIsPersonalized = true;
       return true;
     }
   } catch (error) {
@@ -204,6 +263,10 @@ export const useRoomData = () => {
     // Clear storage and reset to default
     localStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
     localStorage.removeItem(STORAGE_KEYS.IS_PERSONALIZED);
+    // Также очищаем данные новой системы, если они есть
+    localStorage.removeItem('rubikinn_room_token');
+    localStorage.removeItem('rubikinn_guest_registered');
+    localStorage.removeItem('rubikinn_guest_data');
     fetchDefaultData();
   };
 
