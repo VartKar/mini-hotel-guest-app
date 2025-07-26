@@ -40,19 +40,39 @@ export const generateRoomToken = (): string => {
 
 export const getRoomByToken = async (token: string): Promise<RoomAccessData | null> => {
   try {
+    console.log('getRoomByToken - Searching for token:', token);
+    
     const { data, error } = await supabase
       .from('room_access')
       .select('*')
       .eq('access_token', token)
-      .eq('is_active', true)
-      .single();
+      .eq('is_active', true);
+
+    console.log('getRoomByToken - Query result:', { data, error });
 
     if (error) {
       console.error('Error fetching room by token:', error);
       return null;
     }
 
-    return data;
+    if (!data || data.length === 0) {
+      console.log('No room found for token:', token);
+      
+      // Давайте также проверим, есть ли вообще записи в таблице
+      const { data: allRooms, error: allRoomsError } = await supabase
+        .from('room_access')
+        .select('access_token, room_number, city')
+        .limit(5);
+      
+      console.log('Available rooms sample:', allRooms);
+      console.log('All rooms query error:', allRoomsError);
+      
+      return null;
+    }
+
+    const roomData = data[0];
+    console.log('Found room data:', roomData);
+    return roomData;
   } catch (error) {
     console.error('Error in getRoomByToken:', error);
     return null;
@@ -65,6 +85,8 @@ export const registerGuestInRoom = async (roomAccessId: string, guestData: {
   guest_name?: string;
 }) => {
   try {
+    console.log('registerGuestInRoom - Room ID:', roomAccessId, 'Guest data:', guestData);
+    
     const { data, error } = await supabase
       .from('room_guests')
       .insert({
@@ -79,6 +101,7 @@ export const registerGuestInRoom = async (roomAccessId: string, guestData: {
       return null;
     }
 
+    console.log('Guest registered successfully:', data);
     return data;
   } catch (error) {
     console.error('Error in registerGuestInRoom:', error);
@@ -88,6 +111,8 @@ export const registerGuestInRoom = async (roomAccessId: string, guestData: {
 
 export const updateGuestAccess = async (roomAccessId: string, guestEmail?: string, guestPhone?: string) => {
   try {
+    console.log('updateGuestAccess - Room ID:', roomAccessId, 'Email:', guestEmail, 'Phone:', guestPhone);
+    
     const { error } = await supabase
       .from('room_guests')
       .update({ 
@@ -101,6 +126,7 @@ export const updateGuestAccess = async (roomAccessId: string, guestEmail?: strin
       return false;
     }
 
+    console.log('Guest access updated successfully');
     return true;
   } catch (error) {
     console.error('Error in updateGuestAccess:', error);
