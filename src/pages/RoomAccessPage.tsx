@@ -19,30 +19,45 @@ const RoomAccessPage = () => {
     loadFromStorage 
   } = useRoomAccess();
   const [authStep, setAuthStep] = useState<'loading' | 'registration' | 'success' | 'error'>('loading');
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
+    if (isInitialized) return; // Prevent multiple initializations
+    
     const initializeRoom = async () => {
       console.log('Initializing room with token:', token);
       
-      // Сначала проверяем, есть ли сохраненные данные
-      if (loadFromStorage()) {
-        console.log('Found stored data, is registered:', isRegistered);
-        if (isRegistered) {
-          setAuthStep('success');
-          setTimeout(() => {
-            navigate('/', { replace: true });
-          }, 2000);
-          return;
-        }
-      }
-
-      // Если токен есть, аутентифицируемся
-      if (!token) {
-        console.log('No token provided');
-        setAuthStep('error');
+      // First check if there's stored data
+      const hasStoredData = loadFromStorage();
+      console.log('Has stored data:', hasStoredData, 'is registered:', isRegistered);
+      
+      if (hasStoredData && isRegistered) {
+        console.log('User already registered, redirecting to success');
+        setAuthStep('success');
+        setTimeout(() => {
+          navigate('/', { replace: true });
+        }, 2000);
+        setIsInitialized(true);
         return;
       }
 
+      // If no token provided, show error
+      if (!token) {
+        console.log('No token provided');
+        setAuthStep('error');
+        setIsInitialized(true);
+        return;
+      }
+
+      // If we have stored data but not registered, go to registration
+      if (hasStoredData && !isRegistered) {
+        console.log('Has stored data but not registered, going to registration');
+        setAuthStep('registration');
+        setIsInitialized(true);
+        return;
+      }
+
+      // Authenticate with token
       console.log('Authenticating with token:', token);
       const success = await authenticateByToken(token);
       console.log('Authentication result:', success);
@@ -52,19 +67,21 @@ const RoomAccessPage = () => {
       } else {
         setAuthStep('error');
       }
+      
+      setIsInitialized(true);
     };
 
     initializeRoom();
-  }, [token, authenticateByToken, loadFromStorage, isRegistered, navigate]);
+  }, [token]); // Only depend on token
 
   const handleGuestRegistration = async (guestData: {
     guest_email?: string;
     guest_phone?: string;
     guest_name?: string;
   }) => {
-    console.log('Registering guest with data:', guestData);
+    console.log('🔄 Registering guest with data:', guestData);
     const success = await registerGuest(guestData);
-    console.log('Registration result:', success);
+    console.log('✅ Registration result:', success);
     
     if (success) {
       setAuthStep('success');

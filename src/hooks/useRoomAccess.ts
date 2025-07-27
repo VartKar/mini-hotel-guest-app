@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { RoomAccessData, getRoomByToken, registerGuestInRoom, updateGuestAccess } from '@/utils/roomAccessUtils';
 
 export const useRoomAccess = () => {
@@ -8,7 +8,7 @@ export const useRoomAccess = () => {
   const [error, setError] = useState<string | null>(null);
   const [isRegistered, setIsRegistered] = useState(false);
 
-  const authenticateByToken = async (token: string) => {
+  const authenticateByToken = useCallback(async (token: string) => {
     try {
       console.log('🔐 Starting authentication with token:', token);
       setLoading(true);
@@ -39,9 +39,9 @@ export const useRoomAccess = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const registerGuest = async (guestData: {
+  const registerGuest = useCallback(async (guestData: {
     guest_email?: string;
     guest_phone?: string;
     guest_name?: string;
@@ -96,9 +96,9 @@ export const useRoomAccess = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [roomData]);
 
-  const loadFromStorage = () => {
+  const loadFromStorage = useCallback(() => {
     try {
       const storedRoomData = localStorage.getItem('rubikinn_room_data');
       const storedToken = localStorage.getItem('rubikinn_room_token');
@@ -113,9 +113,9 @@ export const useRoomAccess = () => {
       console.error('Error loading from storage:', error);
     }
     return false;
-  };
+  }, []);
 
-  const clearData = () => {
+  const clearData = useCallback(() => {
     localStorage.removeItem('rubikinn_room_token');
     localStorage.removeItem('rubikinn_room_data');
     localStorage.removeItem('rubikinn_guest_registered');
@@ -123,7 +123,7 @@ export const useRoomAccess = () => {
     setRoomData(null);
     setIsRegistered(false);
     setError(null);
-  };
+  }, []);
 
   return {
     roomData,
@@ -134,6 +134,6 @@ export const useRoomAccess = () => {
     registerGuest,
     loadFromStorage,
     clearData,
-    clearError: () => setError(null)
+    clearError: useCallback(() => setError(null), [])
   };
 };
