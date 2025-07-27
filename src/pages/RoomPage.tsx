@@ -1,9 +1,14 @@
+
 import React from "react";
 import { Wifi, Car, Coffee, Tv, Shield, Bed } from "lucide-react";
 import { useRoomData } from "@/hooks/useRoomData";
 
 const RoomPage = () => {
   const { roomData, loading } = useRoomData();
+
+  console.log('🖼️ RoomPage - Room data:', roomData);
+  console.log('🖼️ RoomPage - room_image_url:', roomData?.room_image_url);
+  console.log('🖼️ RoomPage - main_image_url:', roomData?.main_image_url);
 
   if (loading) {
     return (
@@ -22,6 +27,7 @@ const RoomPage = () => {
   }
 
   const imageUrl = roomData.room_image_url || roomData.main_image_url;
+  console.log('🖼️ RoomPage - Selected image URL:', imageUrl);
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
@@ -33,7 +39,18 @@ const RoomPage = () => {
             src={imageUrl} 
             alt={roomData.apartment_name || "Room"} 
             className="w-full h-48 object-cover rounded-lg"
+            onLoad={() => console.log('🖼️ Image loaded successfully:', imageUrl)}
+            onError={(e) => {
+              console.error('🖼️ Image load error:', imageUrl);
+              console.error('🖼️ Error details:', e);
+            }}
           />
+        </div>
+      )}
+
+      {!imageUrl && (
+        <div className="mb-6 bg-gray-100 rounded-lg h-48 flex items-center justify-center">
+          <p className="text-gray-500">Изображение не найдено</p>
         </div>
       )}
       
