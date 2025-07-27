@@ -1,0 +1,66 @@
+
+-- Создаем тестовые записи в таблице room_access с токенами для демонстрации
+INSERT INTO room_access (
+  room_id, 
+  property_id, 
+  room_number, 
+  apartment_name, 
+  access_token, 
+  city,
+  wifi_network,
+  wifi_password,
+  checkout_time,
+  host_name,
+  host_phone,
+  host_email,
+  notes_for_guests,
+  main_image_url
+) VALUES 
+(
+  'room_001',
+  'prop_001', 
+  '101',
+  'Апартаменты "Центр Сочи"',
+  'abc123def456ghi789',
+  'Сочи',
+  'WiFi-Center',
+  'password123',
+  '12:00',
+  'Анна Иванова',
+  '+7 (918) 123-45-67',
+  'anna@example.com',
+  'Добро пожаловать! Ключи от номера у администратора на ресепшн.',
+  'https://example.com/room1.jpg'
+),
+(
+  'room_002',
+  'prop_002',
+  '205', 
+  'Апартаменты "У моря"',
+  'xyz789uvw456rst123',
+  'Сочи',
+  'WiFi-Sea',
+  'seapass456',
+  '11:00',
+  'Дмитрий Петров',
+  '+7 (918) 765-43-21',
+  'dmitry@example.com',
+  'Прекрасный вид на море! Наслаждайтесь отдыхом.',
+  'https://example.com/room2.jpg'
+),
+(
+  'room_003',
+  'prop_003',
+  '307',
+  'Апартаменты "Красная Поляна"', 
+  'qwe456rty789uio123',
+  'Красная Поляна',
+  'WiFi-Mountains',
+  'mountain789',
+  '11:30',
+  'Елена Сидорова',
+  '+7 (918) 234-56-78',
+  'elena@example.com',
+  'Горный воздух и прекрасные виды! До подъемников 10 минут пешком.',
+  'https://example.com/room3.jpg'
+);
