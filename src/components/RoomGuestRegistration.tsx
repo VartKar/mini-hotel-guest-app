@@ -23,25 +23,42 @@ const RoomGuestRegistration = ({ onRegister, error }: RoomGuestRegistrationProps
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🔄 Form submitted with data:', {
+      guestName: guestName.trim(),
+      guestEmail: guestEmail.trim(),
+      guestPhone: guestPhone.trim()
+    });
+
     if (!guestName.trim()) {
+      console.log('❌ Guest name is required');
       return;
     }
 
     setIsSubmitting(true);
+    console.log('⏳ Setting isSubmitting to true');
     
     try {
+      console.log('🚀 Calling onRegister function...');
       const success = await onRegister({
         guest_name: guestName.trim(),
         guest_email: guestEmail.trim() || undefined,
         guest_phone: guestPhone.trim() || undefined,
       });
 
+      console.log('✅ Registration result:', success);
+
       if (success) {
+        console.log('🎉 Registration successful, clearing form');
         setGuestName('');
         setGuestEmail('');
         setGuestPhone('');
+      } else {
+        console.log('❌ Registration failed');
       }
+    } catch (error) {
+      console.error('💥 Error during registration:', error);
     } finally {
+      console.log('🔄 Setting isSubmitting to false');
       setIsSubmitting(false);
     }
   };
@@ -118,17 +135,17 @@ const RoomGuestRegistration = ({ onRegister, error }: RoomGuestRegistrationProps
             <button 
               type="submit" 
               disabled={isButtonDisabled}
-              className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
+              className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center ${
                 isButtonDisabled 
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                   : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 shadow-sm hover:shadow-md'
               }`}
             >
               {isSubmitting ? (
-                <div className="flex items-center justify-center">
+                <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Регистрация...
-                </div>
+                </>
               ) : (
                 'Зарегистрироваться'
               )}

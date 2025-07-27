@@ -40,7 +40,7 @@ export const generateRoomToken = (): string => {
 
 export const getRoomByToken = async (token: string): Promise<RoomAccessData | null> => {
   try {
-    console.log('getRoomByToken - Searching for token:', token);
+    console.log('🔍 getRoomByToken - Searching for token:', token);
     
     const { data, error } = await supabase
       .from('room_access')
@@ -48,15 +48,15 @@ export const getRoomByToken = async (token: string): Promise<RoomAccessData | nu
       .eq('access_token', token)
       .eq('is_active', true);
 
-    console.log('getRoomByToken - Query result:', { data, error });
+    console.log('📊 getRoomByToken - Query result:', { data, error });
 
     if (error) {
-      console.error('Error fetching room by token:', error);
+      console.error('❌ Error fetching room by token:', error);
       return null;
     }
 
     if (!data || data.length === 0) {
-      console.log('No room found for token:', token);
+      console.log('🚫 No room found for token:', token);
       
       // Давайте также проверим, есть ли вообще записи в таблице
       const { data: allRooms, error: allRoomsError } = await supabase
@@ -64,17 +64,17 @@ export const getRoomByToken = async (token: string): Promise<RoomAccessData | nu
         .select('access_token, room_number, city')
         .limit(5);
       
-      console.log('Available rooms sample:', allRooms);
-      console.log('All rooms query error:', allRoomsError);
+      console.log('📋 Available rooms sample:', allRooms);
+      console.log('⚠️ All rooms query error:', allRoomsError);
       
       return null;
     }
 
     const roomData = data[0];
-    console.log('Found room data:', roomData);
+    console.log('✅ Found room data:', roomData);
     return roomData;
   } catch (error) {
-    console.error('Error in getRoomByToken:', error);
+    console.error('💥 Error in getRoomByToken:', error);
     return null;
   }
 };
@@ -85,33 +85,64 @@ export const registerGuestInRoom = async (roomAccessId: string, guestData: {
   guest_name?: string;
 }) => {
   try {
-    console.log('registerGuestInRoom - Room ID:', roomAccessId, 'Guest data:', guestData);
+    console.log('📝 registerGuestInRoom - Starting registration');
+    console.log('🏠 Room ID:', roomAccessId);
+    console.log('👤 Guest data:', guestData);
+    
+    // Проверим, что room_access_id существует
+    const { data: roomCheck, error: roomCheckError } = await supabase
+      .from('room_access')
+      .select('id, room_number')
+      .eq('id', roomAccessId)
+      .single();
+    
+    console.log('🔍 Room check result:', { roomCheck, roomCheckError });
+    
+    if (roomCheckError || !roomCheck) {
+      console.error('❌ Room not found for ID:', roomAccessId);
+      return null;
+    }
+
+    console.log('✅ Room exists, proceeding with guest registration');
     
     const { data, error } = await supabase
       .from('room_guests')
       .insert({
         room_access_id: roomAccessId,
-        ...guestData
+        guest_name: guestData.guest_name,
+        guest_email: guestData.guest_email,
+        guest_phone: guestData.guest_phone
       })
       .select()
       .single();
 
+    console.log('📋 Guest registration query result:', { data, error });
+
     if (error) {
-      console.error('Error registering guest in room:', error);
+      console.error('❌ Error registering guest in room:', error);
+      console.error('Error details:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
       return null;
     }
 
-    console.log('Guest registered successfully:', data);
+    console.log('🎉 Guest registered successfully:', data);
     return data;
   } catch (error) {
-    console.error('Error in registerGuestInRoom:', error);
+    console.error('💥 Error in registerGuestInRoom:', error);
     return null;
   }
 };
 
 export const updateGuestAccess = async (roomAccessId: string, guestEmail?: string, guestPhone?: string) => {
   try {
-    console.log('updateGuestAccess - Room ID:', roomAccessId, 'Email:', guestEmail, 'Phone:', guestPhone);
+    console.log('⏰ updateGuestAccess - Starting update');
+    console.log('🏠 Room ID:', roomAccessId);
+    console.log('📧 Email:', guestEmail);
+    console.log('📱 Phone:', guestPhone);
     
     const { error } = await supabase
       .from('room_guests')
@@ -121,15 +152,17 @@ export const updateGuestAccess = async (roomAccessId: string, guestEmail?: strin
       .eq('room_access_id', roomAccessId)
       .or(guestEmail ? `guest_email.eq.${guestEmail}` : `guest_phone.eq.${guestPhone}`);
 
+    console.log('⏰ Update guest access result:', { error });
+
     if (error) {
-      console.error('Error updating guest access:', error);
+      console.error('❌ Error updating guest access:', error);
       return false;
     }
 
-    console.log('Guest access updated successfully');
+    console.log('✅ Guest access updated successfully');
     return true;
   } catch (error) {
-    console.error('Error in updateGuestAccess:', error);
+    console.error('💥 Error in updateGuestAccess:', error);
     return false;
   }
 };
