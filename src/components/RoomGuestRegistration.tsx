@@ -24,7 +24,8 @@ const RoomGuestRegistration = ({ onRegister, loading, error }: RoomGuestRegistra
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!guestName || (!guestEmail && !guestPhone)) {
+    // Для MVP достаточно только имени
+    if (!guestName.trim()) {
       return;
     }
 
@@ -50,7 +51,7 @@ const RoomGuestRegistration = ({ onRegister, loading, error }: RoomGuestRegistra
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="guestName">Имя</Label>
+              <Label htmlFor="guestName">Имя <span className="text-red-500">*</span></Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
@@ -66,7 +67,7 @@ const RoomGuestRegistration = ({ onRegister, loading, error }: RoomGuestRegistra
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="guestEmail">Email</Label>
+              <Label htmlFor="guestEmail">Email (опционально)</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
@@ -81,7 +82,7 @@ const RoomGuestRegistration = ({ onRegister, loading, error }: RoomGuestRegistra
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="guestPhone">Телефон</Label>
+              <Label htmlFor="guestPhone">Телефон (опционально)</Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
@@ -96,11 +97,11 @@ const RoomGuestRegistration = ({ onRegister, loading, error }: RoomGuestRegistra
             </div>
 
             <p className="text-sm text-gray-600">
-              Укажите email или телефон для доступа к номеру
+              Для входа в номер достаточно указать только имя. Email и телефон опциональны.
             </p>
 
             {error && (
-              <div className="text-red-600 text-sm text-center">
+              <div className="text-red-600 text-sm text-center bg-red-50 p-2 rounded">
                 {error}
               </div>
             )}
@@ -108,7 +109,7 @@ const RoomGuestRegistration = ({ onRegister, loading, error }: RoomGuestRegistra
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={loading || !guestName || (!guestEmail && !guestPhone)}
+              disabled={loading || !guestName.trim()}
             >
               {loading ? (
                 <>
