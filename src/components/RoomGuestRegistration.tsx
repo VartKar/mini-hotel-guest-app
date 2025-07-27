@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, User, Mail, Phone } from 'lucide-react';
@@ -41,6 +40,8 @@ const RoomGuestRegistration = ({ onRegister, loading, error }: RoomGuestRegistra
       setGuestPhone('');
     }
   };
+
+  const isButtonDisabled = loading || !guestName.trim();
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
@@ -106,20 +107,24 @@ const RoomGuestRegistration = ({ onRegister, loading, error }: RoomGuestRegistra
               </div>
             )}
 
-            <Button 
+            <button 
               type="submit" 
-              className="w-full" 
-              disabled={loading || !guestName.trim()}
+              disabled={isButtonDisabled}
+              className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
+                isButtonDisabled 
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 shadow-sm hover:shadow-md'
+              }`}
             >
               {loading ? (
-                <>
+                <div className="flex items-center justify-center">
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Регистрация...
-                </>
+                </div>
               ) : (
                 'Зарегистрироваться'
               )}
-            </Button>
+            </button>
           </form>
         </CardContent>
       </Card>
