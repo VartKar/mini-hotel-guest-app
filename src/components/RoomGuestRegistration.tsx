@@ -11,37 +11,42 @@ interface RoomGuestRegistrationProps {
     guest_phone?: string;
     guest_name?: string;
   }) => Promise<boolean>;
-  loading: boolean;
   error?: string | null;
 }
 
-const RoomGuestRegistration = ({ onRegister, loading, error }: RoomGuestRegistrationProps) => {
+const RoomGuestRegistration = ({ onRegister, error }: RoomGuestRegistrationProps) => {
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Для MVP достаточно только имени
     if (!guestName.trim()) {
       return;
     }
 
-    const success = await onRegister({
-      guest_name: guestName.trim(),
-      guest_email: guestEmail.trim() || undefined,
-      guest_phone: guestPhone.trim() || undefined,
-    });
+    setIsSubmitting(true);
+    
+    try {
+      const success = await onRegister({
+        guest_name: guestName.trim(),
+        guest_email: guestEmail.trim() || undefined,
+        guest_phone: guestPhone.trim() || undefined,
+      });
 
-    if (success) {
-      setGuestName('');
-      setGuestEmail('');
-      setGuestPhone('');
+      if (success) {
+        setGuestName('');
+        setGuestEmail('');
+        setGuestPhone('');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const isButtonDisabled = loading || !guestName.trim();
+  const isButtonDisabled = isSubmitting || !guestName.trim();
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
@@ -63,6 +68,7 @@ const RoomGuestRegistration = ({ onRegister, loading, error }: RoomGuestRegistra
                   onChange={(e) => setGuestName(e.target.value)}
                   className="pl-10"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -78,6 +84,7 @@ const RoomGuestRegistration = ({ onRegister, loading, error }: RoomGuestRegistra
                   value={guestEmail}
                   onChange={(e) => setGuestEmail(e.target.value)}
                   className="pl-10"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -93,6 +100,7 @@ const RoomGuestRegistration = ({ onRegister, loading, error }: RoomGuestRegistra
                   value={guestPhone}
                   onChange={(e) => setGuestPhone(e.target.value)}
                   className="pl-10"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -102,7 +110,7 @@ const RoomGuestRegistration = ({ onRegister, loading, error }: RoomGuestRegistra
             </p>
 
             {error && (
-              <div className="text-red-600 text-sm text-center bg-red-50 p-2 rounded">
+              <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg border border-red-200">
                 {error}
               </div>
             )}
@@ -116,7 +124,7 @@ const RoomGuestRegistration = ({ onRegister, loading, error }: RoomGuestRegistra
                   : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 shadow-sm hover:shadow-md'
               }`}
             >
-              {loading ? (
+              {isSubmitting ? (
                 <div className="flex items-center justify-center">
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Регистрация...

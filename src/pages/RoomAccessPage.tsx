@@ -20,15 +20,6 @@ const RoomAccessPage = () => {
   } = useRoomAccess();
   const [authStep, setAuthStep] = useState<'loading' | 'registration' | 'success' | 'error'>('loading');
 
-  // Добавим отладочную информацию
-  useEffect(() => {
-    console.log('RoomAccessPage - Token from URL:', token);
-    console.log('RoomAccessPage - Current auth step:', authStep);
-    console.log('RoomAccessPage - Room data:', roomData);
-    console.log('RoomAccessPage - Is registered:', isRegistered);
-    console.log('RoomAccessPage - Error:', error);
-  }, [token, authStep, roomData, isRegistered, error]);
-
   useEffect(() => {
     const initializeRoom = async () => {
       console.log('Initializing room with token:', token);
@@ -38,7 +29,6 @@ const RoomAccessPage = () => {
         console.log('Found stored data, is registered:', isRegistered);
         if (isRegistered) {
           setAuthStep('success');
-          // Перенаправляем на главную через 2 секунды
           setTimeout(() => {
             navigate('/', { replace: true });
           }, 2000);
@@ -78,7 +68,6 @@ const RoomAccessPage = () => {
     
     if (success) {
       setAuthStep('success');
-      // Перенаправляем на главную через 2 секунды
       setTimeout(() => {
         navigate('/', { replace: true });
       }, 2000);
@@ -95,9 +84,6 @@ const RoomAccessPage = () => {
             <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin text-blue-600" />
             <h2 className="text-xl font-semibold mb-2">Загрузка...</h2>
             <p className="text-gray-600">Проверяем доступ к номеру</p>
-            {token && (
-              <p className="text-xs text-gray-400 mt-2">Токен: {token}</p>
-            )}
           </CardContent>
         </Card>
       </div>
@@ -114,9 +100,6 @@ const RoomAccessPage = () => {
             <p className="text-gray-600 mb-4">
               {error || 'Номер не найден или ссылка недействительна'}
             </p>
-            {token && (
-              <p className="text-xs text-gray-400 mb-4">Проверяемый токен: {token}</p>
-            )}
             <button
               onClick={() => navigate('/')}
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -144,7 +127,6 @@ const RoomAccessPage = () => {
           
           <RoomGuestRegistration
             onRegister={handleGuestRegistration}
-            loading={loading}
             error={error}
           />
         </div>
