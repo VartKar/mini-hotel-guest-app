@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useTravelItinerary } from "@/hooks/useTravelItinerary";
@@ -14,8 +15,8 @@ import { Loader2, MapPin, Clock, Calendar, User } from "lucide-react";
 
 const TravelPage = () => {
   const { roomData } = useRoomData();
-  const { itinerary, loading: itineraryLoading } = useTravelItinerary(roomData?.booking_id);
-  const { services, loading: servicesLoading } = useTravelServices();
+  const { itineraries, isLoading: itineraryLoading } = useTravelItinerary(roomData?.booking_id, roomData?.city || 'Сочи', roomData?.property_id);
+  const { data: services = [], isLoading: servicesLoading } = useTravelServices();
   const [selectedServices, setSelectedServices] = useState<any[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -114,7 +115,7 @@ const TravelPage = () => {
           </TabsList>
           
           <TabsContent value="itinerary" className="space-y-6">
-            {itinerary.length === 0 ? (
+            {itineraries.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-8">
                   <p className="text-gray-500">Персональный маршрут не создан</p>
@@ -122,7 +123,7 @@ const TravelPage = () => {
               </Card>
             ) : (
               <div className="space-y-4">
-                {itinerary.map((day, index) => (
+                {itineraries.map((day, index) => (
                   <Card key={day.id}>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">

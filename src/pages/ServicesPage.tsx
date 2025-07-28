@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useHotelServices } from "@/hooks/useHotelServices";
@@ -12,7 +13,7 @@ import { Loader2, Phone, Mail, Clock, Star, MapPin, Info } from "lucide-react";
 
 const ServicesPage = () => {
   const { roomData } = useRoomData();
-  const { services, loading } = useHotelServices();
+  const { data: services = [], isLoading: loading } = useHotelServices();
   const [selectedServices, setSelectedServices] = useState<any[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");

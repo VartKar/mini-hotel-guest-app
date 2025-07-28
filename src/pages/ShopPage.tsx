@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useShopItems } from "@/hooks/useShopItems";
@@ -12,7 +13,7 @@ import { Loader2, Minus, Plus, ShoppingCart } from "lucide-react";
 
 const ShopPage = () => {
   const { roomData } = useRoomData();
-  const { items, loading } = useShopItems();
+  const { data: items = [], isLoading: loading } = useShopItems();
   const [cart, setCart] = useState<any[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");

@@ -1,328 +1,278 @@
 import React, { useState } from "react";
-import { Mail, LogOut, Loader2, Building, Calendar, User } from "lucide-react";
-import { toast } from "sonner";
-import { useHostData } from "@/hooks/useHostData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { translateStatus, getStatusBadgeVariant } from "@/lib/statusTranslations";
-import HotelServiceOrders from "@/components/host/HotelServiceOrders";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, User, Loader2, MessageSquare } from "lucide-react";
+import { useHostData, HostBooking } from "@/hooks/useHostData";
+import { toast } from "sonner";
 
 const HostPage = () => {
-  const { hostData, isAuthenticated, loginWithEmail, logout, requestChange, loading, error, clearError } = useHostData();
+  const { hostData, loading, error, isAuthenticated, loginWithEmail, logout, requestChange } = useHostData();
   const [email, setEmail] = useState("");
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<HostBooking | null>(null);
+  const [requestType, setRequestType] = useState("");
   const [requestDetails, setRequestDetails] = useState("");
-  const [selectedBooking, setSelectedBooking] = useState(null);
-  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+  const [requestSubmitting, setRequestSubmitting] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) {
-      toast.error("Введите email адрес");
+    setSubmitting(true);
+    try {
+      await loginWithEmail(email);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRequestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBooking || !requestType.trim() || !requestDetails.trim()) {
+      toast.error("Пожалуйста, заполните все поля");
       return;
     }
 
-    setIsLoggingIn(true);
-    clearError();
-    
-    const success = await loginWithEmail(email);
-    
-    if (success) {
-      toast.success("Успешный вход в панель управления");
-      setEmail("");
-    }
-    
-    setIsLoggingIn(false);
-  };
-
-  const handleLogout = () => {
-    logout();
-    toast.success("Вы вышли из панели управления");
-  };
-
-  const handleRequestChange = async () => {
-    if (!selectedBooking || !requestDetails.trim()) {
-      toast.error("Заполните все поля");
-      return;
-    }
-
-    setIsSubmittingRequest(true);
-    
-    const success = await requestChange(selectedBooking, "update_info", requestDetails);
-    
-    if (success) {
-      toast.success("Запрос на изменение отправлен администратору");
-      setRequestDetails("");
-      setSelectedBooking(null);
-    } else {
+    setRequestSubmitting(true);
+    try {
+      const success = await requestChange(selectedBooking, requestType, requestDetails);
+      if (success) {
+        toast.success("Запрос отправлен администратору");
+        setSelectedBooking(null);
+        setRequestType("");
+        setRequestDetails("");
+      } else {
+        toast.error("Ошибка при отправке запроса");
+      }
+    } catch (error) {
       toast.error("Ошибка при отправке запроса");
+    } finally {
+      setRequestSubmitting(false);
     }
-    
-    setIsSubmittingRequest(false);
   };
 
-  const getStatusBadge = (status: string | null) => {
+  if (loading) {
     return (
-      <Badge variant={getStatusBadgeVariant(status)}>
-        {translateStatus(status)}
-      </Badge>
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
     );
-  };
+  }
 
   if (!isAuthenticated) {
     return (
-      <div className="w-full max-w-md mx-auto pt-8">
-        <div className="bg-white rounded-xl p-8 shadow-sm border">
-          <div className="text-center mb-6">
-            <Building className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-            <h1 className="text-2xl font-semibold text-gray-800 mb-2">
-              Панель управления объектом
-            </h1>
-            <p className="text-gray-600">
-              Войдите для управления вашими бронированиями
-            </p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label htmlFor="host-email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email владельца объекта
-              </label>
-              <Input
-                id="host-email"
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full"
-                disabled={isLoggingIn}
-              />
-              {error && (
-                <p className="text-sm text-red-600 mt-2">{error}</p>
-              )}
-            </div>
-            
-            <Button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={isLoggingIn || !email.trim()}
-            >
-              {isLoggingIn ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Вход...
-                </>
-              ) : (
-                'Войти'
-              )}
-            </Button>
-          </form>
-
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              Только для владельцев объектов недвижимости. Доступ предоставляется по email.
-            </p>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-md mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">Вход для хостов</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium mb-1">
+                    Email хоста
+                  </label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    required
+                  />
+                </div>
+                
+                {error && (
+                  <div className="text-red-600 text-sm">{error}</div>
+                )}
+                
+                <Button type="submit" disabled={submitting} className="w-full">
+                  {submitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Вход...
+                    </>
+                  ) : (
+                    "Войти"
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto pt-4 px-4">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-light">
-            Панель управления - {hostData?.host_name || 'Хост'}
-          </h1>
-          <p className="text-gray-600 mt-1">
-            {hostData?.bookings.length || 0} активных бронирований
-          </p>
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Панель хоста</h1>
+          <Button onClick={logout} variant="outline">
+            Выйти
+          </Button>
         </div>
-        <Button
-          onClick={handleLogout}
-          variant="outline"
-          className="text-red-600 border-red-200 hover:bg-red-50"
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Выйти
-        </Button>
-      </div>
 
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Активные бронирования
-            </CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{hostData?.bookings.length || 0}</div>
-          </CardContent>
-        </Card>
+        <div className="grid gap-6">
+          {/* Host Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Информация о хосте
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Имя</p>
+                  <p className="font-medium">{hostData?.host_name || 'Не указано'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Email</p>
+                  <p className="font-medium">{hostData?.host_email}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Телефон</p>
+                  <p className="font-medium">{hostData?.host_phone || 'Не указан'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Компания</p>
+                  <p className="font-medium">{hostData?.host_company || 'Не указана'}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Компания
-            </CardTitle>
-            <Building className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-medium">{hostData?.host_company || 'Не указано'}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Email хоста
-            </CardTitle>
-            <Mail className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm">{hostData?.host_email}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Hotel Service Orders Section */}
-      <div className="mb-6">
-        <HotelServiceOrders hostEmail={hostData?.host_email || ''} />
-      </div>
-
-      {/* Bookings Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Список бронирований</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Гость</TableHead>
-                <TableHead>Номер</TableHead>
-                <TableHead>Объект</TableHead>
-                <TableHead>Заезд - Выезд</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead>Действия</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {hostData?.bookings.map((booking) => (
-                <TableRow key={booking.id_key}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{booking.guest_name || 'Не указано'}</div>
-                      <div className="text-sm text-gray-500">{booking.guest_email}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{booking.room_number}</TableCell>
-                  <TableCell>{booking.apartment_name}</TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {booking.check_in_date} - {booking.check_out_date}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(booking.booking_status)}
-                  </TableCell>
-                  <TableCell>
-                    <Sheet>
-                      <SheetTrigger asChild>
-                        <Button 
-                          variant="outline" 
+          {/* Bookings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Активные бронирования ({hostData?.bookings.length || 0})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {hostData?.bookings.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">Нет активных бронирований</p>
+              ) : (
+                <div className="space-y-4">
+                  {hostData?.bookings.map((booking) => (
+                    <div key={booking.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h3 className="font-medium">{booking.guest_name}</h3>
+                          <p className="text-sm text-gray-600">{booking.guest_email}</p>
+                        </div>
+                        <Badge variant={booking.booking_status === 'confirmed' ? 'default' : 'secondary'}>
+                          {booking.booking_status}
+                        </Badge>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-600">Номер</p>
+                          <p className="font-medium">{booking.room_number}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Заезд</p>
+                          <p className="font-medium">{booking.check_in_date || 'Не указан'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Выезд</p>
+                          <p className="font-medium">{booking.check_out_date || 'Не указан'}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3 flex gap-2">
+                        <Button
                           size="sm"
+                          variant="outline"
                           onClick={() => setSelectedBooking(booking)}
                         >
-                          Запросить изменения
+                          <MessageSquare className="h-4 w-4 mr-1" />
+                          Запросить изменение
                         </Button>
-                      </SheetTrigger>
-                      <SheetContent>
-                        <SheetHeader>
-                          <SheetTitle>Запрос на изменение</SheetTitle>
-                          <SheetDescription>
-                            Опишите какие изменения нужно внести в бронирование. 
-                            Запрос будет отправлен администратору.
-                          </SheetDescription>
-                        </SheetHeader>
-                        <div className="mt-6 space-y-4">
-                          <div>
-                            <label className="block text-sm font-medium mb-2">
-                              Бронирование
-                            </label>
-                            <div className="p-3 bg-gray-50 rounded-lg">
-                              <div className="font-medium">{selectedBooking?.guest_name}</div>
-                              <div className="text-sm text-gray-600">
-                                {selectedBooking?.apartment_name} - {selectedBooking?.room_number}
-                              </div>
-                            </div>
-                          </div>
-                          <div>
-                            <label htmlFor="request-details" className="block text-sm font-medium mb-2">
-                              Описание изменений
-                            </label>
-                            <Textarea
-                              id="request-details"
-                              value={requestDetails}
-                              onChange={(e) => setRequestDetails(e.target.value)}
-                              rows={4}
-                              placeholder="Опишите подробно какие изменения необходимы..."
-                              className="w-full"
-                            />
-                          </div>
-                          <Button
-                            onClick={handleRequestChange}
-                            className="w-full"
-                            disabled={isSubmittingRequest || !requestDetails.trim()}
-                          >
-                            {isSubmittingRequest ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Отправка...
-                              </>
-                            ) : (
-                              'Отправить запрос'
-                            )}
-                          </Button>
-                        </div>
-                      </SheetContent>
-                    </Sheet>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          
-          {(!hostData?.bookings || hostData.bookings.length === 0) && (
-            <div className="text-center py-8 text-gray-500">
-              Нет активных бронирований
-            </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Change Request Form */}
+          {selectedBooking && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Запрос на изменение</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleRequestSubmit} className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-2">Бронирование:</p>
+                    <p className="font-medium">{selectedBooking.guest_name} - {selectedBooking.room_number}</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Тип запроса</label>
+                    <select
+                      value={requestType}
+                      onChange={(e) => setRequestType(e.target.value)}
+                      className="w-full p-2 border rounded"
+                      required
+                    >
+                      <option value="">Выберите тип запроса</option>
+                      <option value="date_change">Изменение дат</option>
+                      <option value="room_change">Смена номера</option>
+                      <option value="guest_change">Изменение данных гостя</option>
+                      <option value="cancellation">Отмена бронирования</option>
+                      <option value="other">Другое</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Детали запроса</label>
+                    <Textarea
+                      value={requestDetails}
+                      onChange={(e) => setRequestDetails(e.target.value)}
+                      placeholder="Опишите подробно, что нужно изменить..."
+                      rows={4}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      type="submit"
+                      disabled={requestSubmitting}
+                    >
+                      {requestSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Отправляем...
+                        </>
+                      ) : (
+                        "Отправить запрос"
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setSelectedBooking(null)}
+                    >
+                      Отмена
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };
