@@ -1,10 +1,11 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Wifi, Car, Coffee, Tv, Shield, Bed } from "lucide-react";
 import { useRoomData } from "@/hooks/useRoomData";
 
 const RoomPage = () => {
   const { roomData, loading } = useRoomData();
+  const [imgError, setImgError] = useState(false);
 
   if (loading) {
     return (
@@ -22,43 +23,56 @@ const RoomPage = () => {
     );
   }
 
-  // Properly prioritize image URLs
+  // Properly prioritize image URLs - main_image_url first, then room_image_url
   const getImageUrl = () => {
+    console.log('🖼️ RoomPage getImageUrl called with:', {
+      main_image_url: roomData.main_image_url,
+      room_image_url: roomData.room_image_url
+    });
+    
     if (roomData.main_image_url && roomData.main_image_url.trim()) {
+      console.log('✅ RoomPage using main_image_url:', roomData.main_image_url);
       return roomData.main_image_url;
     }
     if (roomData.room_image_url && roomData.room_image_url.trim()) {
+      console.log('✅ RoomPage using room_image_url:', roomData.room_image_url);
       return roomData.room_image_url;
     }
+    console.log('⚠️ RoomPage no valid image URL found');
     return null;
   };
 
   const imageUrl = getImageUrl();
 
-  console.log('🖼️ Room page image logic:', {
-    main_image_url: roomData.main_image_url,
-    room_image_url: roomData.room_image_url,
-    finalImageUrl: imageUrl
-  });
+  // Reset error state if image URLs change
+  React.useEffect(() => {
+    setImgError(false);
+  }, [roomData?.main_image_url, roomData?.room_image_url]);
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
       <h1 className="text-3xl font-light mb-6">Ваш номер</h1>
       
-      {imageUrl && (
+      {imageUrl && !imgError && (
         <div className="mb-6">
           <img 
             src={imageUrl} 
             alt={roomData.apartment_name || "Room"} 
             className="w-full h-48 object-cover rounded-lg"
-            onError={(e) => {
-              console.error('❌ Image failed to load:', imageUrl);
-              e.currentTarget.style.display = 'none';
+            onError={() => {
+              console.error('❌ RoomPage image failed to load:', imageUrl);
+              setImgError(true);
             }}
             onLoad={() => {
-              console.log('✅ Image loaded successfully:', imageUrl);
+              console.log('✅ RoomPage image loaded successfully:', imageUrl);
             }}
           />
+        </div>
+      )}
+
+      {imgError && (
+        <div className="mb-6 w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+          <span className="text-gray-400 text-sm">Изображение недоступно</span>
         </div>
       )}
       

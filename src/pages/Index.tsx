@@ -40,14 +40,22 @@ const Index = () => {
   const apartmentName = roomData?.apartment_name || 'Апартаменты "Вальс"';
   const guestName = roomData?.guest_name || "Иван";
 
-  // Get the best available image
+  // Get the best available image - prioritize main_image_url over room_image_url
   const getValidImage = () => {
+    console.log('🖼️ Index getValidImage called with:', {
+      main_image_url: roomData?.main_image_url,
+      room_image_url: roomData?.room_image_url
+    });
+    
     if (roomData?.main_image_url && roomData.main_image_url.trim() !== '') {
+      console.log('✅ Using main_image_url:', roomData.main_image_url);
       return roomData.main_image_url;
     }
     if (roomData?.room_image_url && roomData.room_image_url.trim() !== '') {
+      console.log('✅ Using room_image_url:', roomData.room_image_url);
       return roomData.room_image_url;
     }
+    console.log('⚠️ Using default image');
     return DEFAULT_IMG;
   };
 
@@ -62,12 +70,11 @@ const Index = () => {
 
   const hotelImage = getValidImage();
 
-  console.log('🖼️ Index page image logic:', {
-    main_image_url: roomData?.main_image_url,
-    room_image_url: roomData?.room_image_url,
+  console.log('🖼️ Index page final image logic:', {
     finalImageUrl: hotelImage,
     imgError,
-    imgLoaded
+    imgLoaded,
+    loading
   });
 
   const documentTitle = roomData?.apartment_name
@@ -110,7 +117,7 @@ const Index = () => {
                 console.error('❌ Index image failed to load:', hotelImage);
                 setImgError(true);
               }}
-              style={{ minHeight: "8rem", minWidth: "8rem" }}
+              style={{ minHeight: "192px", minWidth: "100%" }}
             />
           )}
           {!loading && imgError && (
