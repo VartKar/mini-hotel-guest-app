@@ -14,48 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
-      actions: {
+      bookings: {
         Row: {
-          action_id: string
-          action_type: Database["public"]["Enums"]["action_type"]
-          date_created: string | null
-          player_id: string | null
-          quantity: number
-          result: Json | null
-          round_id: string | null
+          access_token: string | null
+          booking_id: string | null
+          booking_status: string
+          check_in_date: string | null
+          check_out_date: string | null
+          created_at: string
+          guest_email: string
+          guest_name: string
+          guest_phone: string | null
+          id: string
+          is_archived: boolean
+          last_updated_at: string | null
+          last_updated_by: string | null
+          notes_internal: string | null
+          number_of_guests: number | null
+          room_id: string
+          stay_duration: string | null
+          updated_at: string
+          visible_to_admin: boolean
+          visible_to_guests: boolean
+          visible_to_hosts: boolean
         }
         Insert: {
-          action_id?: string
-          action_type: Database["public"]["Enums"]["action_type"]
-          date_created?: string | null
-          player_id?: string | null
-          quantity?: number
-          result?: Json | null
-          round_id?: string | null
+          access_token?: string | null
+          booking_id?: string | null
+          booking_status?: string
+          check_in_date?: string | null
+          check_out_date?: string | null
+          created_at?: string
+          guest_email: string
+          guest_name: string
+          guest_phone?: string | null
+          id?: string
+          is_archived?: boolean
+          last_updated_at?: string | null
+          last_updated_by?: string | null
+          notes_internal?: string | null
+          number_of_guests?: number | null
+          room_id: string
+          stay_duration?: string | null
+          updated_at?: string
+          visible_to_admin?: boolean
+          visible_to_guests?: boolean
+          visible_to_hosts?: boolean
         }
         Update: {
-          action_id?: string
-          action_type?: Database["public"]["Enums"]["action_type"]
-          date_created?: string | null
-          player_id?: string | null
-          quantity?: number
-          result?: Json | null
-          round_id?: string | null
+          access_token?: string | null
+          booking_id?: string | null
+          booking_status?: string
+          check_in_date?: string | null
+          check_out_date?: string | null
+          created_at?: string
+          guest_email?: string
+          guest_name?: string
+          guest_phone?: string | null
+          id?: string
+          is_archived?: boolean
+          last_updated_at?: string | null
+          last_updated_by?: string | null
+          notes_internal?: string | null
+          number_of_guests?: number | null
+          room_id?: string
+          stay_duration?: string | null
+          updated_at?: string
+          visible_to_admin?: boolean
+          visible_to_guests?: boolean
+          visible_to_hosts?: boolean
         }
         Relationships: [
           {
-            foreignKeyName: "actions_player_id_fkey"
-            columns: ["player_id"]
+            foreignKeyName: "bookings_room_id_fkey"
+            columns: ["room_id"]
             isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["player_id"]
-          },
-          {
-            foreignKeyName: "actions_round_id_fkey"
-            columns: ["round_id"]
-            isOneToOne: false
-            referencedRelation: "rounds"
-            referencedColumns: ["round_id"]
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -235,6 +270,73 @@ export type Database = {
           },
         ]
       }
+      guest_sessions: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          expires_at: string | null
+          guest_email: string | null
+          guest_name: string
+          guest_phone: string | null
+          id: string
+          is_active: boolean
+          last_accessed_at: string | null
+          room_id: string
+          session_token: string
+          session_type: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          guest_email?: string | null
+          guest_name: string
+          guest_phone?: string | null
+          id?: string
+          is_active?: boolean
+          last_accessed_at?: string | null
+          room_id: string
+          session_token: string
+          session_type: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          guest_email?: string | null
+          guest_name?: string
+          guest_phone?: string | null
+          id?: string
+          is_active?: boolean
+          last_accessed_at?: string | null
+          room_id?: string
+          session_token?: string
+          session_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_sessions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guest_sessions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "combined_view"
+            referencedColumns: ["id_key"]
+          },
+          {
+            foreignKeyName: "guest_sessions_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       host_change_requests: {
         Row: {
           booking_id: string | null
@@ -319,107 +421,6 @@ export type Database = {
         }
         Relationships: []
       }
-      logic_rules: {
-        Row: {
-          action_type: Database["public"]["Enums"]["action_type"]
-          cost_per_unit: number
-          date_created: string | null
-          new_product_impact: number
-          old_product_impact: number
-          rule_id: string
-          time_per_unit: number
-        }
-        Insert: {
-          action_type: Database["public"]["Enums"]["action_type"]
-          cost_per_unit: number
-          date_created?: string | null
-          new_product_impact: number
-          old_product_impact: number
-          rule_id?: string
-          time_per_unit: number
-        }
-        Update: {
-          action_type?: Database["public"]["Enums"]["action_type"]
-          cost_per_unit?: number
-          date_created?: string | null
-          new_product_impact?: number
-          old_product_impact?: number
-          rule_id?: string
-          time_per_unit?: number
-        }
-        Relationships: []
-      }
-      players: {
-        Row: {
-          current_round: number | null
-          date_created: string | null
-          is_active: boolean | null
-          player_id: string
-          session_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          current_round?: number | null
-          date_created?: string | null
-          is_active?: boolean | null
-          player_id?: string
-          session_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          current_round?: number | null
-          date_created?: string | null
-          is_active?: boolean | null
-          player_id?: string
-          session_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "players_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "sessions"
-            referencedColumns: ["session_id"]
-          },
-          {
-            foreignKeyName: "players_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          date_created: string | null
-          metadata: Json | null
-          profile_id: string
-          user_id: string | null
-        }
-        Insert: {
-          date_created?: string | null
-          metadata?: Json | null
-          profile_id?: string
-          user_id?: string | null
-        }
-        Update: {
-          date_created?: string | null
-          metadata?: Json | null
-          profile_id?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
       property_item_pricing: {
         Row: {
           created_at: string
@@ -496,75 +497,223 @@ export type Database = {
           },
         ]
       }
-      rounds: {
+      room_access: {
         Row: {
-          date_created: string | null
-          round_id: string
-          round_number: number
-          session_id: string | null
+          ac_instructions: string | null
+          access_token: string
+          apartment_name: string | null
+          checkout_time: string | null
+          city: string
+          coffee_instructions: string | null
+          created_at: string
+          extra_bed_info: string | null
+          host_email: string | null
+          host_name: string | null
+          host_phone: string | null
+          id: string
+          is_active: boolean
+          main_image_url: string | null
+          notes_for_guests: string | null
+          parking_info: string | null
+          property_id: string
+          property_manager_email: string | null
+          property_manager_name: string | null
+          property_manager_phone: string | null
+          room_id: string
+          room_image_url: string | null
+          room_number: string
+          safe_instructions: string | null
+          tv_instructions: string | null
+          updated_at: string
+          wifi_network: string | null
+          wifi_password: string | null
         }
         Insert: {
-          date_created?: string | null
-          round_id?: string
-          round_number: number
-          session_id?: string | null
+          ac_instructions?: string | null
+          access_token: string
+          apartment_name?: string | null
+          checkout_time?: string | null
+          city?: string
+          coffee_instructions?: string | null
+          created_at?: string
+          extra_bed_info?: string | null
+          host_email?: string | null
+          host_name?: string | null
+          host_phone?: string | null
+          id?: string
+          is_active?: boolean
+          main_image_url?: string | null
+          notes_for_guests?: string | null
+          parking_info?: string | null
+          property_id: string
+          property_manager_email?: string | null
+          property_manager_name?: string | null
+          property_manager_phone?: string | null
+          room_id: string
+          room_image_url?: string | null
+          room_number: string
+          safe_instructions?: string | null
+          tv_instructions?: string | null
+          updated_at?: string
+          wifi_network?: string | null
+          wifi_password?: string | null
         }
         Update: {
-          date_created?: string | null
-          round_id?: string
-          round_number?: number
-          session_id?: string | null
+          ac_instructions?: string | null
+          access_token?: string
+          apartment_name?: string | null
+          checkout_time?: string | null
+          city?: string
+          coffee_instructions?: string | null
+          created_at?: string
+          extra_bed_info?: string | null
+          host_email?: string | null
+          host_name?: string | null
+          host_phone?: string | null
+          id?: string
+          is_active?: boolean
+          main_image_url?: string | null
+          notes_for_guests?: string | null
+          parking_info?: string | null
+          property_id?: string
+          property_manager_email?: string | null
+          property_manager_name?: string | null
+          property_manager_phone?: string | null
+          room_id?: string
+          room_image_url?: string | null
+          room_number?: string
+          safe_instructions?: string | null
+          tv_instructions?: string | null
+          updated_at?: string
+          wifi_network?: string | null
+          wifi_password?: string | null
+        }
+        Relationships: []
+      }
+      room_guests: {
+        Row: {
+          guest_email: string | null
+          guest_name: string | null
+          guest_phone: string | null
+          id: string
+          last_access_at: string | null
+          registered_at: string
+          room_access_id: string
+        }
+        Insert: {
+          guest_email?: string | null
+          guest_name?: string | null
+          guest_phone?: string | null
+          id?: string
+          last_access_at?: string | null
+          registered_at?: string
+          room_access_id: string
+        }
+        Update: {
+          guest_email?: string | null
+          guest_name?: string | null
+          guest_phone?: string | null
+          id?: string
+          last_access_at?: string | null
+          registered_at?: string
+          room_access_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "rounds_session_id_fkey"
-            columns: ["session_id"]
+            foreignKeyName: "room_guests_room_access_id_fkey"
+            columns: ["room_access_id"]
             isOneToOne: false
-            referencedRelation: "sessions"
-            referencedColumns: ["session_id"]
+            referencedRelation: "room_access"
+            referencedColumns: ["id"]
           },
         ]
       }
-      sessions: {
+      rooms: {
         Row: {
-          date_created: string | null
-          date_updated: string | null
-          moderator_id: string | null
-          name: string
-          session_id: string
-          settings: Json | null
-          status: Database["public"]["Enums"]["session_status"] | null
-          total_rounds: number | null
+          ac_instructions: string | null
+          apartment_name: string | null
+          checkout_time: string | null
+          city: string
+          coffee_instructions: string | null
+          created_at: string
+          extra_bed_info: string | null
+          host_email: string | null
+          host_name: string | null
+          host_phone: string | null
+          id: string
+          is_active: boolean
+          main_image_url: string | null
+          notes_for_guests: string | null
+          parking_info: string | null
+          property_id: string
+          property_manager_email: string | null
+          property_manager_name: string | null
+          property_manager_phone: string | null
+          room_image_url: string | null
+          room_number: string
+          safe_instructions: string | null
+          tv_instructions: string | null
+          updated_at: string
+          wifi_network: string | null
+          wifi_password: string | null
         }
         Insert: {
-          date_created?: string | null
-          date_updated?: string | null
-          moderator_id?: string | null
-          name: string
-          session_id?: string
-          settings?: Json | null
-          status?: Database["public"]["Enums"]["session_status"] | null
-          total_rounds?: number | null
+          ac_instructions?: string | null
+          apartment_name?: string | null
+          checkout_time?: string | null
+          city?: string
+          coffee_instructions?: string | null
+          created_at?: string
+          extra_bed_info?: string | null
+          host_email?: string | null
+          host_name?: string | null
+          host_phone?: string | null
+          id?: string
+          is_active?: boolean
+          main_image_url?: string | null
+          notes_for_guests?: string | null
+          parking_info?: string | null
+          property_id: string
+          property_manager_email?: string | null
+          property_manager_name?: string | null
+          property_manager_phone?: string | null
+          room_image_url?: string | null
+          room_number: string
+          safe_instructions?: string | null
+          tv_instructions?: string | null
+          updated_at?: string
+          wifi_network?: string | null
+          wifi_password?: string | null
         }
         Update: {
-          date_created?: string | null
-          date_updated?: string | null
-          moderator_id?: string | null
-          name?: string
-          session_id?: string
-          settings?: Json | null
-          status?: Database["public"]["Enums"]["session_status"] | null
-          total_rounds?: number | null
+          ac_instructions?: string | null
+          apartment_name?: string | null
+          checkout_time?: string | null
+          city?: string
+          coffee_instructions?: string | null
+          created_at?: string
+          extra_bed_info?: string | null
+          host_email?: string | null
+          host_name?: string | null
+          host_phone?: string | null
+          id?: string
+          is_active?: boolean
+          main_image_url?: string | null
+          notes_for_guests?: string | null
+          parking_info?: string | null
+          property_id?: string
+          property_manager_email?: string | null
+          property_manager_name?: string | null
+          property_manager_phone?: string | null
+          room_image_url?: string | null
+          room_number?: string
+          safe_instructions?: string | null
+          tv_instructions?: string | null
+          updated_at?: string
+          wifi_network?: string | null
+          wifi_password?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "sessions_moderator_id_fkey"
-            columns: ["moderator_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       shop_items: {
         Row: {
@@ -812,33 +961,52 @@ export type Database = {
         }
         Relationships: []
       }
-      users: {
+    }
+    Views: {
+      combined_view: {
         Row: {
-          date_created: string | null
-          email: string | null
-          name: string
-          role: Database["public"]["Enums"]["user_role"] | null
-          user_id: string
-        }
-        Insert: {
-          date_created?: string | null
-          email?: string | null
-          name: string
-          role?: Database["public"]["Enums"]["user_role"] | null
-          user_id?: string
-        }
-        Update: {
-          date_created?: string | null
-          email?: string | null
-          name?: string
-          role?: Database["public"]["Enums"]["user_role"] | null
-          user_id?: string
+          ac_instructions: string | null
+          access_token: string | null
+          apartment_name: string | null
+          booking_id: string | null
+          booking_status: string | null
+          check_in_date: string | null
+          check_out_date: string | null
+          checkout_time: string | null
+          city: string | null
+          coffee_instructions: string | null
+          extra_bed_info: string | null
+          guest_email: string | null
+          guest_name: string | null
+          host_email: string | null
+          host_name: string | null
+          host_phone: string | null
+          id_key: string | null
+          is_archived: boolean | null
+          last_updated_at: string | null
+          last_updated_by: string | null
+          main_image_url: string | null
+          notes_for_guests: string | null
+          notes_internal: string | null
+          number_of_guests: number | null
+          parking_info: string | null
+          property_id: string | null
+          property_manager_email: string | null
+          property_manager_name: string | null
+          property_manager_phone: string | null
+          room_image_url: string | null
+          room_number: string | null
+          safe_instructions: string | null
+          stay_duration: string | null
+          tv_instructions: string | null
+          visible_to_admin: boolean | null
+          visible_to_guests: boolean | null
+          visible_to_hosts: boolean | null
+          wifi_network: string | null
+          wifi_password: string | null
         }
         Relationships: []
       }
-    }
-    Views: {
-      [_ in never]: never
     }
     Functions: {
       [_ in never]: never

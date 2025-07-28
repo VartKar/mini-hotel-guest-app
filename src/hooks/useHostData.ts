@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface HostBooking {
-  id_key: string;
+  id: string;
   guest_name: string | null;
   guest_email: string | null;
   room_number: string | null;
@@ -17,7 +17,7 @@ export interface HostBooking {
 export interface HostData {
   host_name: string | null;
   host_email: string | null;
-  host_company: string | null;
+  host_phone: string | null;
   bookings: HostBooking[];
 }
 
@@ -52,40 +52,58 @@ export const useHostData = () => {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
-        .from('combined')
-        .select('*')
-        .eq('host_email', email.toLowerCase().trim())
+      console.log('🔍 Looking up host by email:', email);
+      
+      // Look up bookings for this host
+      const { data: bookingsData, error: bookingsError } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          rooms (
+            host_name,
+            host_email,
+            host_phone,
+            room_number,
+            apartment_name
+          )
+        `)
         .eq('visible_to_hosts', true)
         .eq('is_archived', false);
 
-      if (error) {
-        console.error('Error looking up host by email:', error);
+      if (bookingsError) {
+        console.error('Error looking up bookings:', bookingsError);
         setError('Ошибка при поиске данных хоста');
         return false;
       }
 
-      if (!data || data.length === 0) {
+      // Filter bookings where room host_email matches the provided email
+      const hostBookings = bookingsData.filter(booking => 
+        booking.rooms?.host_email?.toLowerCase() === email.toLowerCase().trim()
+      );
+
+      if (hostBookings.length === 0) {
         setError('Хост с таким email не найден или нет активных бронирований');
         return false;
       }
 
-      // Get host info from first record
-      const firstRecord = data[0];
+      console.log('✅ Host bookings found:', hostBookings.length);
+
+      // Get host info from first booking's room
+      const firstRoom = hostBookings[0].rooms;
       const hostInfo: HostData = {
-        host_name: firstRecord.host_name,
-        host_email: firstRecord.host_email,
-        host_company: firstRecord.host_company,
-        bookings: data.map(record => ({
-          id_key: record.id_key,
-          guest_name: record.guest_name,
-          guest_email: record.guest_email,
-          room_number: record.room_number,
-          apartment_name: record.apartment_name,
-          check_in_date: record.check_in_date,
-          check_out_date: record.check_out_date,
-          booking_status: record.booking_status,
-          booking_id: record.booking_id,
+        host_name: firstRoom.host_name,
+        host_email: firstRoom.host_email,
+        host_phone: firstRoom.host_phone,
+        bookings: hostBookings.map(booking => ({
+          id: booking.id,
+          guest_name: booking.guest_name,
+          guest_email: booking.guest_email,
+          room_number: booking.rooms?.room_number,
+          apartment_name: booking.rooms?.apartment_name,
+          check_in_date: booking.check_in_date,
+          check_out_date: booking.check_out_date,
+          booking_status: booking.booking_status,
+          booking_id: booking.booking_id,
         }))
       };
 
@@ -114,12 +132,12 @@ export const useHostData = () => {
 
   const requestChange = async (booking: HostBooking, requestType: string, details: string) => {
     try {
-      // First, insert the change request into the database
+      // Insert the change request
       const { error: insertError } = await supabase
         .from('host_change_requests')
         .insert({
           host_email: hostData?.host_email,
-          property_id: booking.id_key,
+          property_id: booking.id,
           booking_id: booking.booking_id,
           request_type: requestType,
           request_details: details,
@@ -130,11 +148,11 @@ export const useHostData = () => {
         return false;
       }
 
-      // Then, call the Edge Function to send email notification to admin
+      // Send email notification to admin
       const { error: emailError } = await supabase.functions.invoke('notify-admin-change-request', {
         body: {
           host_email: hostData?.host_email,
-          property_id: booking.id_key,
+          property_id: booking.id,
           booking_id: booking.booking_id,
           request_type: requestType,
           request_details: details,
@@ -143,8 +161,6 @@ export const useHostData = () => {
 
       if (emailError) {
         console.error('Error sending admin notification email:', emailError);
-        // Don't fail the request if email fails - the request is still saved
-        console.log('Change request saved but admin notification email failed');
       }
 
       return true;

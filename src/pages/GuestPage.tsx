@@ -1,7 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { RoomData } from '@/hooks/useRoomData';
 import { getGuestBookingByToken } from '@/utils/tokenUtils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
@@ -11,7 +10,7 @@ const GuestPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [booking, setBooking] = useState<RoomData | null>(null);
+  const [bookingData, setBookingData] = useState<any>(null);
 
   useEffect(() => {
     const authenticateGuest = async () => {
@@ -22,21 +21,27 @@ const GuestPage = () => {
       }
 
       try {
-        const bookingData = await getGuestBookingByToken(token);
+        const guestBooking = await getGuestBookingByToken(token);
         
-        if (!bookingData) {
+        if (!guestBooking) {
           setError('Бронирование не найдено или ссылка недействительна');
           setLoading(false);
           return;
         }
 
-        setBooking(bookingData);
+        setBookingData(guestBooking);
         
-        // Сохраняем данные в localStorage для использования в useRoomData
-        localStorage.setItem('rubikinn_room_data', JSON.stringify(bookingData));
+        // Save data to localStorage for useRoomData
+        const roomData = {
+          ...guestBooking,
+          session_type: 'registered',
+          session_token: null
+        };
+        
+        localStorage.setItem('rubikinn_room_data', JSON.stringify(roomData));
         localStorage.setItem('rubikinn_is_personalized', 'true');
         
-        // Небольшая задержка для показа успешной авторизации
+        // Redirect to home page
         setTimeout(() => {
           navigate('/', { replace: true });
         }, 2000);
@@ -93,7 +98,7 @@ const GuestPage = () => {
           <CheckCircle className="w-8 h-8 mx-auto mb-4 text-green-600" />
           <h2 className="text-xl font-semibold mb-2">Добро пожаловать!</h2>
           <p className="text-gray-600 mb-2">
-            Здравствуйте, {booking?.guest_name || 'гость'}!
+            Здравствуйте, {bookingData?.guest_name || 'гость'}!
           </p>
           <p className="text-sm text-gray-500">
             Перенаправляем вас на главную страницу...

@@ -13,16 +13,19 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
-type TableName = 'shop_orders' | 'travel_service_orders' | 'feedback' | 'host_change_requests' | 'hotel_services' | 'travel_services' | 'shop_items' | 'travel_itineraries' | 'combined';
+type TableName = 'rooms' | 'bookings' | 'guest_sessions' | 'shop_orders' | 'travel_service_orders' | 'feedback' | 'host_change_requests' | 'hotel_services' | 'travel_services' | 'shop_items' | 'travel_itineraries';
 
 const DatabaseManagement = () => {
-  const [selectedTable, setSelectedTable] = useState<TableName>('shop_orders');
+  const [selectedTable, setSelectedTable] = useState<TableName>('rooms');
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const tables = [
+    { value: 'rooms', label: 'Номера' },
+    { value: 'bookings', label: 'Бронирования' },
+    { value: 'guest_sessions', label: 'Сессии гостей' },
     { value: 'shop_orders', label: 'Заказы магазина' },
     { value: 'travel_service_orders', label: 'Заказы путешествий' },
     { value: 'feedback', label: 'Отзывы' },
@@ -30,8 +33,7 @@ const DatabaseManagement = () => {
     { value: 'hotel_services', label: 'Услуги отеля' },
     { value: 'travel_services', label: 'Туристические услуги' },
     { value: 'shop_items', label: 'Товары магазина' },
-    { value: 'travel_itineraries', label: 'Маршруты' },
-    { value: 'combined', label: 'Бронирования' }
+    { value: 'travel_itineraries', label: 'Маршруты' }
   ];
 
   useEffect(() => {
@@ -91,6 +93,8 @@ const DatabaseManagement = () => {
           recordData[key.replace('number_', '')] = value ? Number(value) : null;
         } else if (key.includes('boolean_')) {
           recordData[key.replace('boolean_', '')] = value === 'true';
+        } else if (key.includes('date_')) {
+          recordData[key.replace('date_', '')] = value ? new Date(value as string).toISOString() : null;
         } else {
           recordData[key] = value || null;
         }
@@ -135,6 +139,17 @@ const DatabaseManagement = () => {
 
   const renderFormField = (key: string, value: any) => {
     const fieldType = typeof value;
+    
+    if (key.includes('date') && !key.includes('_at')) {
+      return (
+        <Input
+          name={`date_${key}`}
+          type="date"
+          defaultValue={value ? new Date(value).toISOString().split('T')[0] : ''}
+          placeholder={`Введите ${key}`}
+        />
+      );
+    }
     
     if (key.includes('comment') || key.includes('description') || key.includes('details') || key.includes('instructions') || key.includes('info')) {
       return (

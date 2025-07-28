@@ -30,7 +30,7 @@ export const useHotelServices = (city: string = 'Сочи', propertyId?: string 
       console.log('=== HOTEL SERVICES DEBUG ===');
       console.log('Fetching hotel services for city:', city, 'property:', propertyId);
       
-      // First, get all hotel services for the city
+      // Get all hotel services for the city
       const { data: services, error: servicesError } = await supabase
         .from('hotel_services')
         .select('*')
@@ -50,7 +50,7 @@ export const useHotelServices = (city: string = 'Сочи', propertyId?: string 
         return [];
       }
 
-      // If we have a property ID, get property-specific pricing
+      // Get property-specific pricing if we have a property ID
       let propertyPricing: any[] = [];
       if (propertyId) {
         console.log('Fetching service pricing for property:', propertyId);
