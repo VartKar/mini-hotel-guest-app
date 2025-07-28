@@ -18,6 +18,7 @@ export interface HostData {
   host_name: string | null;
   host_email: string | null;
   host_phone: string | null;
+  host_company: string | null;
   bookings: HostBooking[];
 }
 
@@ -94,6 +95,7 @@ export const useHostData = () => {
         host_name: firstRoom.host_name,
         host_email: firstRoom.host_email,
         host_phone: firstRoom.host_phone,
+        host_company: null, // Not available in current schema
         bookings: hostBookings.map(booking => ({
           id: booking.id,
           guest_name: booking.guest_name,

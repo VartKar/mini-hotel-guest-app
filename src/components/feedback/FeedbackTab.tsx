@@ -55,7 +55,7 @@ const FeedbackTab = ({
       const { data, error } = await supabase
         .from('feedback')
         .insert({
-          booking_id_key: roomData?.id_key || null,
+          booking_id_key: roomData?.booking_id || null,
           customer_name: customerName,
           room_number: roomData?.room_number || null,
           rating: feedbackForm.rating,

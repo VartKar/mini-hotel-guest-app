@@ -37,6 +37,47 @@ export interface GuestBookingData {
   access_token: string | null;
 }
 
+export const generateGuestToken = (): string => {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+};
+
+export const ensureGuestToken = async (bookingId: string): Promise<string | null> => {
+  try {
+    // First check if booking already has a token
+    const { data: booking, error: fetchError } = await supabase
+      .from('bookings')
+      .select('access_token')
+      .eq('id', bookingId)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching booking:', fetchError);
+      return null;
+    }
+
+    if (booking?.access_token) {
+      return booking.access_token;
+    }
+
+    // Generate new token and update booking
+    const newToken = generateGuestToken();
+    const { error: updateError } = await supabase
+      .from('bookings')
+      .update({ access_token: newToken })
+      .eq('id', bookingId);
+
+    if (updateError) {
+      console.error('Error updating booking token:', updateError);
+      return null;
+    }
+
+    return newToken;
+  } catch (error) {
+    console.error('Error in ensureGuestToken:', error);
+    return null;
+  }
+};
+
 export const getGuestBookingByToken = async (token: string): Promise<GuestBookingData | null> => {
   try {
     console.log('🔍 Looking up booking by token:', token);

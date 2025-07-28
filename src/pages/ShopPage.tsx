@@ -1,255 +1,260 @@
-
-import React, { useState } from "react";
-import { ShoppingCart, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
-import { toast } from "@/components/ui/sonner";
-import { useShopItems } from "@/hooks/useShopItems";
+import React, { useState, useEffect } from "react";
 import { useRoomData } from "@/hooks/useRoomData";
+import { useShopItems } from "@/hooks/useShopItems";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Minus, Plus, ShoppingCart } from "lucide-react";
 
 const ShopPage = () => {
   const { roomData } = useRoomData();
-  const city = roomData?.city || 'Сочи';
-  const propertyId = roomData?.property_id;
-  
-  console.log('=== SHOP PAGE DEBUG ===');
-  console.log('Room data:', roomData);
-  console.log('City:', city);
-  console.log('Property ID:', propertyId);
-  console.log('Guest email:', roomData?.guest_email);
-  
-  const { data: shopItems, isLoading, error } = useShopItems(city, propertyId);
-  
-  console.log('Shop items result:', { shopItems, isLoading, error });
-  console.log('=== END SHOP PAGE DEBUG ===');
-  
-  const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [quantity, setQuantity] = useState(1);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [comment, setComment] = useState("");
+  const { items, loading } = useShopItems();
+  const [cart, setCart] = useState<any[]>([]);
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerComment, setCustomerComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleItemClick = (item: any) => {
-    setSelectedItem(item);
-    setQuantity(1);
-    setIsDrawerOpen(true);
+  useEffect(() => {
+    if (roomData?.guest_name) {
+      setCustomerName(roomData.guest_name);
+    }
+    if (roomData?.guest_phone) {
+      setCustomerPhone(roomData.guest_phone);
+    }
+  }, [roomData]);
+
+  const addToCart = (item: any) => {
+    setCart(prev => {
+      const existingItem = prev.find(cartItem => cartItem.id === item.id);
+      if (existingItem) {
+        return prev.map(cartItem =>
+          cartItem.id === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        );
+      } else {
+        return [...prev, { ...item, quantity: 1 }];
+      }
+    });
   };
 
-  const handleSubmitOrder = async () => {
-    if (!selectedItem) {
-      toast.error("Товар не выбран");
+  const removeFromCart = (itemId: string) => {
+    setCart(prev => {
+      const existingItem = prev.find(cartItem => cartItem.id === itemId);
+      if (existingItem && existingItem.quantity > 1) {
+        return prev.map(cartItem =>
+          cartItem.id === itemId
+            ? { ...cartItem, quantity: cartItem.quantity - 1 }
+            : cartItem
+        );
+      } else {
+        return prev.filter(cartItem => cartItem.id !== itemId);
+      }
+    });
+  };
+
+  const calculateTotal = () => {
+    return cart.reduce((total, item) => total + (item.base_price * item.quantity), 0);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (cart.length === 0) {
+      toast.error("Корзина пуста");
       return;
     }
 
-    if (!roomData?.guest_name || !roomData?.room_number || !roomData?.host_phone) {
-      toast.error("Данные гостя не найдены");
+    if (!customerName.trim() || !customerPhone.trim()) {
+      toast.error("Пожалуйста, заполните имя и телефон");
       return;
     }
 
-    setIsSubmitting(true);
-
+    setSubmitting(true);
+    
     try {
-      const totalAmount = selectedItem.final_price * quantity;
-      
       const orderData = {
-        customerName: roomData.guest_name,
-        customerPhone: roomData.host_phone,
-        roomNumber: roomData.room_number,
-        customerComment: comment,
-        items: [{
-          name: selectedItem.name,
-          price: selectedItem.final_price,
-          quantity: quantity,
-          category: selectedItem.category
-        }],
-        totalAmount: totalAmount,
-        bookingIdKey: roomData?.id_key || null
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        customer_comment: customerComment,
+        ordered_items: cart,
+        total_amount: calculateTotal(),
+        booking_id_key: roomData?.booking_id || null,
+        room_number: roomData?.room_number || null,
+        order_status: 'pending'
       };
 
-      console.log('Submitting shop order:', orderData);
+      const { error } = await supabase
+        .from('shop_orders')
+        .insert([orderData]);
 
-      const { data, error } = await supabase.functions.invoke('submit-shop-order', {
-        body: orderData
-      });
+      if (error) throw error;
 
-      if (error) {
-        console.error('Shop order submission error:', error);
-        throw error;
-      }
-
-      console.log('Shop order submitted successfully:', data);
+      toast.success("Заказ успешно отправлен!");
       
-      toast.success("Ваш заказ успешно отправлен!");
-      setIsDrawerOpen(false);
-      setSelectedItem(null);
-      setQuantity(1);
-      setComment("");
+      // Reset form
+      setCart([]);
+      setCustomerComment("");
+      if (!roomData?.guest_name) setCustomerName("");
+      if (!roomData?.guest_phone) setCustomerPhone("");
       
     } catch (error) {
-      console.error('Error submitting shop order:', error);
-      toast.error("Ошибка при отправке заказа. Попробуйте еще раз.");
+      console.error('Error submitting order:', error);
+      toast.error("Произошла ошибка при отправке заказа");
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="w-full max-w-md mx-auto pt-4">
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-hotel-dark mx-auto mb-4"></div>
-          <p className="text-hotel-neutral">Загрузка товаров...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    console.error('Shop page error:', error);
-    return (
-      <div className="w-full max-w-md mx-auto pt-4">
-        <div className="text-center py-8">
-          <p className="text-red-500">Ошибка загрузки товаров: {error.message}</p>
-        </div>
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-md mx-auto pt-4">
-      <h1 className="text-3xl font-light mb-6">Магазин отеля</h1>
-      
-      <div className="space-y-4">
-        {shopItems?.map((item) => (
-          <div key={item.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-            {item.image_url && (
-              <div className="w-full h-48 relative">
-                <img 
-                  src={item.image_url} 
-                  alt={item.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-            <div className="p-6">
-              <div className="flex items-start mb-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-hotel-accent flex items-center justify-center text-hotel-dark">
-                  <ShoppingCart size={24} />
-                </div>
-                <div className="ml-4 flex-1">
-                  <h2 className="text-xl font-medium">{item.name}</h2>
-                  <p className="text-hotel-neutral">{item.description}</p>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-lg font-semibold text-hotel-dark">{item.final_price} ₽</span>
-                    <span className="text-sm text-gray-500">{item.category}</span>
-                  </div>
-                </div>
-              </div>
-              <button 
-                className="w-full py-2 px-4 bg-hotel-dark text-white rounded-lg font-medium"
-                onClick={() => handleItemClick(item)}
-                disabled={!item.is_available}
-              >
-                {item.is_available ? 'Заказать' : 'Недоступно'}
-              </button>
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8 text-center">Магазин</h1>
+        
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Items Grid */}
+          <div className="lg:col-span-2">
+            <div className="grid gap-4">
+              {items.map((item) => (
+                <Card key={item.id}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{item.name}</CardTitle>
+                      <Badge variant="default">{item.base_price} ₽</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600 mb-4">{item.description}</p>
+                    
+                    <div className="flex items-center gap-4 mb-4">
+                      <Badge variant="outline">{item.category}</Badge>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeFromCart(item.id)}
+                        disabled={!cart.find(cartItem => cartItem.id === item.id)}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="w-8 text-center">
+                        {cart.find(cartItem => cartItem.id === item.id)?.quantity || 0}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addToCart(item)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
-        ))}
 
-        {(!shopItems || shopItems.length === 0) && (
-          <div className="text-center py-8">
-            <ShoppingCart size={48} className="mx-auto mb-4 text-gray-300" />
-            <p className="text-gray-500">
-              Товары не найдены для города "{city}"
-              {propertyId && ` и объекта "${propertyId}"`}
-            </p>
-            <p className="text-sm text-gray-400 mt-2">
-              Email: {roomData?.guest_email}
-            </p>
-          </div>
-        )}
-      </div>
+          {/* Cart */}
+          <div className="lg:col-span-1">
+            <Card className="sticky top-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShoppingCart className="h-5 w-5" />
+                  Корзина
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {cart.length === 0 ? (
+                  <p className="text-gray-500 text-center py-4">Корзина пуста</p>
+                ) : (
+                  <>
+                    <div className="space-y-3 mb-4">
+                      {cart.map((item) => (
+                        <div key={item.id} className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium">{item.name}</p>
+                            <p className="text-sm text-gray-500">
+                              {item.base_price} ₽ × {item.quantity}
+                            </p>
+                          </div>
+                          <p className="font-medium">{item.base_price * item.quantity} ₽</p>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="border-t pt-4 mb-4">
+                      <div className="flex justify-between items-center font-medium text-lg">
+                        <span>Итого:</span>
+                        <span>{calculateTotal()} ₽</span>
+                      </div>
+                    </div>
 
-      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <DrawerContent className="px-4">
-          <DrawerHeader>
-            <DrawerTitle>Подтверждение заказа</DrawerTitle>
-          </DrawerHeader>
-          
-          <div className="space-y-4 py-4">
-            {selectedItem && (
-              <div className="p-3 bg-gray-50 rounded-lg">
-                {selectedItem.image_url && (
-                  <div className="w-full h-32 mb-3 rounded-lg overflow-hidden">
-                    <img 
-                      src={selectedItem.image_url} 
-                      alt={selectedItem.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Имя *</label>
+                        <Input
+                          value={customerName}
+                          onChange={(e) => setCustomerName(e.target.value)}
+                          placeholder="Ваше имя"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Телефон *</label>
+                        <Input
+                          value={customerPhone}
+                          onChange={(e) => setCustomerPhone(e.target.value)}
+                          placeholder="+7 (999) 123-45-67"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Комментарий</label>
+                        <Textarea
+                          value={customerComment}
+                          onChange={(e) => setCustomerComment(e.target.value)}
+                          placeholder="Дополнительные пожелания..."
+                          rows={3}
+                        />
+                      </div>
+
+                      <Button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full"
+                      >
+                        {submitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Отправляем заказ...
+                          </>
+                        ) : (
+                          "Оформить заказ"
+                        )}
+                      </Button>
+                    </form>
+                  </>
                 )}
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <span className="block font-medium">{selectedItem.name}</span>
-                    <span className="text-sm text-gray-500">{selectedItem.category}</span>
-                    <p className="text-sm text-gray-600 mt-1">{selectedItem.description}</p>
-                  </div>
-                  <span className="font-medium text-lg">{selectedItem.final_price}₽</span>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium mb-2">Количество</label>
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"
-                  >
-                    -
-                  </button>
-                  <span className="font-medium">{quantity}</span>
-                  <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Общая стоимость</label>
-                <span className="text-lg font-semibold">{selectedItem ? selectedItem.final_price * quantity : 0} ₽</span>
-              </div>
-
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Комментарий (необязательно)"
-                className="w-full px-4 py-2 border rounded-md"
-                rows={3}
-              />
-            </div>
+              </CardContent>
+            </Card>
           </div>
-
-          <DrawerFooter>
-            <Button 
-              onClick={handleSubmitOrder} 
-              className="w-full"
-              disabled={isSubmitting}
-            >
-              <Check className="mr-2" size={18} />
-              {isSubmitting ? 'Отправка...' : 'Подтвердить заказ'}
-            </Button>
-            <Button variant="outline" onClick={() => setIsDrawerOpen(false)}>
-              Отмена
-            </Button>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+        </div>
+      </div>
     </div>
   );
 };

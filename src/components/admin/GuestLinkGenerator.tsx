@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Copy, ExternalLink, QrCode, RefreshCw } from 'lucide-react';
+import { Copy, ExternalLink, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { ensureGuestToken, generateGuestToken } from '@/utils/tokenUtils';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,9 +30,9 @@ const GuestLinkGenerator: React.FC<GuestLinkGeneratorProps> = ({
       const newToken = generateGuestToken();
       
       const { error } = await supabase
-        .from('combined')
+        .from('bookings')
         .update({ access_token: newToken })
-        .eq('id_key', bookingId);
+        .eq('id', bookingId);
 
       if (error) throw error;
 

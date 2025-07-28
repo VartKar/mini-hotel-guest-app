@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,7 +35,7 @@ const ProfileTab = ({ profile, onProfileChange }: ProfileTabProps) => {
   }, [roomData]);
 
   const fetchOrders = async () => {
-    if (!roomData?.id_key) {
+    if (!roomData?.booking_id) {
       setIsLoading(false);
       return;
     }
@@ -46,14 +45,14 @@ const ProfileTab = ({ profile, onProfileChange }: ProfileTabProps) => {
       const { data: shopOrders, error: shopError } = await supabase
         .from('shop_orders')
         .select('*')
-        .eq('booking_id_key', roomData.id_key)
+        .eq('booking_id_key', roomData.booking_id)
         .order('created_at', { ascending: false });
 
       // Fetch travel orders
       const { data: travelOrders, error: travelError } = await supabase
         .from('travel_service_orders')
         .select('*')
-        .eq('booking_id_key', roomData.id_key)
+        .eq('booking_id_key', roomData.booking_id)
         .order('created_at', { ascending: false });
 
       if (shopError) console.error('Error fetching shop orders:', shopError);

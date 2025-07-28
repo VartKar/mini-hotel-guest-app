@@ -1,289 +1,240 @@
-
-import React, { useState } from "react";
-import { Bed, UtensilsCrossed, Shirt, Award, Check, ChevronDown, ChevronUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { toast } from "@/components/ui/sonner";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useState, useEffect } from "react";
 import { useRoomData } from "@/hooks/useRoomData";
-import { useHotelServices, HotelServiceWithPrice } from "@/hooks/useHotelServices";
-
-// Icon mapping for services
-const getIconForService = (iconType: string) => {
-  switch (iconType) {
-    case 'Bed':
-      return <Bed size={24} />;
-    case 'UtensilsCrossed':
-      return <UtensilsCrossed size={24} />;
-    case 'Shirt':
-      return <Shirt size={24} />;
-    case 'Award':
-      return <Award size={24} />;
-    default:
-      return <Bed size={24} />;
-  }
-};
+import { useHotelServices } from "@/hooks/useHotelServices";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Phone, Mail, Clock, Star, MapPin, Info } from "lucide-react";
 
 const ServicesPage = () => {
   const { roomData } = useRoomData();
-  const city = roomData?.city || 'Сочи';
-  const propertyId = roomData?.property_id;
-  
-  console.log('=== SERVICES PAGE DEBUG ===');
-  console.log('Room data:', roomData);
-  console.log('City:', city);
-  console.log('Property ID:', propertyId);
-  console.log('Guest email:', roomData?.guest_email);
-  
-  const { data: hotelServices, isLoading, error } = useHotelServices(city, propertyId);
-  
-  console.log('Hotel services result:', { hotelServices, isLoading, error });
-  console.log('=== END SERVICES PAGE DEBUG ===');
-  
-  const [selectedService, setSelectedService] = useState<HotelServiceWithPrice | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [comment, setComment] = useState("");
-  const [expandedServices, setExpandedServices] = useState<number[]>([]);
+  const { services, loading } = useHotelServices();
+  const [selectedServices, setSelectedServices] = useState<any[]>([]);
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerComment, setCustomerComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [expandedService, setExpandedService] = useState<string | null>(null);
 
-  const toggleServiceDetails = (index: number) => {
-    setExpandedServices(prev => 
-      prev.includes(index) 
-        ? prev.filter(i => i !== index)
-        : [...prev, index]
-    );
+  useEffect(() => {
+    if (roomData?.guest_name) {
+      setCustomerName(roomData.guest_name);
+    }
+    if (roomData?.guest_phone) {
+      setCustomerPhone(roomData.guest_phone);
+    }
+  }, [roomData]);
+
+  const handleServiceToggle = (service: any) => {
+    setSelectedServices(prev => {
+      const isSelected = prev.some(s => s.id === service.id);
+      if (isSelected) {
+        return prev.filter(s => s.id !== service.id);
+      } else {
+        return [...prev, service];
+      }
+    });
   };
 
-  const handleServiceClick = (service: HotelServiceWithPrice) => {
-    setSelectedService(service);
-    setIsDrawerOpen(true);
+  const calculateTotal = () => {
+    return selectedServices.reduce((total, service) => total + Number(service.base_price), 0);
   };
 
-  const handleSubmitOrder = async () => {
-    if (!selectedService) {
-      toast.error("Услуга не выбрана");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (selectedServices.length === 0) {
+      toast.error("Пожалуйста, выберите хотя бы одну услугу");
       return;
     }
 
-    if (!roomData?.guest_name || !roomData?.room_number || !roomData?.host_phone) {
-      toast.error("Данные гостя не найдены");
+    if (!customerName.trim() || !customerPhone.trim()) {
+      toast.error("Пожалуйста, заполните имя и телефон");
       return;
     }
 
-    setIsSubmitting(true);
-
+    setSubmitting(true);
+    
     try {
       const orderData = {
-        customerName: roomData.guest_name,
-        customerPhone: roomData.host_phone,
-        roomNumber: roomData.room_number,
-        customerComment: comment,
-        services: [{
-          title: selectedService.title,
-          description: selectedService.description,
-          buttonText: "Заказать"
-        }],
-        bookingIdKey: roomData?.id_key || null
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        customer_comment: customerComment,
+        selected_services: selectedServices,
+        total_amount: calculateTotal(),
+        booking_id_key: roomData?.booking_id || null,
+        order_status: 'pending'
       };
 
-      console.log('Submitting service order:', orderData);
+      const { error } = await supabase
+        .from('travel_service_orders')
+        .insert([orderData]);
 
-      const { data, error } = await supabase.functions.invoke('submit-service-order', {
-        body: orderData
-      });
+      if (error) throw error;
 
-      if (error) {
-        console.error('Service order submission error:', error);
-        throw error;
-      }
-
-      console.log('Service order submitted successfully:', data);
+      toast.success("Заказ успешно отправлен!");
       
-      toast.success("Ваш заказ успешно отправлен!");
-      setIsDrawerOpen(false);
-      setSelectedService(null);
-      setComment("");
+      // Reset form
+      setSelectedServices([]);
+      setCustomerComment("");
+      if (!roomData?.guest_name) setCustomerName("");
+      if (!roomData?.guest_phone) setCustomerPhone("");
       
     } catch (error) {
-      console.error('Error submitting service order:', error);
-      toast.error("Ошибка при отправке заказа. Попробуйте еще раз.");
+      console.error('Error submitting order:', error);
+      toast.error("Произошла ошибка при отправке заказа");
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="w-full max-w-md mx-auto pt-4">
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-hotel-dark mx-auto mb-4"></div>
-          <p className="text-hotel-neutral">Загрузка услуг...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    console.error('Services page error:', error);
-    return (
-      <div className="w-full max-w-md mx-auto pt-4">
-        <div className="text-center py-8">
-          <p className="text-red-500">Ошибка загрузки услуг: {error.message}</p>
-        </div>
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-md mx-auto pt-4">
-      <h1 className="text-3xl font-light mb-6">Сервисы в номере</h1>
-      
-      <div className="space-y-4">
-        {hotelServices?.map((service, index) => (
-          <div key={service.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-            {service.image_url && (
-              <div className="w-full h-48 relative">
-                <img 
-                  src={service.image_url} 
-                  alt={service.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-            <div className="p-6">
-              <div className="flex items-start mb-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-hotel-accent flex items-center justify-center text-hotel-dark">
-                  {getIconForService(service.icon_type)}
-                </div>
-                <div className="ml-4 flex-1">
-                  <h2 className="text-xl font-medium">{service.title}</h2>
-                  <p className="text-hotel-neutral">{service.description}</p>
-                  <div className="mt-2">
-                    <span className="text-lg font-semibold text-hotel-dark">
-                      {service.final_price} ₽
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8 text-center">Услуги отеля</h1>
+        
+        <div className="grid gap-6">
+          {/* Services Grid */}
+          <div className="grid gap-4">
+            {services.map((service) => (
+              <Card key={service.id} className="relative">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">{service.title}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={service.base_price > 0 ? "default" : "secondary"}>
+                        {service.base_price > 0 ? `${service.base_price} ₽` : 'Бесплатно'}
+                      </Badge>
+                      {service.has_details && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setExpandedService(
+                            expandedService === service.id ? null : service.id
+                          )}
+                        >
+                          <Info className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 mb-4">{service.description}</p>
+                  
+                  {expandedService === service.id && service.details_content && (
+                    <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                      <div className="whitespace-pre-wrap">{service.details_content}</div>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center gap-4 mb-4">
+                    <Badge variant="outline">{service.category}</Badge>
+                    <span className="text-sm text-gray-500 flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {service.city}
                     </span>
                   </div>
                   
-                  {service.has_details && service.details_content && (
-                    <Collapsible 
-                      open={expandedServices.includes(index)} 
-                      onOpenChange={() => toggleServiceDetails(index)}
-                    >
-                      <CollapsibleTrigger className="flex items-center gap-2 mt-3 text-sm text-hotel-dark hover:text-hotel-accent">
-                        {expandedServices.includes(index) ? (
-                          <>
-                            <ChevronUp size={16} />
-                            Скрыть подробности
-                          </>
-                        ) : (
-                          <>
-                            <ChevronDown size={16} />
-                            Показать подробности
-                          </>
-                        )}
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="text-sm text-gray-700 whitespace-pre-line">
-                            {service.details_content}
-                          </div>
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  )}
-                </div>
-              </div>
-              <button 
-                className="w-full py-2 px-4 bg-hotel-dark text-white rounded-lg font-medium"
-                onClick={() => handleServiceClick(service)}
-                disabled={!service.is_available}
-              >
-                {service.is_available ? 'Заказать' : 'Недоступно'}
-              </button>
-            </div>
+                  <Button
+                    onClick={() => handleServiceToggle(service)}
+                    variant={selectedServices.some(s => s.id === service.id) ? "default" : "outline"}
+                    className="w-full"
+                  >
+                    {selectedServices.some(s => s.id === service.id) ? "Убрать из заказа" : "Добавить в заказ"}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        ))}
 
-        {(!hotelServices || hotelServices.length === 0) && (
-          <div className="text-center py-8">
-            <Award size={48} className="mx-auto mb-4 text-gray-300" />
-            <p className="text-gray-500">
-              Услуги не найдены для города "{city}"
-              {propertyId && ` и объекта "${propertyId}"`}
-            </p>
-            <p className="text-sm text-gray-400 mt-2">
-              Email: {roomData?.guest_email}
-            </p>
-          </div>
-        )}
-      </div>
-
-      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <DrawerContent className="px-4">
-          <DrawerHeader>
-            <DrawerTitle>Подтверждение заказа</DrawerTitle>
-          </DrawerHeader>
-          
-          <div className="space-y-4 py-4">
-            {selectedService && (
-              <div className="p-3 bg-gray-50 rounded-lg">
-                {selectedService.image_url && (
-                  <div className="w-full h-32 mb-3 rounded-lg overflow-hidden">
-                    <img 
-                      src={selectedService.image_url} 
-                      alt={selectedService.title}
-                      className="w-full h-full object-cover"
+          {/* Order Form */}
+          {selectedServices.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Оформление заказа</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Имя *</label>
+                      <Input
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="Ваше имя"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Телефон *</label>
+                      <Input
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        placeholder="+7 (999) 123-45-67"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Комментарий</label>
+                    <Textarea
+                      value={customerComment}
+                      onChange={(e) => setCustomerComment(e.target.value)}
+                      placeholder="Дополнительные пожелания..."
+                      rows={3}
                     />
                   </div>
-                )}
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 bg-hotel-accent rounded-full flex items-center justify-center">
-                    {getIconForService(selectedService.icon_type)}
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-medium mb-2">Выбранные услуги:</h3>
+                    {selectedServices.map((service) => (
+                      <div key={service.id} className="flex justify-between items-center mb-1">
+                        <span>{service.title}</span>
+                        <span>{service.base_price > 0 ? `${service.base_price} ₽` : 'Бесплатно'}</span>
+                      </div>
+                    ))}
+                    <div className="border-t pt-2 mt-2">
+                      <div className="flex justify-between items-center font-medium">
+                        <span>Итого:</span>
+                        <span>{calculateTotal()} ₽</span>
+                      </div>
+                    </div>
                   </div>
-                  <span className="font-medium">{selectedService.title}</span>
-                </div>
-                <p className="text-sm text-gray-600">{selectedService.description}</p>
-                <div className="mt-2">
-                  <span className="text-lg font-semibold text-hotel-dark">
-                    {selectedService.final_price} ₽
-                  </span>
-                </div>
-              </div>
-            )}
 
-            <div className="space-y-3">
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Комментарий (необязательно)"
-                className="w-full px-4 py-2 border rounded-md"
-                rows={3}
-              />
-            </div>
-          </div>
-
-          <DrawerFooter>
-            <Button 
-              onClick={handleSubmitOrder} 
-              className="w-full"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>Отправка...</>
-              ) : (
-                <>
-                  <Check className="mr-2" size={18} />
-                  Подтвердить заказ
-                </>
-              )}
-            </Button>
-            <Button variant="outline" onClick={() => setIsDrawerOpen(false)}>
-              Отмена
-            </Button>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+                  <Button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Отправляем заказ...
+                      </>
+                    ) : (
+                      "Отправить заказ"
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
