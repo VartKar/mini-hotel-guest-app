@@ -1,37 +1,110 @@
-import React from "react";
-import Index from "./pages/Index";
-import RoomPage from "./pages/RoomPage";
-import TravelPage from "./pages/TravelPage";
-import ServicesPage from "./pages/ServicesPage";
-import ShopPage from "./pages/ShopPage";
-import FeedbackPage from "./pages/FeedbackPage";
-import ChatPage from "./pages/ChatPage";
-import AdminPage from "./pages/AdminPage";
-import HostPage from "./pages/HostPage";
-import GuestPage from "./pages/GuestPage";
-import NotFound from "./pages/NotFound";
-import Layout from "./components/Layout";
+
+import { Suspense, lazy } from "react";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import RoomAccessPage from "@/pages/RoomAccessPage";
+import Layout from "./components/Layout";
+
+// Lazy load pages
+const Index = lazy(() => import("./pages/Index"));
+const RoomPage = lazy(() => import("./pages/RoomPage"));
+const TravelPage = lazy(() => import("./pages/TravelPage"));
+const ServicesPage = lazy(() => import("./pages/ServicesPage"));
+const ShopPage = lazy(() => import("./pages/ShopPage"));
+const ChatPage = lazy(() => import("./pages/ChatPage"));
+const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
+const HostPage = lazy(() => import("./pages/HostPage"));
+const GuestPage = lazy(() => import("./pages/GuestPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
-    <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Layout><Index /></Layout>} />
-          <Route path="/room" element={<Layout><RoomPage /></Layout>} />
-          <Route path="/travel" element={<Layout><TravelPage /></Layout>} />
-          <Route path="/services" element={<Layout><ServicesPage /></Layout>} />
-          <Route path="/shop" element={<Layout><ShopPage /></Layout>} />
-          <Route path="/feedback" element={<Layout><FeedbackPage /></Layout>} />
-          <Route path="/chat" element={<Layout><ChatPage /></Layout>} />
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/host" element={<HostPage />} />
-          <Route path="/guest/:token" element={<GuestPage />} />
-          <Route path="/room/:token" element={<RoomAccessPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/guest/:token" element={
+              <Suspense fallback={<div>Загрузка...</div>}>
+                <GuestPage />
+              </Suspense>
+            } />
+            <Route path="/" element={
+              <Layout>
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <Index />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="/room" element={
+              <Layout>
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <RoomPage />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="/travel" element={
+              <Layout>
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <TravelPage />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="/services" element={
+              <Layout>
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <ServicesPage />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="/shop" element={
+              <Layout>
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <ShopPage />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="/chat" element={
+              <Layout>
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <ChatPage />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="/feedback" element={
+              <Layout>
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <FeedbackPage />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="/admin" element={
+              <Layout>
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <AdminPage />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="/host" element={
+              <Layout>
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <HostPage />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="*" element={
+              <Suspense fallback={<div>Загрузка...</div>}>
+                <NotFound />
+              </Suspense>
+            } />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 

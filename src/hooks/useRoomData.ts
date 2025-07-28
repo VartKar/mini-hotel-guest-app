@@ -1,171 +1,219 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface RoomData {
-  id?: string;
-  id_key?: string;
-  property_id?: string;
-  booking_id?: string;
-  guest_email?: string;
-  guest_name?: string;
-  stay_duration?: string;
-  check_in_date?: string;
-  check_out_date?: string;
-  wifi_network?: string;
-  wifi_password?: string;
-  checkout_time?: string;
-  room_image_url?: string;
-  main_image_url?: string;
-  ac_instructions?: string;
-  coffee_instructions?: string;
-  tv_instructions?: string;
-  safe_instructions?: string;
-  parking_info?: string;
-  extra_bed_info?: string;
-  pets_info?: string;
-  room_number?: string;
-  apartment_name?: string;
-  host_name?: string;
-  host_email?: string;
-  host_phone?: string;
-  host_company?: string;
-  property_manager_name?: string;
-  property_manager_phone?: string;
-  property_manager_email?: string;
-  booking_status?: string;
-  notes_for_guests?: string;
-  city?: string;
-  access_token?: string;
-  visible_to_guests?: boolean;
-  is_archived?: boolean;
-  number_of_guests?: number;
+  id_key: string | null;
+  property_id: string | null;
+  booking_id: string | null;
+  guest_email: string | null;
+  guest_name: string | null;
+  room_number: string | null;
+  stay_duration: string | null;
+  check_in_date: string | null;
+  check_out_date: string | null;
+  wifi_network: string | null;
+  wifi_password: string | null;
+  checkout_time: string | null;
+  room_image_url: string | null;
+  ac_instructions: string | null;
+  coffee_instructions: string | null;
+  tv_instructions: string | null;
+  safe_instructions: string | null;
+  parking_info: string | null;
+  extra_bed_info: string | null;
+  apartment_name: string | null;
+  // Host management fields
+  host_id: string | null;
+  host_name: string | null;
+  host_email: string | null;
+  host_phone: string | null;
+  host_company: string | null;
+  property_manager_name: string | null;
+  property_manager_phone: string | null;
+  property_manager_email: string | null;
+  // Visibility control fields
+  visible_to_guests: boolean | null;
+  visible_to_hosts: boolean | null;
+  visible_to_admin: boolean | null;
+  is_archived: boolean | null;
+  booking_status: string | null;
+  last_updated_by: string | null;
+  last_updated_at: string | null;
+  notes_internal: string | null;
+  notes_for_guests: string | null;
+  // Main image field
+  main_image_url: string | null;
+  // City field
+  city: string | null;
+  // Number of guests field
+  number_of_guests: number | null;
 }
 
+let globalRoomData: RoomData | null = null;
+let globalIsPersonalized = false;
+let listeners: (() => void)[] = [];
+
+const notifyListeners = () => {
+  listeners.forEach(listener => listener());
+};
+
+// Specific ID for the default demonstration record
+const DEMO_RECORD_ID = 'c10fe304-7db8-4ee3-a72a-f9dc5418ceac';
+
+// Storage keys
+const STORAGE_KEYS = {
+  ROOM_DATA: 'rubikinn_room_data',
+  IS_PERSONALIZED: 'rubikinn_is_personalized'
+};
+
+// Load data from localStorage
+const loadFromStorage = () => {
+  try {
+    const storedRoomData = localStorage.getItem(STORAGE_KEYS.ROOM_DATA);
+    const storedIsPersonalized = localStorage.getItem(STORAGE_KEYS.IS_PERSONALIZED);
+    
+    if (storedRoomData && storedIsPersonalized) {
+      globalRoomData = JSON.parse(storedRoomData);
+      globalIsPersonalized = storedIsPersonalized === 'true';
+      return true;
+    }
+  } catch (error) {
+    console.error('Error loading data from localStorage:', error);
+  }
+  return false;
+};
+
+// Save data to localStorage
+const saveToStorage = (roomData: RoomData | null, isPersonalized: boolean) => {
+  try {
+    if (roomData) {
+      localStorage.setItem(STORAGE_KEYS.ROOM_DATA, JSON.stringify(roomData));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
+    }
+    localStorage.setItem(STORAGE_KEYS.IS_PERSONALIZED, isPersonalized.toString());
+  } catch (error) {
+    console.error('Error saving data to localStorage:', error);
+  }
+};
+
 export const useRoomData = () => {
-  const [roomData, setRoomData] = useState<RoomData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isPersonalized, setIsPersonalized] = useState(false);
+  const [roomData, setRoomData] = useState<RoomData | null>(globalRoomData);
+  const [loading, setLoading] = useState(!globalRoomData);
   const [error, setError] = useState<string | null>(null);
+  const [isPersonalized, setIsPersonalized] = useState(globalIsPersonalized);
 
-  const loadRoomData = useCallback(async () => {
-    try {
-      console.log('🏠 useRoomData - Loading room data...');
-      
-      // First check localStorage for room data
-      const storedRoomData = localStorage.getItem('rubikinn_room_data');
-      const storedPersonalized = localStorage.getItem('rubikinn_is_personalized');
-      
-      console.log('🏠 useRoomData - Stored room data:', storedRoomData);
-      console.log('🏠 useRoomData - Stored personalized:', storedPersonalized);
-      
-      if (storedRoomData) {
-        const parsedData = JSON.parse(storedRoomData);
-        console.log('🏠 useRoomData - Parsed room data:', parsedData);
-        console.log('🏠 useRoomData - Image URLs in data:', {
-          room_image_url: parsedData.room_image_url,
-          main_image_url: parsedData.main_image_url
-        });
-        
-        setRoomData(parsedData);
-        setIsPersonalized(storedPersonalized === 'true');
-        setLoading(false);
-        return;
-      }
+  useEffect(() => {
+    const listener = () => {
+      setRoomData(globalRoomData);
+      setIsPersonalized(globalIsPersonalized);
+    };
+    listeners.push(listener);
 
-      // If no stored data, load demo data
-      console.log('🏠 useRoomData - No stored data, loading demo data...');
-      const { data: demoData, error } = await supabase
-        .from('combined')
-        .select('*')
-        .eq('booking_status', 'demo')
-        .eq('visible_to_guests', true)
-        .eq('is_archived', false)
-        .limit(1)
-        .single();
+    return () => {
+      listeners = listeners.filter(l => l !== listener);
+    };
+  }, []);
 
-      if (error) {
-        console.error('🏠 useRoomData - Error loading demo data:', error);
-        setError('Ошибка загрузки данных');
-      } else {
-        console.log('🏠 useRoomData - Demo data loaded:', demoData);
-        console.log('🏠 useRoomData - Demo image URLs:', {
-          room_image_url: demoData?.room_image_url,
-          main_image_url: demoData?.main_image_url
-        });
-        setRoomData(demoData);
-      }
-
-      setIsPersonalized(false);
-    } catch (error) {
-      console.error('🏠 useRoomData - Error in loadRoomData:', error);
-      setError('Произошла ошибка при загрузке данных');
-    } finally {
+  useEffect(() => {
+    // Try to load from storage first
+    const hasStoredData = loadFromStorage();
+    
+    if (hasStoredData) {
+      setRoomData(globalRoomData);
+      setIsPersonalized(globalIsPersonalized);
       setLoading(false);
+      notifyListeners();
+    } else if (!globalRoomData) {
+      fetchDefaultData();
     }
   }, []);
 
-  const lookupByEmail = useCallback(async (email: string) => {
+  const fetchDefaultData = async () => {
     try {
-      console.log('📧 useRoomData - Looking up by email:', email);
       setLoading(true);
-      setError(null);
-
+      
+      // Fetch the specific demonstration record by ID
       const { data, error } = await supabase
         .from('combined')
         .select('*')
-        .eq('guest_email', email)
-        .eq('visible_to_guests', true)
-        .eq('is_archived', false)
-        .limit(1)
-        .single();
+        .eq('id_key', DEMO_RECORD_ID)
+        .maybeSingle();
 
-      if (error || !data) {
-        console.log('❌ useRoomData - Email lookup failed:', error);
-        setError('Данные не найдены для указанного email');
+      if (error) {
+        console.error('Error fetching default room data:', error);
+        setError('Failed to load room data');
+        return;
+      }
+
+      globalRoomData = data;
+      globalIsPersonalized = false;
+      setRoomData(data);
+      setIsPersonalized(false);
+      saveToStorage(data, false);
+      notifyListeners();
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const lookupByEmail = async (email: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // The RLS policy will automatically filter the results
+      const { data, error } = await supabase
+        .from('combined')
+        .select('*')
+        .eq('guest_email', email.toLowerCase().trim())
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error looking up guest by email:', error);
+        setError('Ошибка при поиске бронирования');
         return false;
       }
 
-      console.log('✅ useRoomData - Email lookup successful:', data);
+      if (!data) {
+        setError('Бронирование не найдено. Проверьте email или обратитесь на ресепшн.');
+        return false;
+      }
+
+      globalRoomData = data;
+      globalIsPersonalized = true;
       setRoomData(data);
       setIsPersonalized(true);
-      
-      // Save to localStorage
-      localStorage.setItem('rubikinn_room_data', JSON.stringify(data));
-      localStorage.setItem('rubikinn_is_personalized', 'true');
-      
+      saveToStorage(data, true);
+      notifyListeners();
       return true;
     } catch (err) {
-      console.error('💥 useRoomData - Error in lookupByEmail:', err);
-      setError('Произошла ошибка при поиске');
+      console.error('Unexpected error during lookup:', err);
+      setError('Произошла непредвиденная ошибка');
       return false;
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  const logOut = useCallback(() => {
-    console.log('🚪 useRoomData - Logging out...');
-    localStorage.removeItem('rubikinn_is_personalized');
-    setIsPersonalized(false);
-    loadRoomData();
-  }, [loadRoomData]);
-
-  const clearError = useCallback(() => {
-    setError(null);
-  }, []);
-
-  useEffect(() => {
-    loadRoomData();
-  }, [loadRoomData]);
+  const logOut = () => {
+    // Clear storage and reset to default
+    localStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
+    localStorage.removeItem(STORAGE_KEYS.IS_PERSONALIZED);
+    fetchDefaultData();
+  };
 
   return { 
     roomData, 
     loading, 
-    isPersonalized, 
     error, 
+    isPersonalized, 
     lookupByEmail, 
-    logOut, 
-    clearError 
+    logOut,
+    clearError: () => setError(null)
   };
 };
