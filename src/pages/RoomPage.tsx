@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Wifi, Car, Coffee, Tv, Shield, Bed } from "lucide-react";
 import { useRoomData } from "@/hooks/useRoomData";
@@ -21,7 +22,24 @@ const RoomPage = () => {
     );
   }
 
-  const imageUrl = roomData.room_image_url || roomData.main_image_url;
+  // Properly prioritize image URLs
+  const getImageUrl = () => {
+    if (roomData.main_image_url && roomData.main_image_url.trim()) {
+      return roomData.main_image_url;
+    }
+    if (roomData.room_image_url && roomData.room_image_url.trim()) {
+      return roomData.room_image_url;
+    }
+    return null;
+  };
+
+  const imageUrl = getImageUrl();
+
+  console.log('🖼️ Room page image logic:', {
+    main_image_url: roomData.main_image_url,
+    room_image_url: roomData.room_image_url,
+    finalImageUrl: imageUrl
+  });
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
@@ -33,6 +51,13 @@ const RoomPage = () => {
             src={imageUrl} 
             alt={roomData.apartment_name || "Room"} 
             className="w-full h-48 object-cover rounded-lg"
+            onError={(e) => {
+              console.error('❌ Image failed to load:', imageUrl);
+              e.currentTarget.style.display = 'none';
+            }}
+            onLoad={() => {
+              console.log('✅ Image loaded successfully:', imageUrl);
+            }}
           />
         </div>
       )}

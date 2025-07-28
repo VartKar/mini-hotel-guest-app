@@ -23,7 +23,6 @@ export interface RoomData {
   parking_info: string | null;
   extra_bed_info: string | null;
   apartment_name: string | null;
-  // Host management fields
   host_id: string | null;
   host_name: string | null;
   host_email: string | null;
@@ -32,7 +31,6 @@ export interface RoomData {
   property_manager_name: string | null;
   property_manager_phone: string | null;
   property_manager_email: string | null;
-  // Visibility control fields
   visible_to_guests: boolean | null;
   visible_to_hosts: boolean | null;
   visible_to_admin: boolean | null;
@@ -42,11 +40,8 @@ export interface RoomData {
   last_updated_at: string | null;
   notes_internal: string | null;
   notes_for_guests: string | null;
-  // Main image field
   main_image_url: string | null;
-  // City field
   city: string | null;
-  // Number of guests field
   number_of_guests: number | null;
 }
 
@@ -76,6 +71,7 @@ const loadFromStorage = () => {
     if (storedRoomData && storedIsPersonalized) {
       globalRoomData = JSON.parse(storedRoomData);
       globalIsPersonalized = storedIsPersonalized === 'true';
+      console.log('📦 Loaded from storage:', { hasData: !!globalRoomData, isPersonalized: globalIsPersonalized });
       return true;
     }
   } catch (error) {
@@ -89,6 +85,14 @@ const saveToStorage = (roomData: RoomData | null, isPersonalized: boolean) => {
   try {
     if (roomData) {
       localStorage.setItem(STORAGE_KEYS.ROOM_DATA, JSON.stringify(roomData));
+      console.log('💾 Saved to storage:', { 
+        hasData: !!roomData, 
+        isPersonalized,
+        imageUrls: {
+          room_image_url: roomData.room_image_url,
+          main_image_url: roomData.main_image_url
+        }
+      });
     } else {
       localStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
     }
@@ -133,6 +137,7 @@ export const useRoomData = () => {
   const fetchDefaultData = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Fetching default data for demo record:', DEMO_RECORD_ID);
       
       // Fetch the specific demonstration record by ID
       const { data, error } = await supabase
@@ -146,6 +151,14 @@ export const useRoomData = () => {
         setError('Failed to load room data');
         return;
       }
+
+      console.log('✅ Default data fetched:', { 
+        hasData: !!data,
+        imageUrls: data ? {
+          room_image_url: data.room_image_url,
+          main_image_url: data.main_image_url
+        } : null
+      });
 
       globalRoomData = data;
       globalIsPersonalized = false;
@@ -166,6 +179,8 @@ export const useRoomData = () => {
       setLoading(true);
       setError(null);
       
+      console.log('🔍 Looking up email:', email);
+      
       // The RLS policy will automatically filter the results
       const { data, error } = await supabase
         .from('combined')
@@ -184,6 +199,14 @@ export const useRoomData = () => {
         return false;
       }
 
+      console.log('✅ Email lookup successful:', { 
+        hasData: !!data,
+        imageUrls: {
+          room_image_url: data.room_image_url,
+          main_image_url: data.main_image_url
+        }
+      });
+
       globalRoomData = data;
       globalIsPersonalized = true;
       setRoomData(data);
@@ -201,10 +224,21 @@ export const useRoomData = () => {
   };
 
   const logOut = () => {
+    console.log('🚪 Logging out - clearing storage and resetting to default');
     // Clear storage and reset to default
     localStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
     localStorage.removeItem(STORAGE_KEYS.IS_PERSONALIZED);
+    globalRoomData = null;
+    globalIsPersonalized = false;
+    setRoomData(null);
+    setIsPersonalized(false);
+    setError(null);
+    notifyListeners();
     fetchDefaultData();
+  };
+
+  const clearError = () => {
+    setError(null);
   };
 
   return { 
@@ -214,6 +248,6 @@ export const useRoomData = () => {
     isPersonalized, 
     lookupByEmail, 
     logOut,
-    clearError: () => setError(null)
+    clearError
   };
 };

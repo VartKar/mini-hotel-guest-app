@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Home, Map, Coffee, ShoppingBag, MessageCircle, User, Info } from "lucide-react";
@@ -6,7 +7,6 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 // Placeholder image
 const DEFAULT_IMG = "https://i.postimg.cc/NFprr3hY/valse.png";
-// For user context: You can replace the above URL with any good placeholder image.
 
 const menuItems = [{
   name: "Мой номер",
@@ -40,9 +40,8 @@ const Index = () => {
   const apartmentName = roomData?.apartment_name || 'Апартаменты "Вальс"';
   const guestName = roomData?.guest_name || "Иван";
 
-  // Only pick URLs that are non-empty strings
+  // Get the best available image
   const getValidImage = () => {
-    // Returns the main should-be-seen image URL or fallback
     if (roomData?.main_image_url && roomData.main_image_url.trim() !== '') {
       return roomData.main_image_url;
     }
@@ -52,17 +51,24 @@ const Index = () => {
     return DEFAULT_IMG;
   };
 
-  // We use component state to handle load failure
   const [imgError, setImgError] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
 
-  // Reset error state if hotelImage changes
+  // Reset error state if image URLs change
   React.useEffect(() => {
     setImgError(false);
     setImgLoaded(false);
   }, [roomData?.main_image_url, roomData?.room_image_url]);
 
   const hotelImage = getValidImage();
+
+  console.log('🖼️ Index page image logic:', {
+    main_image_url: roomData?.main_image_url,
+    room_image_url: roomData?.room_image_url,
+    finalImageUrl: hotelImage,
+    imgError,
+    imgLoaded
+  });
 
   const documentTitle = roomData?.apartment_name
     ? `RubikInn - ${roomData.apartment_name}`
@@ -96,8 +102,14 @@ const Index = () => {
               alt="Фото апартаментов"
               className={`object-cover w-full h-full transition-opacity duration-500 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
               loading="lazy"
-              onLoad={() => setImgLoaded(true)}
-              onError={() => setImgError(true)}
+              onLoad={() => {
+                console.log('✅ Index image loaded successfully:', hotelImage);
+                setImgLoaded(true);
+              }}
+              onError={() => {
+                console.error('❌ Index image failed to load:', hotelImage);
+                setImgError(true);
+              }}
               style={{ minHeight: "8rem", minWidth: "8rem" }}
             />
           )}
