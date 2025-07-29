@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Calendar, Search, Filter, Edit, Trash2, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +13,9 @@ import BookingDetailsForm from "./BookingDetailsForm";
 import { Database } from "@/integrations/supabase/types";
 import { translateStatus, getStatusBadgeVariant } from "@/lib/statusTranslations";
 
-type Booking = Database['public']['Tables']['combined']['Row'];
+type Booking = Database['public']['Tables']['bookings']['Row'] & {
+  rooms: Database['public']['Tables']['rooms']['Row'];
+};
 
 const BookingsManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,13 +24,16 @@ const BookingsManagement = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  // Fetch all bookings
+  // Fetch all bookings with room data
   const { data: bookings, isLoading } = useQuery({
     queryKey: ['admin-all-bookings'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('combined')
-        .select('*')
+        .from('bookings')
+        .select(`
+          *,
+          rooms (*)
+        `)
         .order('last_updated_at', { ascending: false });
       
       if (error) throw error;
@@ -39,9 +45,9 @@ const BookingsManagement = () => {
   const deleteBookingMutation = useMutation({
     mutationFn: async (bookingId: string) => {
       const { error } = await supabase
-        .from('combined')
+        .from('bookings')
         .delete()
-        .eq('id_key', bookingId);
+        .eq('id', bookingId);
       
       if (error) throw error;
     },
@@ -60,8 +66,8 @@ const BookingsManagement = () => {
     const matchesSearch = !searchTerm || 
       booking.guest_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.guest_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.apartment_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.room_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.rooms?.apartment_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.rooms?.room_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.booking_id?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === "all" || booking.booking_status === statusFilter;
@@ -156,7 +162,7 @@ const BookingsManagement = () => {
               </TableHeader>
               <TableBody>
                 {filteredBookings.map((booking) => (
-                  <TableRow key={booking.id_key}>
+                  <TableRow key={booking.id}>
                     <TableCell>
                       <div>
                         <div className="font-medium">{booking.guest_name || 'Без имени'}</div>
@@ -166,8 +172,8 @@ const BookingsManagement = () => {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{booking.apartment_name}</div>
-                        <div className="text-sm text-gray-500">Комната: {booking.room_number}</div>
+                        <div className="font-medium">{booking.rooms?.apartment_name}</div>
+                        <div className="text-sm text-gray-500">Комната: {booking.rooms?.room_number}</div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -178,9 +184,8 @@ const BookingsManagement = () => {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{booking.host_name}</div>
-                        <div className="text-sm text-gray-500">{booking.host_email}</div>
-                        <div className="text-xs text-gray-400">{booking.host_company}</div>
+                        <div className="font-medium">{booking.rooms?.host_name}</div>
+                        <div className="text-sm text-gray-500">{booking.rooms?.host_email}</div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -200,7 +205,7 @@ const BookingsManagement = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDeleteBooking(booking.id_key)}
+                          onClick={() => handleDeleteBooking(booking.id)}
                           className="text-red-600 hover:text-red-700"
                         >
                           <Trash2 className="w-4 h-4" />

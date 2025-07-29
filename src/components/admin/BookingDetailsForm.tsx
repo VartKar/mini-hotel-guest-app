@@ -10,36 +10,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import GuestLinkGenerator from "./GuestLinkGenerator";
+import { Database } from "@/integrations/supabase/types";
 
-interface BookingData {
-  id: string;
-  room_id: string;
-  booking_id: string | null;
-  guest_name: string;
-  guest_email: string;
-  guest_phone: string | null;
-  number_of_guests: number | null;
-  check_in_date: string | null;
-  check_out_date: string | null;
-  stay_duration: string | null;
-  booking_status: string;
-  access_token: string | null;
-  notes_internal: string | null;
-  // Room data
-  room_number: string;
-  apartment_name: string | null;
-  property_id: string;
-  city: string;
-  host_name: string | null;
-  host_email: string | null;
-  host_phone: string | null;
-  property_manager_name: string | null;
-  property_manager_phone: string | null;
-  property_manager_email: string | null;
-}
+type Booking = Database['public']['Tables']['bookings']['Row'] & {
+  rooms: Database['public']['Tables']['rooms']['Row'];
+};
 
 interface BookingDetailsFormProps {
-  booking: BookingData;
+  booking: Booking;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -49,11 +27,35 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
   onClose,
   onSuccess
 }) => {
-  const [formData, setFormData] = useState(booking);
+  const [formData, setFormData] = useState({
+    // Booking data
+    guest_name: booking.guest_name || '',
+    guest_email: booking.guest_email || '',
+    guest_phone: booking.guest_phone || '',
+    number_of_guests: booking.number_of_guests || 2,
+    check_in_date: booking.check_in_date || '',
+    check_out_date: booking.check_out_date || '',
+    stay_duration: booking.stay_duration || '',
+    booking_status: booking.booking_status || 'confirmed',
+    access_token: booking.access_token || '',
+    notes_internal: booking.notes_internal || '',
+    // Room data
+    room_number: booking.rooms?.room_number || '',
+    apartment_name: booking.rooms?.apartment_name || '',
+    property_id: booking.rooms?.property_id || '',
+    city: booking.rooms?.city || '',
+    host_name: booking.rooms?.host_name || '',
+    host_email: booking.rooms?.host_email || '',
+    host_phone: booking.rooms?.host_phone || '',
+    property_manager_name: booking.rooms?.property_manager_name || '',
+    property_manager_phone: booking.rooms?.property_manager_phone || '',
+    property_manager_email: booking.rooms?.property_manager_email || '',
+  });
+
   const queryClient = useQueryClient();
 
   const updateBookingMutation = useMutation({
-    mutationFn: async (updatedData: Partial<BookingData>) => {
+    mutationFn: async (updatedData: typeof formData) => {
       // Split the data into booking and room updates
       const bookingFields = {
         guest_name: updatedData.guest_name,
@@ -113,7 +115,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
     updateBookingMutation.mutate(formData);
   };
 
-  const handleInputChange = (field: keyof BookingData, value: any) => {
+  const handleInputChange = (field: keyof typeof formData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -142,7 +144,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="text"
                 id="guest_name"
-                value={formData.guest_name || ''}
+                value={formData.guest_name}
                 onChange={(e) => handleInputChange('guest_name', e.target.value)}
               />
             </div>
@@ -151,7 +153,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="email"
                 id="guest_email"
-                value={formData.guest_email || ''}
+                value={formData.guest_email}
                 onChange={(e) => handleInputChange('guest_email', e.target.value)}
               />
             </div>
@@ -160,7 +162,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="tel"
                 id="guest_phone"
-                value={formData.guest_phone || ''}
+                value={formData.guest_phone}
                 onChange={(e) => handleInputChange('guest_phone', e.target.value)}
               />
             </div>
@@ -169,7 +171,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="number"
                 id="number_of_guests"
-                value={formData.number_of_guests || ''}
+                value={formData.number_of_guests}
                 onChange={(e) => handleInputChange('number_of_guests', parseInt(e.target.value))}
               />
             </div>
@@ -189,7 +191,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="date"
                 id="check_in_date"
-                value={formData.check_in_date || ''}
+                value={formData.check_in_date}
                 onChange={(e) => handleInputChange('check_in_date', e.target.value)}
               />
             </div>
@@ -198,7 +200,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="date"
                 id="check_out_date"
-                value={formData.check_out_date || ''}
+                value={formData.check_out_date}
                 onChange={(e) => handleInputChange('check_out_date', e.target.value)}
               />
             </div>
@@ -207,7 +209,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="text"
                 id="stay_duration"
-                value={formData.stay_duration || ''}
+                value={formData.stay_duration}
                 onChange={(e) => handleInputChange('stay_duration', e.target.value)}
               />
             </div>
@@ -233,7 +235,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
             <Label htmlFor="notes_internal">Внутренние заметки</Label>
             <Textarea
               id="notes_internal"
-              value={formData.notes_internal || ''}
+              value={formData.notes_internal}
               onChange={(e) => handleInputChange('notes_internal', e.target.value)}
               placeholder="Внутренние заметки для администрации"
             />
@@ -253,7 +255,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="text"
                 id="room_number"
-                value={formData.room_number || ''}
+                value={formData.room_number}
                 onChange={(e) => handleInputChange('room_number', e.target.value)}
               />
             </div>
@@ -262,7 +264,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="text"
                 id="apartment_name"
-                value={formData.apartment_name || ''}
+                value={formData.apartment_name}
                 onChange={(e) => handleInputChange('apartment_name', e.target.value)}
               />
             </div>
@@ -271,7 +273,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="text"
                 id="property_id"
-                value={formData.property_id || ''}
+                value={formData.property_id}
                 onChange={(e) => handleInputChange('property_id', e.target.value)}
               />
             </div>
@@ -280,7 +282,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="text"
                 id="city"
-                value={formData.city || ''}
+                value={formData.city}
                 onChange={(e) => handleInputChange('city', e.target.value)}
               />
             </div>
@@ -300,7 +302,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="text"
                 id="host_name"
-                value={formData.host_name || ''}
+                value={formData.host_name}
                 onChange={(e) => handleInputChange('host_name', e.target.value)}
               />
             </div>
@@ -309,7 +311,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="email"
                 id="host_email"
-                value={formData.host_email || ''}
+                value={formData.host_email}
                 onChange={(e) => handleInputChange('host_email', e.target.value)}
               />
             </div>
@@ -318,7 +320,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="tel"
                 id="host_phone"
-                value={formData.host_phone || ''}
+                value={formData.host_phone}
                 onChange={(e) => handleInputChange('host_phone', e.target.value)}
               />
             </div>
@@ -338,7 +340,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="text"
                 id="property_manager_name"
-                value={formData.property_manager_name || ''}
+                value={formData.property_manager_name}
                 onChange={(e) => handleInputChange('property_manager_name', e.target.value)}
               />
             </div>
@@ -347,7 +349,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="email"
                 id="property_manager_email"
-                value={formData.property_manager_email || ''}
+                value={formData.property_manager_email}
                 onChange={(e) => handleInputChange('property_manager_email', e.target.value)}
               />
             </div>
@@ -356,7 +358,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               <Input
                 type="tel"
                 id="property_manager_phone"
-                value={formData.property_manager_phone || ''}
+                value={formData.property_manager_phone}
                 onChange={(e) => handleInputChange('property_manager_phone', e.target.value)}
               />
             </div>
