@@ -25,10 +25,10 @@ export interface HotelServiceWithPrice extends HotelService {
 
 export const useHotelServices = (city: string = 'Сочи', propertyId?: string | null) => {
   return useQuery({
-    queryKey: ['hotel-services', city, propertyId],
+    queryKey: ['hotel-services', city],
     queryFn: async () => {
       console.log('=== HOTEL SERVICES DEBUG ===');
-      console.log('Fetching hotel services for city:', city, 'property:', propertyId);
+      console.log('Fetching hotel services for city:', city);
       
       // Get all hotel services for the city
       const { data: services, error: servicesError } = await supabase
@@ -50,35 +50,12 @@ export const useHotelServices = (city: string = 'Сочи', propertyId?: string 
         return [];
       }
 
-      // Get property-specific pricing if we have a property ID
-      let propertyPricing: any[] = [];
-      if (propertyId) {
-        console.log('Fetching service pricing for property:', propertyId);
-        const { data: pricing, error: pricingError } = await supabase
-          .from('property_service_pricing')
-          .select('hotel_service_id, price_override, is_available')
-          .eq('property_id', propertyId);
-
-        console.log('Service pricing query result:', { pricing, pricingError });
-
-        if (pricingError) {
-          console.error('Error fetching service pricing:', pricingError);
-        } else {
-          propertyPricing = pricing || [];
-        }
-      }
-
-      // Combine services with pricing
-      const servicesWithPricing: HotelServiceWithPrice[] = services.map(service => {
-        const pricing = propertyPricing.find(p => p.hotel_service_id === service.id);
-        const finalService = {
-          ...service,
-          final_price: pricing?.price_override || service.base_price,
-          is_available: pricing?.is_available !== false // Default to true if no override
-        };
-        console.log('Service with pricing:', finalService);
-        return finalService;
-      });
+      // Since we removed property_service_pricing, use base prices
+      const servicesWithPricing: HotelServiceWithPrice[] = services.map(service => ({
+        ...service,
+        final_price: service.base_price,
+        is_available: true // All active services are available
+      }));
 
       console.log('Final hotel services with pricing:', servicesWithPricing.length, 'services');
       console.log('=== END HOTEL SERVICES DEBUG ===');

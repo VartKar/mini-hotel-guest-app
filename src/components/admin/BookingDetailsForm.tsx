@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,13 +9,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Database } from "@/integrations/supabase/types";
 import GuestLinkGenerator from "./GuestLinkGenerator";
 
-type Booking = Database['public']['Tables']['combined']['Row'];
+interface BookingData {
+  id: string;
+  room_id: string;
+  booking_id: string | null;
+  guest_name: string;
+  guest_email: string;
+  guest_phone: string | null;
+  number_of_guests: number | null;
+  check_in_date: string | null;
+  check_out_date: string | null;
+  stay_duration: string | null;
+  booking_status: string;
+  access_token: string | null;
+  notes_internal: string | null;
+  // Room data
+  room_number: string;
+  apartment_name: string | null;
+  property_id: string;
+  city: string;
+  host_name: string | null;
+  host_email: string | null;
+  host_phone: string | null;
+  property_manager_name: string | null;
+  property_manager_phone: string | null;
+  property_manager_email: string | null;
+}
 
 interface BookingDetailsFormProps {
-  booking: Booking;
+  booking: BookingData;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -28,13 +53,49 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
   const queryClient = useQueryClient();
 
   const updateBookingMutation = useMutation({
-    mutationFn: async (updatedData: Partial<Booking>) => {
-      const { error } = await supabase
-        .from('combined')
-        .update(updatedData)
-        .eq('id_key', booking.id_key);
+    mutationFn: async (updatedData: Partial<BookingData>) => {
+      // Split the data into booking and room updates
+      const bookingFields = {
+        guest_name: updatedData.guest_name,
+        guest_email: updatedData.guest_email,
+        guest_phone: updatedData.guest_phone,
+        number_of_guests: updatedData.number_of_guests,
+        check_in_date: updatedData.check_in_date,
+        check_out_date: updatedData.check_out_date,
+        stay_duration: updatedData.stay_duration,
+        booking_status: updatedData.booking_status,
+        access_token: updatedData.access_token,
+        notes_internal: updatedData.notes_internal,
+      };
+
+      const roomFields = {
+        room_number: updatedData.room_number,
+        apartment_name: updatedData.apartment_name,
+        property_id: updatedData.property_id,
+        city: updatedData.city,
+        host_name: updatedData.host_name,
+        host_email: updatedData.host_email,
+        host_phone: updatedData.host_phone,
+        property_manager_name: updatedData.property_manager_name,
+        property_manager_phone: updatedData.property_manager_phone,
+        property_manager_email: updatedData.property_manager_email,
+      };
+
+      // Update booking
+      const { error: bookingError } = await supabase
+        .from('bookings')
+        .update(bookingFields)
+        .eq('id', booking.id);
       
-      if (error) throw error;
+      if (bookingError) throw bookingError;
+
+      // Update room
+      const { error: roomError } = await supabase
+        .from('rooms')
+        .update(roomFields)
+        .eq('id', booking.room_id);
+      
+      if (roomError) throw roomError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
@@ -52,7 +113,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
     updateBookingMutation.mutate(formData);
   };
 
-  const handleInputChange = (field: keyof Booking, value: any) => {
+  const handleInputChange = (field: keyof BookingData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -64,7 +125,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Guest Link Generator */}
       <GuestLinkGenerator
-        bookingId={booking.id_key}
+        bookingId={booking.id}
         currentToken={formData.access_token}
         onTokenUpdate={handleTokenUpdate}
       />
@@ -95,43 +156,34 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               />
             </div>
             <div>
+              <Label htmlFor="guest_phone">Телефон гостя</Label>
+              <Input
+                type="tel"
+                id="guest_phone"
+                value={formData.guest_phone || ''}
+                onChange={(e) => handleInputChange('guest_phone', e.target.value)}
+              />
+            </div>
+            <div>
               <Label htmlFor="number_of_guests">Количество гостей</Label>
               <Input
                 type="number"
                 id="number_of_guests"
                 value={formData.number_of_guests || ''}
-                onChange={(e) => handleInputChange('number_of_guests', e.target.value)}
+                onChange={(e) => handleInputChange('number_of_guests', parseInt(e.target.value))}
               />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Property Information */}
+      {/* Booking Information */}
       <Card>
         <CardHeader>
-          <CardTitle>Информация об объекте</CardTitle>
+          <CardTitle>Информация о бронировании</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="apartment_name">Название апартаментов</Label>
-              <Input
-                type="text"
-                id="apartment_name"
-                value={formData.apartment_name || ''}
-                onChange={(e) => handleInputChange('apartment_name', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="room_number">Номер комнаты</Label>
-              <Input
-                type="text"
-                id="room_number"
-                value={formData.room_number || ''}
-                onChange={(e) => handleInputChange('room_number', e.target.value)}
-              />
-            </div>
             <div>
               <Label htmlFor="check_in_date">Дата заезда</Label>
               <Input
@@ -151,17 +203,86 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               />
             </div>
             <div>
+              <Label htmlFor="stay_duration">Продолжительность</Label>
+              <Input
+                type="text"
+                id="stay_duration"
+                value={formData.stay_duration || ''}
+                onChange={(e) => handleInputChange('stay_duration', e.target.value)}
+              />
+            </div>
+            <div>
               <Label htmlFor="booking_status">Статус бронирования</Label>
-              <Select onValueChange={(value) => handleInputChange('booking_status', value)}>
+              <Select 
+                value={formData.booking_status} 
+                onValueChange={(value) => handleInputChange('booking_status', value)}
+              >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Выберите статус" defaultValue={formData.booking_status || ''} />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="confirmed">Подтверждено</SelectItem>
                   <SelectItem value="paid">Оплачено</SelectItem>
                   <SelectItem value="completed">Завершено</SelectItem>
+                  <SelectItem value="cancelled">Отменено</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="notes_internal">Внутренние заметки</Label>
+            <Textarea
+              id="notes_internal"
+              value={formData.notes_internal || ''}
+              onChange={(e) => handleInputChange('notes_internal', e.target.value)}
+              placeholder="Внутренние заметки для администрации"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Property Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Информация об объекте</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="room_number">Номер комнаты</Label>
+              <Input
+                type="text"
+                id="room_number"
+                value={formData.room_number || ''}
+                onChange={(e) => handleInputChange('room_number', e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="apartment_name">Название апартаментов</Label>
+              <Input
+                type="text"
+                id="apartment_name"
+                value={formData.apartment_name || ''}
+                onChange={(e) => handleInputChange('apartment_name', e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="property_id">ID объекта</Label>
+              <Input
+                type="text"
+                id="property_id"
+                value={formData.property_id || ''}
+                onChange={(e) => handleInputChange('property_id', e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="city">Город</Label>
+              <Input
+                type="text"
+                id="city"
+                value={formData.city || ''}
+                onChange={(e) => handleInputChange('city', e.target.value)}
+              />
             </div>
           </div>
         </CardContent>
@@ -201,13 +322,42 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
                 onChange={(e) => handleInputChange('host_phone', e.target.value)}
               />
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Property Manager Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Информация о менеджере объекта</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="host_company">Компания хоста</Label>
+              <Label htmlFor="property_manager_name">Имя менеджера</Label>
               <Input
                 type="text"
-                id="host_company"
-                value={formData.host_company || ''}
-                onChange={(e) => handleInputChange('host_company', e.target.value)}
+                id="property_manager_name"
+                value={formData.property_manager_name || ''}
+                onChange={(e) => handleInputChange('property_manager_name', e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="property_manager_email">Email менеджера</Label>
+              <Input
+                type="email"
+                id="property_manager_email"
+                value={formData.property_manager_email || ''}
+                onChange={(e) => handleInputChange('property_manager_email', e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="property_manager_phone">Телефон менеджера</Label>
+              <Input
+                type="tel"
+                id="property_manager_phone"
+                value={formData.property_manager_phone || ''}
+                onChange={(e) => handleInputChange('property_manager_phone', e.target.value)}
               />
             </div>
           </div>
