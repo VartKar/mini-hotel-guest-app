@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Wifi, Car, Coffee, Tv, Shield, Bed } from "lucide-react";
 import { useRoomData } from "@/hooks/useRoomData";
@@ -23,20 +22,20 @@ const RoomPage = () => {
     );
   }
 
-  // Properly prioritize image URLs - main_image_url first, then room_image_url
+  // For room page: prioritize room_image_url first, then main_image_url
   const getImageUrl = () => {
     console.log('🖼️ RoomPage getImageUrl called with:', {
-      main_image_url: roomData.main_image_url,
-      room_image_url: roomData.room_image_url
+      room_image_url: roomData.room_image_url,
+      main_image_url: roomData.main_image_url
     });
     
-    if (roomData.main_image_url && roomData.main_image_url.trim()) {
-      console.log('✅ RoomPage using main_image_url:', roomData.main_image_url);
-      return roomData.main_image_url;
-    }
     if (roomData.room_image_url && roomData.room_image_url.trim()) {
       console.log('✅ RoomPage using room_image_url:', roomData.room_image_url);
       return roomData.room_image_url;
+    }
+    if (roomData.main_image_url && roomData.main_image_url.trim()) {
+      console.log('✅ RoomPage using main_image_url as fallback:', roomData.main_image_url);
+      return roomData.main_image_url;
     }
     console.log('⚠️ RoomPage no valid image URL found');
     return null;

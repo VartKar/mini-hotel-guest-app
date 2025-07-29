@@ -40,7 +40,7 @@ const Index = () => {
   const apartmentName = roomData?.apartment_name || 'Апартаменты "Вальс"';
   const guestName = roomData?.guest_name || "Иван";
 
-  // Get the best available image - prioritize main_image_url over room_image_url
+  // For main page: prioritize main_image_url (hotel overview), then room_image_url
   const getValidImage = () => {
     console.log('🖼️ Index getValidImage called with:', {
       main_image_url: roomData?.main_image_url,
@@ -48,14 +48,14 @@ const Index = () => {
     });
     
     if (roomData?.main_image_url && roomData.main_image_url.trim() !== '') {
-      console.log('✅ Using main_image_url:', roomData.main_image_url);
+      console.log('✅ Index using main_image_url:', roomData.main_image_url);
       return roomData.main_image_url;
     }
     if (roomData?.room_image_url && roomData.room_image_url.trim() !== '') {
-      console.log('✅ Using room_image_url:', roomData.room_image_url);
+      console.log('✅ Index using room_image_url as fallback:', roomData.room_image_url);
       return roomData.room_image_url;
     }
-    console.log('⚠️ Using default image');
+    console.log('⚠️ Index using default image');
     return DEFAULT_IMG;
   };
 
