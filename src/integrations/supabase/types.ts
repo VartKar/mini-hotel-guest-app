@@ -337,6 +337,48 @@ export type Database = {
           },
         ]
       }
+      guests: {
+        Row: {
+          created_at: string
+          email: string
+          email_preferences: Json | null
+          email_subscribed: boolean
+          id: string
+          loyalty_points: number
+          loyalty_tier: string
+          name: string
+          phone: string | null
+          total_spent: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          email_preferences?: Json | null
+          email_subscribed?: boolean
+          id?: string
+          loyalty_points?: number
+          loyalty_tier?: string
+          name: string
+          phone?: string | null
+          total_spent?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          email_preferences?: Json | null
+          email_subscribed?: boolean
+          id?: string
+          loyalty_points?: number
+          loyalty_tier?: string
+          name?: string
+          phone?: string | null
+          total_spent?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       host_change_requests: {
         Row: {
           booking_id: string | null
