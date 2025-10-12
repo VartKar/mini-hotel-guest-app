@@ -40,8 +40,8 @@ const HotelServiceOrders = ({ hostEmail }: HotelServiceOrdersProps) => {
     queryFn: async () => {
       // First get all bookings for this host
       const { data: hostBookings, error: bookingsError } = await supabase
-        .from('combined')
-        .select('id_key')
+        .from('bookings')
+        .select('id')
         .eq('host_email', hostEmail);
 
       if (bookingsError) throw bookingsError;
@@ -50,7 +50,7 @@ const HotelServiceOrders = ({ hostEmail }: HotelServiceOrdersProps) => {
         return [];
       }
 
-      const bookingIds = hostBookings.map(booking => booking.id_key);
+      const bookingIds = hostBookings.map(booking => booking.id);
 
       // Get shop orders that are hotel services (not shop items)
       const { data: serviceOrders, error: ordersError } = await supabase
