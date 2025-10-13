@@ -195,22 +195,22 @@ const PersonalAccountPage = () => {
         
         <div className="flex mb-6 border-b">
           <button 
-            className={`pb-2 px-4 ${activeTab === "profile" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
+            className={`pb-2 px-2 text-sm ${activeTab === "profile" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
             onClick={() => setActiveTab("profile")}
           >
             Профиль
           </button>
           <button 
-            className={`pb-2 px-4 ${activeTab === "bonuses" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
+            className={`pb-2 px-2 text-sm ${activeTab === "bonuses" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
             onClick={() => setActiveTab("bonuses")}
           >
             Бонусы
           </button>
           <button 
-            className={`pb-2 px-4 ${activeTab === "feedback" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
+            className={`pb-2 px-2 text-sm ${activeTab === "feedback" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
             onClick={() => setActiveTab("feedback")}
           >
-            Поделиться впечатлениями
+            Отзывы
           </button>
         </div>
         
