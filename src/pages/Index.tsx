@@ -13,23 +13,23 @@ const menuItems = [{
   icon: <Home size={32} />,
   path: "/room"
 }, {
-  name: "План поездки",
+  name: "Что посмотреть",
   icon: <Map size={32} />,
   path: "/travel"
 }, {
-  name: "Сервисы",
+  name: "Услуги отеля",
   icon: <Coffee size={32} />,
   path: "/services"
 }, {
-  name: "Магазин",
+  name: "Маркет",
   icon: <ShoppingBag size={32} />,
   path: "/shop"
 }, {
-  name: "Чат с консьержем",
+  name: "Консьерж",
   icon: <MessageCircle size={32} />,
   path: "/chat"
 }, {
-  name: "Личный кабинет",
+  name: "Профиль",
   icon: <User size={32} />,
   path: "/feedback"
 }];
