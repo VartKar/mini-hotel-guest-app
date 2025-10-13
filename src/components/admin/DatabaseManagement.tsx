@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Upload } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useImageUpload } from "@/hooks/useImageUpload";
 
 type TableName = 'rooms' | 'bookings' | 'guest_sessions' | 'shop_orders' | 'travel_service_orders' | 'feedback' | 'host_change_requests' | 'hotel_services' | 'travel_services' | 'shop_items' | 'travel_itineraries';
 
@@ -21,6 +22,8 @@ const DatabaseManagement = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const { uploadImage } = useImageUpload();
 
   const tables = [
     { value: 'rooms', label: 'Номера' },
@@ -137,8 +140,77 @@ const DatabaseManagement = () => {
     );
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    const url = await uploadImage(file);
+    setUploadingImage(false);
+
+    if (url) {
+      // Update the hidden input value
+      const input = document.querySelector(`input[name="${key}"]`) as HTMLInputElement;
+      if (input) {
+        input.value = url;
+      }
+      
+      // Update editing record to show preview
+      if (editingRecord) {
+        setEditingRecord({ ...editingRecord, [key]: url });
+      }
+    }
+  };
+
   const renderFormField = (key: string, value: any) => {
     const fieldType = typeof value;
+    
+    // Handle image_url field specially for shop_items table
+    if (key === 'image_url' && selectedTable === 'shop_items') {
+      return (
+        <div className="space-y-3">
+          {/* Current image preview */}
+          {value && (
+            <div className="relative w-32 h-32 rounded border overflow-hidden">
+              <img 
+                src={value} 
+                alt="Preview" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+          
+          {/* File upload button */}
+          <label className="inline-block">
+            <div className={`flex items-center gap-2 px-4 py-2 border rounded cursor-pointer hover:bg-accent transition-colors ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              <Upload className="h-4 w-4" />
+              <span>{uploadingImage ? 'Загрузка...' : 'Загрузить изображение'}</span>
+            </div>
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              onChange={(e) => handleImageUpload(e, key)}
+              disabled={uploadingImage}
+              className="hidden"
+            />
+          </label>
+          
+          {/* Hidden input to store URL */}
+          <input
+            type="hidden"
+            name={key}
+            defaultValue={value || ''}
+          />
+          
+          {/* Display current URL */}
+          {value && (
+            <p className="text-xs text-muted-foreground truncate">
+              {value}
+            </p>
+          )}
+        </div>
+      );
+    }
     
     if (key.includes('date') && !key.includes('_at')) {
       return (
