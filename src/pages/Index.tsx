@@ -10,27 +10,27 @@ const DEFAULT_IMG = "https://i.postimg.cc/NFprr3hY/valse.png";
 
 const menuItems = [{
   name: "Мой номер",
-  icon: <Home size={32} />,
+  icon: <Home size={20} strokeWidth={1.5} />,
   path: "/room"
 }, {
   name: "Что посмотреть",
-  icon: <Map size={32} />,
+  icon: <Map size={20} strokeWidth={1.5} />,
   path: "/travel"
 }, {
   name: "Услуги отеля",
-  icon: <Coffee size={32} />,
+  icon: <Coffee size={20} strokeWidth={1.5} />,
   path: "/services"
 }, {
   name: "Маркет",
-  icon: <ShoppingBag size={32} />,
+  icon: <ShoppingBag size={20} strokeWidth={1.5} />,
   path: "/shop"
 }, {
   name: "Консьерж",
-  icon: <MessageCircle size={32} />,
+  icon: <MessageCircle size={20} strokeWidth={1.5} />,
   path: "/chat"
 }, {
   name: "Профиль",
-  icon: <User size={32} />,
+  icon: <User size={20} strokeWidth={1.5} />,
   path: "/feedback"
 }];
 
