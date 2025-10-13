@@ -106,7 +106,7 @@ const TravelPage = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">Путешествия и экскурсии</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center">Интересное поблизости</h1>
         
         <Tabs defaultValue="itinerary" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
@@ -128,7 +128,7 @@ const TravelPage = () => {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Calendar className="h-5 w-5" />
-                        День {day.day_number}
+                        {day.day_number}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
