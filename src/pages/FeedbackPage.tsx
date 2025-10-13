@@ -210,7 +210,7 @@ const PersonalAccountPage = () => {
             className={`pb-2 px-4 ${activeTab === "feedback" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
             onClick={() => setActiveTab("feedback")}
           >
-            Отзыв
+            Поделиться впечатлениями
           </button>
         </div>
         
