@@ -409,6 +409,7 @@ export type Database = {
           name: string
           partner_link: string | null
           price_range: string | null
+          total_clicks: number
           updated_at: string
         }
         Insert: {
@@ -423,6 +424,7 @@ export type Database = {
           name: string
           partner_link?: string | null
           price_range?: string | null
+          total_clicks?: number
           updated_at?: string
         }
         Update: {
@@ -437,6 +439,7 @@ export type Database = {
           name?: string
           partner_link?: string | null
           price_range?: string | null
+          total_clicks?: number
           updated_at?: string
         }
         Relationships: []

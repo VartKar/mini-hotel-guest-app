@@ -177,12 +177,27 @@ const TravelPage = () => {
                                   variant="ghost"
                                   size="sm"
                                   className="shrink-0"
-                                  onClick={() => {
-                                    window.open('https://example-restaurant.com', '_blank');
-                                    console.log('Restaurant click:', {
-                                      restaurant: day.restaurant.name,
-                                      activity: day.activity_title
-                                    });
+                                  onClick={async () => {
+                                    try {
+                                      // Increment click counter
+                                      await supabase
+                                        .from('restaurant_recommendations')
+                                        .update({ total_clicks: (day.restaurant.total_clicks || 0) + 1 })
+                                        .eq('id', day.restaurant.id);
+                                      
+                                      // Open restaurant link
+                                      window.open(day.restaurant.partner_link, '_blank');
+                                      
+                                      console.log('Restaurant click tracked:', {
+                                        restaurant: day.restaurant.name,
+                                        activity: day.activity_title,
+                                        total_clicks: (day.restaurant.total_clicks || 0) + 1
+                                      });
+                                    } catch (error) {
+                                      console.error('Error tracking click:', error);
+                                      // Still open the link even if tracking fails
+                                      window.open(day.restaurant.partner_link, '_blank');
+                                    }
                                   }}
                                 >
                                   Подробнее

@@ -14,6 +14,7 @@ export interface RestaurantRecommendation {
   price_range: string | null;
   partner_link: string | null;
   is_active: boolean;
+  total_clicks: number;
 }
 
 export interface TravelItinerary {
