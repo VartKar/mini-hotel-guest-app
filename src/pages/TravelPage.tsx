@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, MapPin, Clock, Calendar, User } from "lucide-react";
+import { Loader2, MapPin, Clock, Calendar, UtensilsCrossed } from "lucide-react";
 
 const TravelPage = () => {
   const { roomData } = useRoomData();
@@ -155,6 +155,31 @@ const TravelPage = () => {
                                   {day.duration_hours} часов
                                 </span>
                               )}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {day.restaurant && (
+                          <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                            <div className="flex items-start gap-3">
+                              <UtensilsCrossed className="h-5 w-5 text-amber-700 mt-0.5" />
+                              <div className="flex-1">
+                                <h5 className="font-medium text-amber-900 mb-1">Где поесть рядом</h5>
+                                <p className="font-semibold text-amber-800">{day.restaurant.name}</p>
+                                {day.restaurant.description && (
+                                  <p className="text-sm text-amber-700 mt-1">{day.restaurant.description}</p>
+                                )}
+                                <div className="flex items-center gap-3 mt-2 flex-wrap">
+                                  {day.restaurant.cuisine_type && (
+                                    <Badge variant="outline" className="bg-white border-amber-300 text-amber-800">
+                                      {day.restaurant.cuisine_type}
+                                    </Badge>
+                                  )}
+                                  {day.restaurant.price_range && (
+                                    <span className="text-sm text-amber-700">{day.restaurant.price_range}</span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         )}

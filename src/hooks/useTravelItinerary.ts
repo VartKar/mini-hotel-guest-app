@@ -3,6 +3,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
 
+export interface RestaurantRecommendation {
+  id: string;
+  name: string;
+  description: string | null;
+  cuisine_type: string | null;
+  city: string;
+  category: string | null;
+  image_url: string | null;
+  price_range: string | null;
+  is_active: boolean;
+}
+
 export interface TravelItinerary {
   id: string;
   booking_id_key: string | null;
@@ -20,6 +32,8 @@ export interface TravelItinerary {
   activity_category: string | null;
   difficulty_level: string | null;
   duration_hours: number | null;
+  restaurant_id: string | null;
+  restaurant?: RestaurantRecommendation;
 }
 
 export interface TravelItineraryWithIcon extends TravelItinerary {
@@ -135,14 +149,17 @@ export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: str
   const numberOfDays = calculateDays(checkInDate, checkOutDate);
   const [selectedActivities, setSelectedActivities] = useState<TravelItinerary[]>([]);
 
-  // Fetch template itineraries
+  // Fetch template itineraries with restaurant data
   const { data: templateItineraries, isLoading } = useQuery({
     queryKey: ['travel-itinerary-templates'],
     queryFn: async () => {
       console.log('Fetching travel itinerary templates...');
       const { data, error } = await supabase
         .from('travel_itineraries')
-        .select('*')
+        .select(`
+          *,
+          restaurant:restaurant_recommendations(*)
+        `)
         .is('booking_id_key', null)
         .order('day_number');
       

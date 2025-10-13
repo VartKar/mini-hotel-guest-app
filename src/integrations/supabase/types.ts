@@ -396,6 +396,48 @@ export type Database = {
           },
         ]
       }
+      restaurant_recommendations: {
+        Row: {
+          category: string | null
+          city: string
+          created_at: string
+          cuisine_type: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          price_range: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          city?: string
+          created_at?: string
+          cuisine_type?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          price_range?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          city?: string
+          created_at?: string
+          cuisine_type?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          price_range?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       rooms: {
         Row: {
           ac_instructions: string | null
@@ -578,6 +620,7 @@ export type Database = {
           icon_type: string | null
           id: string
           is_service_available: boolean | null
+          restaurant_id: string | null
           service_description: string | null
           service_price: number | null
           service_title: string | null
@@ -596,6 +639,7 @@ export type Database = {
           icon_type?: string | null
           id?: string
           is_service_available?: boolean | null
+          restaurant_id?: string | null
           service_description?: string | null
           service_price?: number | null
           service_title?: string | null
@@ -614,12 +658,21 @@ export type Database = {
           icon_type?: string | null
           id?: string
           is_service_available?: boolean | null
+          restaurant_id?: string | null
           service_description?: string | null
           service_price?: number | null
           service_title?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "travel_itineraries_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_recommendations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       travel_service_orders: {
         Row: {
