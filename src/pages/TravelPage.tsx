@@ -110,8 +110,8 @@ const TravelPage = () => {
         
         <Tabs defaultValue="itinerary" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="itinerary">Ваш маршрут</TabsTrigger>
-            <TabsTrigger value="services">Дополнительные услуги</TabsTrigger>
+            <TabsTrigger value="itinerary">Рекомендации</TabsTrigger>
+            <TabsTrigger value="services">Больше интересного</TabsTrigger>
           </TabsList>
           
           <TabsContent value="itinerary" className="space-y-6">
