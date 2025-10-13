@@ -84,29 +84,65 @@ const Index = () => {
   useDocumentTitle(documentTitle);
 
   return (
-    <>
-      {/* Fixed Header */}
-      <header className="sticky top-0 z-10 bg-white px-6 py-5 border-b border-gray-200">
-        <h1 className="text-xl font-medium text-gray-900">
-          Добро пожаловать, {guestName}
-        </h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          {apartmentName}
-        </p>
-      </header>
+    <div className="flex flex-col items-center">
+      <div className="w-full max-w-md">
+        <div className="py-8">
+          <h1 className="font-light mb-3 text-center text-2xl">
+            <span>Добро пожаловать, </span>
+            <span className="border-b border-dashed border-gray-300 px-1">
+              {guestName}
+            </span>
+          </h1>
+          <p className="text-xl text-hotel-neutral text-center">
+            {apartmentName}
+          </p>
+        </div>
 
-      {/* Main Content */}
-      <div className="p-4">
+        {/* Main hotel image section */}
+        <div className="w-full h-48 mb-8 rounded-lg overflow-hidden flex items-center justify-center bg-hotel-light relative">
+          {loading && (
+            <div className="w-full h-full animate-pulse bg-gray-200" />
+          )}
+          {!loading && !imgError && (
+            <img
+              src={hotelImage}
+              alt="Фото апартаментов"
+              className={`object-cover w-full h-full transition-opacity duration-500 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+              loading="lazy"
+              onLoad={() => {
+                console.log('✅ Index image loaded successfully:', hotelImage);
+                setImgLoaded(true);
+              }}
+              onError={() => {
+                console.error('❌ Index image failed to load:', hotelImage);
+                setImgError(true);
+              }}
+              style={{ minHeight: "192px", minWidth: "100%" }}
+            />
+          )}
+          {!loading && imgError && (
+            <div className="w-full h-full bg-gray-100 flex flex-col justify-center items-center">
+              <span className="text-gray-400 text-xs">Ошибка загрузки изображения</span>
+              <img
+                src={DEFAULT_IMG}
+                alt="Фото по умолчанию"
+                className="w-20 h-20 opacity-40 mt-2"
+                draggable={false}
+              />
+            </div>
+          )}
+        </div>
+
         {/* Menu section */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-4 mb-6">
           {menuItems.map(item => (
             <Link
               key={item.name}
               to={item.path}
-              className="flex flex-col items-center justify-center bg-white border border-gray-200 rounded-xl p-6 transition-all hover:border-gray-300 active:scale-[0.99]"
+              className="flex flex-col items-center justify-center bg-white rounded-lg p-6 shadow-sm transition-all hover:shadow-md"
             >
-              <div className="text-gray-900 mb-3">{item.icon}</div>
-              <span className="text-center font-medium text-gray-900">{item.name}</span>
+              <div className="text-hotel-dark mb-3">{item.icon}</div>
+              <span className="text-center font-medium">{item.name}</span>
             </Link>
           ))}
         </div>
@@ -128,7 +164,7 @@ const Index = () => {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
 

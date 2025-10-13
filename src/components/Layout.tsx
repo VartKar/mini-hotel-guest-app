@@ -12,7 +12,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isHomePage = location.pathname === "/";
 
   return (
-    <div className={`min-h-screen font-['Inter'] ${isHomePage ? 'bg-gray-50' : 'bg-hotel-light text-hotel-dark'}`}>
+    <div className="min-h-screen bg-hotel-light font-['Inter'] text-hotel-dark">
       {!isHomePage && (
         <header className="p-4 flex items-center">
           <Link to="/" className="text-2xl flex items-center">
@@ -21,7 +21,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Link>
         </header>
       )}
-      <main className={isHomePage ? '' : 'px-4 pb-16'}>
+      <main className="px-4 pb-16">
         {children}
       </main>
     </div>
