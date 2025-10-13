@@ -13,7 +13,7 @@ const menuItems = [{
   icon: <Home size={20} strokeWidth={1.5} />,
   path: "/room"
 }, {
-  name: "Что посмотреть",
+  name: "Что вокруг",
   icon: <Map size={20} strokeWidth={1.5} />,
   path: "/travel"
 }, {
@@ -142,7 +142,7 @@ const Index = () => {
               className="flex flex-col items-center justify-center bg-white rounded-lg p-6 shadow-sm transition-all hover:shadow-md"
             >
               <div className="text-hotel-dark mb-3">{item.icon}</div>
-              <span className="text-center font-medium">{item.name}</span>
+              <span className="text-center text-sm font-normal">{item.name}</span>
             </Link>
           ))}
         </div>
