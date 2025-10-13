@@ -111,7 +111,7 @@ const TravelPage = () => {
         <Tabs defaultValue="itinerary" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="itinerary">Рекомендации</TabsTrigger>
-            <TabsTrigger value="services">Больше интересного</TabsTrigger>
+            <TabsTrigger value="services">Авторские туры</TabsTrigger>
           </TabsList>
           
           <TabsContent value="itinerary" className="space-y-6">
@@ -163,10 +163,11 @@ const TravelPage = () => {
                           <div className="mt-4 pt-4 border-t">
                             <div className="flex items-start justify-between gap-4">
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
+                                <div className="flex items-center gap-2 mb-2">
                                   <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
-                                  <p className="text-sm font-medium">{day.restaurant.name}</p>
+                                  <span className="text-xs text-muted-foreground uppercase tracking-wide">Где поесть</span>
                                 </div>
+                                <p className="text-sm font-medium">{day.restaurant.name}</p>
                                 {day.restaurant.cuisine_type && (
                                   <p className="text-xs text-muted-foreground">{day.restaurant.cuisine_type}</p>
                                 )}
