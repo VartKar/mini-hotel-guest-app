@@ -183,8 +183,17 @@ const TravelPage = () => {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="mt-3 bg-white border-amber-300 text-amber-800 hover:bg-amber-100"
-                                    onClick={() => window.open(day.restaurant.partner_link, '_blank')}
+                                    className="mt-3 w-full bg-white border-amber-300 text-amber-800 hover:bg-amber-100"
+                                    onClick={() => {
+                                      window.open(day.restaurant!.partner_link!, '_blank');
+                                      toast.success("Переход на сайт ресторана");
+                                      // Track click for analytics
+                                      console.log('Restaurant click:', {
+                                        restaurant: day.restaurant.name,
+                                        activity: day.activity_title,
+                                        link: day.restaurant.partner_link
+                                      });
+                                    }}
                                   >
                                     Посмотреть меню
                                   </Button>
