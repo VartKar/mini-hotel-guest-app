@@ -13,7 +13,7 @@ import { Plus, Edit, Trash2, Upload } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useImageUpload } from "@/hooks/useImageUpload";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type TableName = 'rooms' | 'bookings' | 'guest_sessions' | 'shop_orders' | 'travel_service_orders' | 'feedback' | 'host_change_requests' | 'hotel_services' | 'travel_services' | 'shop_items' | 'travel_itineraries';
@@ -426,6 +426,7 @@ const DatabaseManagement = () => {
                   </TableBody>
                 </Table>
               </div>
+              <ScrollBar orientation="horizontal" />
             </ScrollArea>
           )}
         </CardContent>
