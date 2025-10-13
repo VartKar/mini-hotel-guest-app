@@ -379,55 +379,52 @@ const DatabaseManagement = () => {
               Нет данных в таблице {selectedTable}
             </div>
           ) : (
-            <ScrollArea className="w-full">
-              <div className="min-w-max">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {renderTableColumns().map(column => (
-                        <TableHead key={column} className="min-w-[150px]">
-                          {column}
-                        </TableHead>
-                      ))}
-                      <TableHead className="w-[120px]">Действия</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {data.map((record) => (
-                      <TableRow key={record.id}>
-                        {renderTableColumns().map(column => (
-                          <TableCell key={column} className="max-w-[250px]">
-                            {renderCellValue(record[column])}
-                          </TableCell>
-                        ))}
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setEditingRecord(record);
-                                setIsDialogOpen(true);
-                              }}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDelete(record.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {renderTableColumns().map(column => (
+                      <TableHead key={column} className="min-w-[150px]">
+                        {column}
+                      </TableHead>
                     ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
+                    <TableHead className="min-w-[120px]">Действия</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.map((record) => (
+                    <TableRow key={record.id}>
+                      {renderTableColumns().map(column => (
+                        <TableCell key={column} className="max-w-[250px]">
+                          {renderCellValue(record[column])}
+                        </TableCell>
+                      ))}
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingRecord(record);
+                              setIsDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(record.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
