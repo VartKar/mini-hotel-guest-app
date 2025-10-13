@@ -13,6 +13,8 @@ import { Plus, Edit, Trash2, Upload } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type TableName = 'rooms' | 'bookings' | 'guest_sessions' | 'shop_orders' | 'travel_service_orders' | 'feedback' | 'host_change_requests' | 'hotel_services' | 'travel_services' | 'shop_items' | 'travel_itineraries';
 
@@ -283,9 +285,27 @@ const DatabaseManagement = () => {
   const renderCellValue = (value: any) => {
     if (value === null || value === undefined) return '-';
     if (typeof value === 'boolean') return value ? 'Да' : 'Нет';
-    if (typeof value === 'object') return JSON.stringify(value).slice(0, 50) + '...';
-    if (typeof value === 'string' && value.length > 50) return value.slice(0, 50) + '...';
-    return value.toString();
+    
+    const fullValue = typeof value === 'object' ? JSON.stringify(value, null, 2) : value.toString();
+    const displayValue = fullValue.length > 50 ? fullValue.slice(0, 50) + '...' : fullValue;
+    const needsTooltip = fullValue.length > 50;
+    
+    if (needsTooltip) {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="cursor-help">{displayValue}</span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-md max-h-96 overflow-auto">
+              <pre className="whitespace-pre-wrap text-xs">{fullValue}</pre>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+    
+    return displayValue;
   };
 
   return (
@@ -359,52 +379,54 @@ const DatabaseManagement = () => {
               Нет данных в таблице {selectedTable}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {renderTableColumns().map(column => (
-                      <TableHead key={column} className="min-w-[120px]">
-                        {column}
-                      </TableHead>
-                    ))}
-                    <TableHead className="w-[100px]">Действия</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.map((record) => (
-                    <TableRow key={record.id}>
+            <ScrollArea className="w-full">
+              <div className="min-w-max">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
                       {renderTableColumns().map(column => (
-                        <TableCell key={column} className="max-w-[200px] truncate">
-                          {renderCellValue(record[column])}
-                        </TableCell>
+                        <TableHead key={column} className="min-w-[150px]">
+                          {column}
+                        </TableHead>
                       ))}
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setEditingRecord(record);
-                              setIsDialogOpen(true);
-                            }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(record.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      <TableHead className="w-[120px]">Действия</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {data.map((record) => (
+                      <TableRow key={record.id}>
+                        {renderTableColumns().map(column => (
+                          <TableCell key={column} className="max-w-[250px]">
+                            {renderCellValue(record[column])}
+                          </TableCell>
+                        ))}
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setEditingRecord(record);
+                                setIsDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDelete(record.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </ScrollArea>
           )}
         </CardContent>
       </Card>
