@@ -131,38 +131,53 @@ const ShopPage = () => {
             <div className="grid gap-4">
               {items.map((item) => (
                 <Card key={item.id}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{item.name}</CardTitle>
-                      <Badge variant="default">{item.base_price} ₽</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600 mb-4">{item.description}</p>
-                    
-                    <div className="flex items-center gap-4 mb-4">
-                      <Badge variant="outline">{item.category}</Badge>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeFromCart(item.id)}
-                        disabled={!cart.find(cartItem => cartItem.id === item.id)}
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <span className="w-8 text-center">
-                        {cart.find(cartItem => cartItem.id === item.id)?.quantity || 0}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addToCart(item)}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
+                  <CardContent className="p-0">
+                    <div className="flex gap-4">
+                      {/* Image */}
+                      {item.image_url && (
+                        <div className="w-32 h-32 shrink-0">
+                          <img
+                            src={item.image_url}
+                            alt={item.name}
+                            className="w-full h-full object-cover rounded-l-lg"
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Content */}
+                      <div className="flex-1 p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-lg font-semibold">{item.name}</h3>
+                          <Badge variant="default">{item.base_price} ₽</Badge>
+                        </div>
+                        
+                        <p className="text-sm text-muted-foreground mb-3">{item.description}</p>
+                        
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline">{item.category}</Badge>
+                          
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeFromCart(item.id)}
+                              disabled={!cart.find(cartItem => cartItem.id === item.id)}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                            <span className="w-8 text-center font-medium">
+                              {cart.find(cartItem => cartItem.id === item.id)?.quantity || 0}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => addToCart(item)}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
