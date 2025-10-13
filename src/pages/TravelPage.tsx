@@ -160,45 +160,33 @@ const TravelPage = () => {
                         )}
                         
                         {day.restaurant && (
-                          <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
-                            <div className="flex items-start gap-3">
-                              <UtensilsCrossed className="h-5 w-5 text-amber-700 mt-0.5" />
-                              <div className="flex-1">
-                                <h5 className="font-medium text-amber-900 mb-1">Где поесть рядом</h5>
-                                <p className="font-semibold text-amber-800">{day.restaurant.name}</p>
-                                {day.restaurant.description && (
-                                  <p className="text-sm text-amber-700 mt-1">{day.restaurant.description}</p>
-                                )}
-                                <div className="flex items-center gap-3 mt-2 flex-wrap">
-                                  {day.restaurant.cuisine_type && (
-                                    <Badge variant="outline" className="bg-white border-amber-300 text-amber-800">
-                                      {day.restaurant.cuisine_type}
-                                    </Badge>
-                                  )}
-                                  {day.restaurant.price_range && (
-                                    <span className="text-sm text-amber-700">{day.restaurant.price_range}</span>
-                                  )}
+                          <div className="mt-4 pt-4 border-t">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
+                                  <p className="text-sm font-medium">{day.restaurant.name}</p>
                                 </div>
-                                {day.restaurant.partner_link && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="mt-3 w-full bg-white border-amber-300 text-amber-800 hover:bg-amber-100"
-                                    onClick={() => {
-                                      window.open(day.restaurant!.partner_link!, '_blank');
-                                      toast.success("Переход на сайт ресторана");
-                                      // Track click for analytics
-                                      console.log('Restaurant click:', {
-                                        restaurant: day.restaurant.name,
-                                        activity: day.activity_title,
-                                        link: day.restaurant.partner_link
-                                      });
-                                    }}
-                                  >
-                                    Посмотреть меню
-                                  </Button>
+                                {day.restaurant.cuisine_type && (
+                                  <p className="text-xs text-muted-foreground">{day.restaurant.cuisine_type}</p>
                                 )}
                               </div>
+                              {day.restaurant.partner_link && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="shrink-0"
+                                  onClick={() => {
+                                    window.open('https://example-restaurant.com', '_blank');
+                                    console.log('Restaurant click:', {
+                                      restaurant: day.restaurant.name,
+                                      activity: day.activity_title
+                                    });
+                                  }}
+                                >
+                                  Подробнее
+                                </Button>
+                              )}
                             </div>
                           </div>
                         )}
