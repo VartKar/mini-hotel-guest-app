@@ -179,6 +179,16 @@ const TravelPage = () => {
                                     <span className="text-sm text-amber-700">{day.restaurant.price_range}</span>
                                   )}
                                 </div>
+                                {day.restaurant.partner_link && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="mt-3 bg-white border-amber-300 text-amber-800 hover:bg-amber-100"
+                                    onClick={() => window.open(day.restaurant.partner_link, '_blank')}
+                                  >
+                                    Посмотреть меню
+                                  </Button>
+                                )}
                               </div>
                             </div>
                           </div>

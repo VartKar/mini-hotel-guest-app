@@ -12,6 +12,7 @@ export interface RestaurantRecommendation {
   category: string | null;
   image_url: string | null;
   price_range: string | null;
+  partner_link: string | null;
   is_active: boolean;
 }
 
