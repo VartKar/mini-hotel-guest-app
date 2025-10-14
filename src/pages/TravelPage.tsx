@@ -143,34 +143,38 @@ const TravelPage = () => {
                         
                           {day.service_title && (
                             <div className="bg-blue-50 p-4 rounded-lg">
-                              {(() => {
-                                const match = services.find(s => s.title && day.service_title && s.title.toLowerCase().trim() === day.service_title.toLowerCase().trim());
-                                const imageUrl = day.service_image_url || match?.image_url || null;
-                                return imageUrl ? (
-                                  <div className="w-full h-48 rounded-lg overflow-hidden mb-3">
-                                    <img 
-                                      src={imageUrl} 
-                                      alt={day.service_title}
-                                      className="w-full h-full object-cover"
-                                    />
+                              <div className="flex gap-4">
+                                {(() => {
+                                  const match = services.find(s => s.title && day.service_title && s.title.toLowerCase().trim() === day.service_title.toLowerCase().trim());
+                                  const imageUrl = day.service_image_url || match?.image_url || null;
+                                  return imageUrl ? (
+                                    <div className="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                                      <img 
+                                        src={imageUrl} 
+                                        alt={day.service_title}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                  ) : null;
+                                })()}
+                                
+                                <div className="flex-1">
+                                  <h5 className="font-medium text-blue-900">{day.service_title}</h5>
+                                  <p className="text-blue-700 text-sm mt-1">{day.service_description}</p>
+                                  <div className="flex items-center gap-4 mt-2">
+                                    {day.service_price && (
+                                      <Badge variant="secondary">{day.service_price} ₽</Badge>
+                                    )}
+                                    {day.duration_hours && (
+                                      <span className="text-sm text-blue-600 flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        {day.duration_hours} часов
+                                      </span>
+                                    )}
                                   </div>
-                                ) : null;
-                              })()}
-
-                            <h5 className="font-medium text-blue-900">{day.service_title}</h5>
-                            <p className="text-blue-700 text-sm mt-1">{day.service_description}</p>
-                            <div className="flex items-center gap-4 mt-2">
-                              {day.service_price && (
-                                <Badge variant="secondary">{day.service_price} ₽</Badge>
-                              )}
-                              {day.duration_hours && (
-                                <span className="text-sm text-blue-600 flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {day.duration_hours} часов
-                                </span>
-                              )}
+                                </div>
+                              </div>
                             </div>
-                          </div>
                         )}
                         
                         {day.restaurant && (
