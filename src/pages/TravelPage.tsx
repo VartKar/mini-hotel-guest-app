@@ -16,7 +16,7 @@ import { Loader2, MapPin, Clock, Calendar, UtensilsCrossed } from "lucide-react"
 const TravelPage = () => {
   const { roomData } = useRoomData();
   const { itineraries, isLoading: itineraryLoading } = useTravelItinerary(roomData?.booking_id, roomData?.city || 'Сочи', roomData?.property_id);
-  const { data: services = [], isLoading: servicesLoading } = useTravelServices();
+  const { data: services = [], isLoading: servicesLoading } = useTravelServices(roomData?.city || 'Сочи');
   const [selectedServices, setSelectedServices] = useState<any[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -141,17 +141,22 @@ const TravelPage = () => {
                           <p className="text-gray-600 mt-1">{day.activity_description}</p>
                         </div>
                         
-                        {day.service_title && (
-                          <div className="bg-blue-50 p-4 rounded-lg">
-                            {day.service_image_url && (
-                              <div className="w-full h-48 rounded-lg overflow-hidden mb-3">
-                                <img 
-                                  src={day.service_image_url} 
-                                  alt={day.service_title}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                            )}
+                          {day.service_title && (
+                            <div className="bg-blue-50 p-4 rounded-lg">
+                              {(() => {
+                                const match = services.find(s => s.title && day.service_title && s.title.toLowerCase().trim() === day.service_title.toLowerCase().trim());
+                                const imageUrl = day.service_image_url || match?.image_url || null;
+                                return imageUrl ? (
+                                  <div className="w-full h-48 rounded-lg overflow-hidden mb-3">
+                                    <img 
+                                      src={imageUrl} 
+                                      alt={day.service_title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                ) : null;
+                              })()}
+
                             <h5 className="font-medium text-blue-900">{day.service_title}</h5>
                             <p className="text-blue-700 text-sm mt-1">{day.service_description}</p>
                             <div className="flex items-center gap-4 mt-2">
