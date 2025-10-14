@@ -143,12 +143,12 @@ const TravelPage = () => {
                         
                           {day.service_title && (
                             <div className="bg-blue-50 p-4 rounded-lg">
-                              <div className="flex gap-4">
+                              <div className="flex flex-col sm:flex-row gap-4">
                                 {(() => {
                                   const match = services.find(s => s.title && day.service_title && s.title.toLowerCase().trim() === day.service_title.toLowerCase().trim());
                                   const imageUrl = day.service_image_url || match?.image_url || null;
                                   return imageUrl ? (
-                                    <div className="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                                    <div className="w-full sm:w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
                                       <img 
                                         src={imageUrl} 
                                         alt={day.service_title}
@@ -158,10 +158,10 @@ const TravelPage = () => {
                                   ) : null;
                                 })()}
                                 
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-0">
                                   <h5 className="font-medium text-blue-900">{day.service_title}</h5>
                                   <p className="text-blue-700 text-sm mt-1">{day.service_description}</p>
-                                  <div className="flex items-center gap-4 mt-2">
+                                  <div className="flex items-center gap-4 mt-2 flex-wrap">
                                     {day.service_price && (
                                       <Badge variant="secondary">{day.service_price} ₽</Badge>
                                     )}
@@ -239,9 +239,9 @@ const TravelPage = () => {
                 {services.map((service) => (
                   <Card key={service.id}>
                     <CardContent className="p-6">
-                      <div className="flex gap-4">
+                      <div className="flex flex-col sm:flex-row gap-4">
                         {service.image_url && (
-                          <div className="flex-shrink-0 w-32 h-32 rounded-lg overflow-hidden">
+                          <div className="flex-shrink-0 w-full sm:w-32 h-32 rounded-lg overflow-hidden">
                             <img 
                               src={service.image_url} 
                               alt={service.title}
