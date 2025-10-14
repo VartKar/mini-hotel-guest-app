@@ -628,6 +628,7 @@ export type Database = {
           is_service_available: boolean | null
           restaurant_id: string | null
           service_description: string | null
+          service_image_url: string | null
           service_price: number | null
           service_title: string | null
           updated_at: string
@@ -647,6 +648,7 @@ export type Database = {
           is_service_available?: boolean | null
           restaurant_id?: string | null
           service_description?: string | null
+          service_image_url?: string | null
           service_price?: number | null
           service_title?: string | null
           updated_at?: string
@@ -666,6 +668,7 @@ export type Database = {
           is_service_available?: boolean | null
           restaurant_id?: string | null
           service_description?: string | null
+          service_image_url?: string | null
           service_price?: number | null
           service_title?: string | null
           updated_at?: string

@@ -147,7 +147,9 @@ const DatabaseManagement = () => {
     if (!file) return;
 
     // Determine bucket based on selected table
-    const bucket = selectedTable === 'travel_services' ? 'travel-services' : 'shop-items';
+    const bucket = (selectedTable === 'travel_services' || selectedTable === 'travel_itineraries') 
+      ? 'travel-services' 
+      : 'shop-items';
     
     setUploadingImage(true);
     const url = await uploadImage(file, bucket);
@@ -170,8 +172,9 @@ const DatabaseManagement = () => {
   const renderFormField = (key: string, value: any) => {
     const fieldType = typeof value;
     
-    // Handle image_url field specially for shop_items and travel_services tables
-    if (key === 'image_url' && (selectedTable === 'shop_items' || selectedTable === 'travel_services')) {
+    // Handle image_url field specially for shop_items, travel_services, and travel_itineraries tables
+    if ((key === 'image_url' && (selectedTable === 'shop_items' || selectedTable === 'travel_services')) ||
+        (key === 'service_image_url' && selectedTable === 'travel_itineraries')) {
       return (
         <div className="space-y-3">
           {/* Current image preview */}
