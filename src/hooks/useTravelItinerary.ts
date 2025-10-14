@@ -26,6 +26,7 @@ export interface TravelItinerary {
   service_title: string | null;
   service_description: string | null;
   service_price: number | null;
+  service_image_url?: string | null;
   icon_type: string | null;
   is_service_available: boolean | null;
   created_at: string;

@@ -143,6 +143,15 @@ const TravelPage = () => {
                         
                         {day.service_title && (
                           <div className="bg-blue-50 p-4 rounded-lg">
+                            {day.service_image_url && (
+                              <div className="w-full h-48 rounded-lg overflow-hidden mb-3">
+                                <img 
+                                  src={day.service_image_url} 
+                                  alt={day.service_title}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            )}
                             <h5 className="font-medium text-blue-900">{day.service_title}</h5>
                             <p className="text-blue-700 text-sm mt-1">{day.service_description}</p>
                             <div className="flex items-center gap-4 mt-2">
@@ -220,39 +229,52 @@ const TravelPage = () => {
               <div className="grid gap-4">
                 {services.map((service) => (
                   <Card key={service.id}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{service.title}</CardTitle>
-                        <Badge variant="default">{service.base_price} ₽</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600 mb-4">{service.description}</p>
-                      
-                      <div className="flex items-center gap-4 mb-4">
-                        <Badge variant="outline">{service.category}</Badge>
-                        {service.difficulty_level && (
-                          <Badge variant="secondary">{service.difficulty_level}</Badge>
+                    <CardContent className="p-6">
+                      <div className="flex gap-4">
+                        {service.image_url && (
+                          <div className="flex-shrink-0 w-32 h-32 rounded-lg overflow-hidden">
+                            <img 
+                              src={service.image_url} 
+                              alt={service.title}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
                         )}
-                        {service.duration_hours && (
-                          <span className="text-sm text-gray-500 flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {service.duration_hours} часов
-                          </span>
-                        )}
-                        <span className="text-sm text-gray-500 flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {service.city}
-                        </span>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-4 mb-2">
+                            <h3 className="text-lg font-semibold">{service.title}</h3>
+                            <Badge variant="default" className="shrink-0">{service.base_price} ₽</Badge>
+                          </div>
+                          
+                          <p className="text-gray-600 mb-4 text-sm">{service.description}</p>
+                          
+                          <div className="flex items-center gap-3 mb-4 flex-wrap">
+                            <Badge variant="outline" className="text-xs">{service.category}</Badge>
+                            {service.difficulty_level && (
+                              <Badge variant="secondary" className="text-xs">{service.difficulty_level}</Badge>
+                            )}
+                            {service.duration_hours && (
+                              <span className="text-xs text-gray-500 flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {service.duration_hours} часов
+                              </span>
+                            )}
+                            <span className="text-xs text-gray-500 flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {service.city}
+                            </span>
+                          </div>
+                          
+                          <Button
+                            onClick={() => handleServiceToggle(service)}
+                            variant={selectedServices.some(s => s.id === service.id) ? "default" : "outline"}
+                            size="sm"
+                          >
+                            {selectedServices.some(s => s.id === service.id) ? "Убрать из заказа" : "Добавить в заказ"}
+                          </Button>
+                        </div>
                       </div>
-                      
-                      <Button
-                        onClick={() => handleServiceToggle(service)}
-                        variant={selectedServices.some(s => s.id === service.id) ? "default" : "outline"}
-                        className="w-full"
-                      >
-                        {selectedServices.some(s => s.id === service.id) ? "Убрать из заказа" : "Добавить в заказ"}
-                      </Button>
                     </CardContent>
                   </Card>
                 ))}

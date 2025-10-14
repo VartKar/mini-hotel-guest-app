@@ -12,6 +12,7 @@ export interface TravelService {
   duration_hours: number | null;
   difficulty_level: string | null;
   is_active: boolean;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
 }
