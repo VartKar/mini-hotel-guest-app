@@ -270,7 +270,9 @@ const TravelPage = () => {
                                 
                                 {day.restaurant.partner_link && (
                                   <Button
+                                    variant="outline"
                                     size="sm"
+                                    className="h-7 text-xs"
                                     onClick={async () => {
                                       try {
                                         await supabase
