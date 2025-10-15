@@ -177,7 +177,7 @@ const TravelPage = () => {
                               {expandedServiceId === day.service.id && (
                                 <div className="mt-4 space-y-3 pl-6 border-l-2 border-muted">
                                   {day.service.image_url && (
-                                    <div className="w-full h-48 rounded-lg overflow-hidden">
+                                    <div className="w-full sm:w-48 h-32 rounded-lg overflow-hidden">
                                       <img 
                                         src={day.service.image_url} 
                                         alt={day.service.title}
