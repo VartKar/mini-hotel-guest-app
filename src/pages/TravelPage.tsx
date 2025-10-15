@@ -11,8 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Loader2, MapPin, Clock, Calendar, UtensilsCrossed, Plus } from "lucide-react";
+import { Loader2, MapPin, Clock, Calendar, UtensilsCrossed, Plus, ChevronDown, ChevronUp } from "lucide-react";
 
 const TravelPage = () => {
   const { roomData } = useRoomData();
@@ -23,7 +22,7 @@ const TravelPage = () => {
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerComment, setCustomerComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [selectedServiceDetails, setSelectedServiceDetails] = useState<any>(null);
+  const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null);
 
   useEffect(() => {
     if (roomData?.guest_name) {
@@ -164,12 +163,52 @@ const TravelPage = () => {
                                     variant="ghost"
                                     size="sm"
                                     className="shrink-0"
-                                    onClick={() => setSelectedServiceDetails(day.service)}
+                                    onClick={() => setExpandedServiceId(expandedServiceId === day.service.id ? null : day.service.id)}
                                   >
-                                    Подробнее
+                                    {expandedServiceId === day.service.id ? (
+                                      <>Скрыть <ChevronUp className="h-4 w-4 ml-1" /></>
+                                    ) : (
+                                      <>Подробнее <ChevronDown className="h-4 w-4 ml-1" /></>
+                                    )}
                                   </Button>
                                 )}
                               </div>
+                              
+                              {expandedServiceId === day.service.id && (
+                                <div className="mt-4 space-y-3 pl-6 border-l-2 border-muted">
+                                  {day.service.image_url && (
+                                    <div className="w-full h-48 rounded-lg overflow-hidden">
+                                      <img 
+                                        src={day.service.image_url} 
+                                        alt={day.service.title}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                  )}
+                                  
+                                  {day.service.description && (
+                                    <p className="text-sm text-muted-foreground">{day.service.description}</p>
+                                  )}
+                                  
+                                  <div className="flex flex-wrap gap-2">
+                                    {day.service.difficulty_level && (
+                                      <Badge variant="secondary">{day.service.difficulty_level}</Badge>
+                                    )}
+                                    {day.service.category && (
+                                      <Badge variant="outline">{day.service.category}</Badge>
+                                    )}
+                                  </div>
+                                  
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleServiceToggle(day.service)}
+                                    variant={selectedServices.some(s => s.id === day.service.id) ? "outline" : "default"}
+                                  >
+                                    <Plus className="h-3 w-3 mr-1" />
+                                    {selectedServices.some(s => s.id === day.service.id) ? "Убрать из заказа" : "Добавить в заказ"}
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                         )}
                         
@@ -361,64 +400,6 @@ const TravelPage = () => {
             </div>
           </TabsContent>
         </Tabs>
-
-        {/* Service Details Dialog */}
-        <Dialog open={!!selectedServiceDetails} onOpenChange={() => setSelectedServiceDetails(null)}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>{selectedServiceDetails?.title}</DialogTitle>
-              <DialogDescription>{selectedServiceDetails?.category}</DialogDescription>
-            </DialogHeader>
-            
-            {selectedServiceDetails && (
-              <div className="space-y-4">
-                {selectedServiceDetails.image_url && (
-                  <div className="w-full h-64 rounded-lg overflow-hidden">
-                    <img 
-                      src={selectedServiceDetails.image_url} 
-                      alt={selectedServiceDetails.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                
-                <div>
-                  <h4 className="font-medium mb-2">Описание</h4>
-                  <p className="text-muted-foreground">{selectedServiceDetails.description}</p>
-                </div>
-                
-                <div className="flex flex-wrap gap-3">
-                  {selectedServiceDetails.duration_hours && (
-                    <Badge variant="outline" className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {selectedServiceDetails.duration_hours} часов
-                    </Badge>
-                  )}
-                  {selectedServiceDetails.difficulty_level && (
-                    <Badge variant="secondary">{selectedServiceDetails.difficulty_level}</Badge>
-                  )}
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    {selectedServiceDetails.city}
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="text-2xl font-bold">{selectedServiceDetails.base_price} ₽</div>
-                  <Button
-                    onClick={() => {
-                      handleServiceToggle(selectedServiceDetails);
-                      setSelectedServiceDetails(null);
-                    }}
-                    variant={selectedServices.some(s => s.id === selectedServiceDetails.id) ? "outline" : "default"}
-                  >
-                    {selectedServices.some(s => s.id === selectedServiceDetails.id) ? "Убрать из заказа" : "Добавить в заказ"}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );
