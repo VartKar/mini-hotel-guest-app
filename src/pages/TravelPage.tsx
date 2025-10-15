@@ -226,20 +226,18 @@ const TravelPage = () => {
                                   <p className="text-xs text-muted-foreground mt-1">{day.restaurant.cuisine_type}</p>
                                 )}
                               </div>
-                              {day.restaurant.partner_link && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="shrink-0"
-                                  onClick={() => setExpandedRestaurantId(expandedRestaurantId === day.restaurant.id ? null : day.restaurant.id)}
-                                >
-                                  {expandedRestaurantId === day.restaurant.id ? (
-                                    <>Скрыть <ChevronUp className="h-4 w-4 ml-1" /></>
-                                  ) : (
-                                    <>Подробнее <ChevronDown className="h-4 w-4 ml-1" /></>
-                                  )}
-                                </Button>
-                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="shrink-0"
+                                onClick={() => setExpandedRestaurantId(expandedRestaurantId === day.restaurant.id ? null : day.restaurant.id)}
+                              >
+                                {expandedRestaurantId === day.restaurant.id ? (
+                                  <>Скрыть <ChevronUp className="h-4 w-4 ml-1" /></>
+                                ) : (
+                                  <>Подробнее <ChevronDown className="h-4 w-4 ml-1" /></>
+                                )}
+                              </Button>
                             </div>
                             
                             {expandedRestaurantId === day.restaurant.id && (
