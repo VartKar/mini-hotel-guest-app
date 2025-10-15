@@ -23,6 +23,7 @@ const TravelPage = () => {
   const [customerComment, setCustomerComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null);
+  const [expandedRestaurantId, setExpandedRestaurantId] = useState<string | null>(null);
 
   useEffect(() => {
     if (roomData?.guest_name) {
@@ -222,7 +223,7 @@ const TravelPage = () => {
                                 </div>
                                 <p className="text-sm font-medium">{day.restaurant.name}</p>
                                 {day.restaurant.cuisine_type && (
-                                  <p className="text-xs text-muted-foreground">{day.restaurant.cuisine_type}</p>
+                                  <p className="text-xs text-muted-foreground mt-1">{day.restaurant.cuisine_type}</p>
                                 )}
                               </div>
                               {day.restaurant.partner_link && (
@@ -230,33 +231,73 @@ const TravelPage = () => {
                                   variant="ghost"
                                   size="sm"
                                   className="shrink-0"
-                                  onClick={async () => {
-                                    try {
-                                      // Increment click counter
-                                      await supabase
-                                        .from('restaurant_recommendations')
-                                        .update({ total_clicks: (day.restaurant.total_clicks || 0) + 1 })
-                                        .eq('id', day.restaurant.id);
-                                      
-                                      // Open restaurant link
-                                      window.open(day.restaurant.partner_link, '_blank');
-                                      
-                                      console.log('Restaurant click tracked:', {
-                                        restaurant: day.restaurant.name,
-                                        activity: day.activity_title,
-                                        total_clicks: (day.restaurant.total_clicks || 0) + 1
-                                      });
-                                    } catch (error) {
-                                      console.error('Error tracking click:', error);
-                                      // Still open the link even if tracking fails
-                                      window.open(day.restaurant.partner_link, '_blank');
-                                    }
-                                  }}
+                                  onClick={() => setExpandedRestaurantId(expandedRestaurantId === day.restaurant.id ? null : day.restaurant.id)}
                                 >
-                                  Подробнее
+                                  {expandedRestaurantId === day.restaurant.id ? (
+                                    <>Скрыть <ChevronUp className="h-4 w-4 ml-1" /></>
+                                  ) : (
+                                    <>Подробнее <ChevronDown className="h-4 w-4 ml-1" /></>
+                                  )}
                                 </Button>
                               )}
                             </div>
+                            
+                            {expandedRestaurantId === day.restaurant.id && (
+                              <div className="mt-4 space-y-3 pl-6 border-l-2 border-muted">
+                                {day.restaurant.image_url && (
+                                  <div className="w-full sm:w-48 h-32 rounded-lg overflow-hidden">
+                                    <img 
+                                      src={day.restaurant.image_url} 
+                                      alt={day.restaurant.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                )}
+                                
+                                {day.restaurant.description && (
+                                  <p className="text-sm text-muted-foreground">{day.restaurant.description}</p>
+                                )}
+                                
+                                <div className="flex flex-wrap gap-2">
+                                  {day.restaurant.price_range && (
+                                    <Badge variant="secondary">{day.restaurant.price_range}</Badge>
+                                  )}
+                                  {day.restaurant.cuisine_type && (
+                                    <Badge variant="outline">{day.restaurant.cuisine_type}</Badge>
+                                  )}
+                                  {day.restaurant.category && (
+                                    <Badge variant="outline">{day.restaurant.category}</Badge>
+                                  )}
+                                </div>
+                                
+                                {day.restaurant.partner_link && (
+                                  <Button
+                                    size="sm"
+                                    onClick={async () => {
+                                      try {
+                                        await supabase
+                                          .from('restaurant_recommendations')
+                                          .update({ total_clicks: (day.restaurant.total_clicks || 0) + 1 })
+                                          .eq('id', day.restaurant.id);
+                                        
+                                        window.open(day.restaurant.partner_link, '_blank');
+                                        
+                                        console.log('Restaurant click tracked:', {
+                                          restaurant: day.restaurant.name,
+                                          activity: day.activity_title,
+                                          total_clicks: (day.restaurant.total_clicks || 0) + 1
+                                        });
+                                      } catch (error) {
+                                        console.error('Error tracking click:', error);
+                                        window.open(day.restaurant.partner_link, '_blank');
+                                      }
+                                    }}
+                                  >
+                                    Открыть сайт ресторана
+                                  </Button>
+                                )}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
