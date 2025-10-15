@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, MapPin, Clock, Calendar, UtensilsCrossed } from "lucide-react";
+import { Loader2, MapPin, Clock, Calendar, UtensilsCrossed, Plus } from "lucide-react";
 
 const TravelPage = () => {
   const { roomData } = useRoomData();
@@ -141,35 +141,42 @@ const TravelPage = () => {
                           <p className="text-gray-600 mt-1">{day.activity_description}</p>
                         </div>
                         
-                          {day.service_title && (
+                          {day.service && (
                             <div className="bg-blue-50 p-4 rounded-lg">
                               <div className="flex flex-col sm:flex-row gap-4">
-                                {(() => {
-                                  const match = services.find(s => s.title && day.service_title && s.title.toLowerCase().trim() === day.service_title.toLowerCase().trim());
-                                  const imageUrl = day.service_image_url || match?.image_url || null;
-                                  return imageUrl ? (
-                                    <div className="w-full sm:w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
-                                      <img 
-                                        src={imageUrl} 
-                                        alt={day.service_title}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                  ) : null;
-                                })()}
+                                {day.service.image_url && (
+                                  <div className="w-full sm:w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                                    <img 
+                                      src={day.service.image_url} 
+                                      alt={day.service.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                )}
                                 
                                 <div className="flex-1 min-w-0">
-                                  <h5 className="font-medium text-blue-900">{day.service_title}</h5>
-                                  <p className="text-blue-700 text-sm mt-1">{day.service_description}</p>
+                                  <h5 className="font-medium text-blue-900">{day.service.title}</h5>
+                                  <p className="text-blue-700 text-sm mt-1">{day.service.description}</p>
                                   <div className="flex items-center gap-4 mt-2 flex-wrap">
-                                    {day.service_price && (
-                                      <Badge variant="secondary">{day.service_price} ₽</Badge>
-                                    )}
-                                    {day.duration_hours && (
+                                    <Badge variant="secondary">
+                                      {day.service_price_override || day.service.base_price} ₽
+                                    </Badge>
+                                    {day.service.duration_hours && (
                                       <span className="text-sm text-blue-600 flex items-center gap-1">
                                         <Clock className="h-3 w-3" />
-                                        {day.duration_hours} часов
+                                        {day.service.duration_hours} часов
                                       </span>
+                                    )}
+                                    {day.is_service_available && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleServiceToggle(day.service!)}
+                                        className={selectedServices.some(s => s.id === day.service!.id) ? "bg-blue-100" : ""}
+                                      >
+                                        <Plus className="h-3 w-3 mr-1" />
+                                        Добавить в заказ
+                                      </Button>
                                     )}
                                   </div>
                                 </div>

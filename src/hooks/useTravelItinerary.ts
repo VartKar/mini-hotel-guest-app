@@ -17,26 +17,36 @@ export interface RestaurantRecommendation {
   total_clicks: number;
 }
 
+export interface TravelService {
+  id: string;
+  title: string;
+  description: string | null;
+  base_price: number;
+  category: string | null;
+  city: string;
+  difficulty_level: string | null;
+  duration_hours: number | null;
+  image_url: string | null;
+  is_active: boolean;
+}
+
 export interface TravelItinerary {
   id: string;
   booking_id_key: string | null;
   day_number: number;
   activity_title: string;
   activity_description: string | null;
-  service_title: string | null;
-  service_description: string | null;
-  service_price: number | null;
-  service_image_url?: string | null;
+  travel_service_id: string | null;
+  service_price_override: number | null;
   icon_type: string | null;
   is_service_available: boolean | null;
   created_at: string;
   updated_at: string;
   city: string | null;
   activity_category: string | null;
-  difficulty_level: string | null;
-  duration_hours: number | null;
   restaurant_id: string | null;
   restaurant?: RestaurantRecommendation;
+  service?: TravelService;
 }
 
 export interface TravelItineraryWithIcon extends TravelItinerary {
@@ -161,7 +171,8 @@ export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: str
         .from('travel_itineraries')
         .select(`
           *,
-          restaurant:restaurant_recommendations(*)
+          restaurant:restaurant_recommendations(*),
+          service:travel_services(*)
         `)
         .is('booking_id_key', null)
         .order('day_number');

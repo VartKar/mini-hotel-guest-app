@@ -26,6 +26,10 @@ const DatabaseManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const { uploadImage } = useImageUpload();
+  const [relatedData, setRelatedData] = useState<{
+    travel_services: any[];
+    restaurant_recommendations: any[];
+  }>({ travel_services: [], restaurant_recommendations: [] });
 
   const tables = [
     { value: 'rooms', label: 'Номера' },
@@ -43,7 +47,36 @@ const DatabaseManagement = () => {
 
   useEffect(() => {
     fetchData();
+    fetchRelatedData();
   }, [selectedTable]);
+
+  const fetchRelatedData = async () => {
+    if (selectedTable === 'travel_itineraries') {
+      try {
+        const [servicesRes, restaurantsRes] = await Promise.all([
+          supabase
+            .from('travel_services')
+            .select('id, title, city, base_price')
+            .eq('is_active', true)
+            .order('city', { ascending: true })
+            .order('title', { ascending: true }),
+          supabase
+            .from('restaurant_recommendations')
+            .select('id, name, city')
+            .eq('is_active', true)
+            .order('city', { ascending: true })
+            .order('name', { ascending: true })
+        ]);
+
+        setRelatedData({
+          travel_services: servicesRes.data || [],
+          restaurant_recommendations: restaurantsRes.data || []
+        });
+      } catch (error) {
+        console.error('Error fetching related data:', error);
+      }
+    }
+  };
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -88,6 +121,12 @@ const DatabaseManagement = () => {
       
       // Convert FormData to object
       for (const [key, value] of formData.entries()) {
+        // Handle NULL values for FK fields (travel_service_id, restaurant_id)
+        if (value === 'null') {
+          recordData[key] = null;
+          continue;
+        }
+        
         if (key.includes('json_') && value) {
           try {
             recordData[key.replace('json_', '')] = JSON.parse(value as string);
@@ -172,9 +211,46 @@ const DatabaseManagement = () => {
   const renderFormField = (key: string, value: any) => {
     const fieldType = typeof value;
     
-    // Handle image_url field specially for shop_items, travel_services, and travel_itineraries tables
-    if ((key === 'image_url' && (selectedTable === 'shop_items' || selectedTable === 'travel_services')) ||
-        (key === 'service_image_url' && selectedTable === 'travel_itineraries')) {
+    // Handle travel_service_id for travel_itineraries
+    if (selectedTable === 'travel_itineraries' && key === 'travel_service_id') {
+      return (
+        <Select name={key} defaultValue={value || 'null'}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="null">(Без услуги)</SelectItem>
+            {relatedData.travel_services.map(s => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.title} ({s.city}) - {s.base_price} ₽
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    }
+    
+    // Handle restaurant_id for travel_itineraries
+    if (selectedTable === 'travel_itineraries' && key === 'restaurant_id') {
+      return (
+        <Select name={key} defaultValue={value || 'null'}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="null">(Без ресторана)</SelectItem>
+            {relatedData.restaurant_recommendations.map(r => (
+              <SelectItem key={r.id} value={r.id}>
+                {r.name} ({r.city})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    }
+    
+    // Handle image_url field specially for shop_items, travel_services tables
+    if (key === 'image_url' && (selectedTable === 'shop_items' || selectedTable === 'travel_services')) {
       return (
         <div className="space-y-3">
           {/* Current image preview */}

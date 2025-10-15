@@ -621,16 +621,12 @@ export type Database = {
           city: string | null
           created_at: string
           day_number: number
-          difficulty_level: string | null
-          duration_hours: number | null
           icon_type: string | null
           id: string
           is_service_available: boolean | null
           restaurant_id: string | null
-          service_description: string | null
-          service_image_url: string | null
-          service_price: number | null
-          service_title: string | null
+          service_price_override: number | null
+          travel_service_id: string | null
           updated_at: string
         }
         Insert: {
@@ -641,16 +637,12 @@ export type Database = {
           city?: string | null
           created_at?: string
           day_number: number
-          difficulty_level?: string | null
-          duration_hours?: number | null
           icon_type?: string | null
           id?: string
           is_service_available?: boolean | null
           restaurant_id?: string | null
-          service_description?: string | null
-          service_image_url?: string | null
-          service_price?: number | null
-          service_title?: string | null
+          service_price_override?: number | null
+          travel_service_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -661,19 +653,22 @@ export type Database = {
           city?: string | null
           created_at?: string
           day_number?: number
-          difficulty_level?: string | null
-          duration_hours?: number | null
           icon_type?: string | null
           id?: string
           is_service_available?: boolean | null
           restaurant_id?: string | null
-          service_description?: string | null
-          service_image_url?: string | null
-          service_price?: number | null
-          service_title?: string | null
+          service_price_override?: number | null
+          travel_service_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_travel_itineraries_service"
+            columns: ["travel_service_id"]
+            isOneToOne: false
+            referencedRelation: "travel_services"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "travel_itineraries_restaurant_id_fkey"
             columns: ["restaurant_id"]
