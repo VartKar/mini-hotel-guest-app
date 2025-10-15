@@ -142,44 +142,31 @@ const TravelPage = () => {
                         </div>
                         
                           {day.service && (
-                            <div className="bg-blue-50 p-4 rounded-lg">
-                              <div className="flex flex-col sm:flex-row gap-4">
-                                {day.service.image_url && (
-                                  <div className="w-full sm:w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
-                                    <img 
-                                      src={day.service.image_url} 
-                                      alt={day.service.title}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  </div>
-                                )}
-                                
+                            <div className="mt-4 pt-4 border-t">
+                              <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1 min-w-0">
-                                  <h5 className="font-medium text-blue-900">{day.service.title}</h5>
-                                  <p className="text-blue-700 text-sm mt-1">{day.service.description}</p>
-                                  <div className="flex items-center gap-4 mt-2 flex-wrap">
-                                    <Badge variant="secondary">
-                                      {day.service_price_override || day.service.base_price} ₽
-                                    </Badge>
-                                    {day.service.duration_hours && (
-                                      <span className="text-sm text-blue-600 flex items-center gap-1">
-                                        <Clock className="h-3 w-3" />
-                                        {day.service.duration_hours} часов
-                                      </span>
-                                    )}
-                                    {day.is_service_available && (
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleServiceToggle(day.service!)}
-                                        className={selectedServices.some(s => s.id === day.service!.id) ? "bg-blue-100" : ""}
-                                      >
-                                        <Plus className="h-3 w-3 mr-1" />
-                                        Добавить в заказ
-                                      </Button>
-                                    )}
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-xs text-muted-foreground uppercase tracking-wide">Чем дополнить</span>
                                   </div>
+                                  <p className="text-sm font-medium">{day.service.title}</p>
+                                  {day.service.duration_hours && (
+                                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                      <Clock className="h-3 w-3" />
+                                      {day.service.duration_hours} часов • {day.service_price_override || day.service.base_price} ₽
+                                    </p>
+                                  )}
                                 </div>
+                                {day.is_service_available && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="shrink-0"
+                                    onClick={() => handleServiceToggle(day.service!)}
+                                  >
+                                    {selectedServices.some(s => s.id === day.service!.id) ? "Убрать" : "Подробнее"}
+                                  </Button>
+                                )}
                               </div>
                             </div>
                         )}
