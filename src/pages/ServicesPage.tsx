@@ -65,14 +65,15 @@ const ServicesPage = () => {
         customer_name: customerName,
         customer_phone: customerPhone,
         customer_comment: customerComment,
-        selected_services: selectedServices,
+        ordered_items: selectedServices,
         total_amount: calculateTotal(),
         booking_id_key: roomData?.booking_id || null,
+        room_number: roomData?.room_number || null,
         order_status: 'pending'
       };
 
       const { error } = await supabase
-        .from('travel_service_orders')
+        .from('shop_orders')
         .insert([orderData]);
 
       if (error) throw error;
