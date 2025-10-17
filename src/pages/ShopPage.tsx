@@ -9,7 +9,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Minus, Plus, ShoppingCart } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Loader2, Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
+import { z } from "zod";
+
+const CART_STORAGE_KEY = "shop_cart";
+const MAX_QUANTITY = 99;
+
+const orderSchema = z.object({
+  customerName: z.string()
+    .trim()
+    .min(2, { message: "Имя должно содержать минимум 2 символа" })
+    .max(100, { message: "Имя не должно превышать 100 символов" }),
+  customerPhone: z.string()
+    .trim()
+    .regex(/^\+?7?\s?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$/, { 
+      message: "Введите корректный российский номер телефона" 
+    }),
+  customerComment: z.string()
+    .max(500, { message: "Комментарий не должен превышать 500 символов" })
+    .optional()
+});
 
 const ShopPage = () => {
   const { roomData } = useRoomData();
@@ -19,6 +40,24 @@ const ShopPage = () => {
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerComment, setCustomerComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
+
+  // Load cart from localStorage
+  useEffect(() => {
+    const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+    if (savedCart) {
+      try {
+        setCart(JSON.parse(savedCart));
+      } catch (error) {
+        console.error("Error loading cart from localStorage:", error);
+      }
+    }
+  }, []);
+
+  // Save cart to localStorage
+  useEffect(() => {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  }, [cart]);
 
   useEffect(() => {
     if (roomData?.guest_name) {
@@ -33,12 +72,18 @@ const ShopPage = () => {
     setCart(prev => {
       const existingItem = prev.find(cartItem => cartItem.id === item.id);
       if (existingItem) {
+        if (existingItem.quantity >= MAX_QUANTITY) {
+          toast.error(`Максимальное количество: ${MAX_QUANTITY} шт.`);
+          return prev;
+        }
+        toast.success(`${item.name} добавлен в корзину`);
         return prev.map(cartItem =>
           cartItem.id === item.id
             ? { ...cartItem, quantity: cartItem.quantity + 1 }
             : cartItem
         );
       } else {
+        toast.success(`${item.name} добавлен в корзину`);
         return [...prev, { ...item, quantity: 1 }];
       }
     });
@@ -59,6 +104,26 @@ const ShopPage = () => {
     });
   };
 
+  const removeItemCompletely = (itemId: string) => {
+    setCart(prev => prev.filter(cartItem => cartItem.id !== itemId));
+    toast.success("Товар удален из корзины");
+  };
+
+  const clearCart = () => {
+    setCart([]);
+    toast.success("Корзина очищена");
+  };
+
+  const updateQuantity = (itemId: string, newQuantity: number) => {
+    if (newQuantity < 1 || newQuantity > MAX_QUANTITY) return;
+    
+    setCart(prev => prev.map(cartItem =>
+      cartItem.id === itemId
+        ? { ...cartItem, quantity: newQuantity }
+        : cartItem
+    ));
+  };
+
   const calculateTotal = () => {
     return cart.reduce((total, item) => total + (item.base_price * item.quantity), 0);
   };
@@ -71,8 +136,16 @@ const ShopPage = () => {
       return;
     }
 
-    if (!customerName.trim() || !customerPhone.trim()) {
-      toast.error("Пожалуйста, заполните имя и телефон");
+    // Validate form data
+    const validation = orderSchema.safeParse({
+      customerName,
+      customerPhone,
+      customerComment
+    });
+
+    if (!validation.success) {
+      const firstError = validation.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
 
@@ -80,9 +153,9 @@ const ShopPage = () => {
     
     try {
       const orderData = {
-        customer_name: customerName,
-        customer_phone: customerPhone,
-        customer_comment: customerComment,
+        customer_name: customerName.trim(),
+        customer_phone: customerPhone.trim(),
+        customer_comment: customerComment.trim(),
         ordered_items: cart,
         total_amount: calculateTotal(),
         booking_id_key: roomData?.booking_id || null,
@@ -98,11 +171,13 @@ const ShopPage = () => {
 
       toast.success("Заказ успешно отправлен!");
       
-      // Reset form
+      // Reset form and clear localStorage
       setCart([]);
+      localStorage.removeItem(CART_STORAGE_KEY);
       setCustomerComment("");
       if (!roomData?.guest_name) setCustomerName("");
       if (!roomData?.guest_phone) setCustomerPhone("");
+      setIsMobileCartOpen(false);
       
     } catch (error) {
       console.error('Error submitting order:', error);
@@ -110,6 +185,10 @@ const ShopPage = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const getTotalItems = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
   if (loading) {
@@ -120,16 +199,171 @@ const ShopPage = () => {
     );
   }
 
+  const CartContent = () => (
+    <>
+      {cart.length === 0 ? (
+        <p className="text-muted-foreground text-center py-4">Корзина пуста</p>
+      ) : (
+        <>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm text-muted-foreground">
+              {getTotalItems()} {getTotalItems() === 1 ? 'товар' : getTotalItems() < 5 ? 'товара' : 'товаров'}
+            </p>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 text-xs">
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Очистить
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Очистить корзину?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Все товары будут удалены из корзины. Это действие нельзя отменить.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Отмена</AlertDialogCancel>
+                  <AlertDialogAction onClick={clearCart}>Очистить</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+
+          <div className="space-y-3 mb-4">
+            {cart.map((item) => (
+              <div key={item.id} className="flex justify-between items-start gap-2 p-2 rounded-lg border">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{item.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {item.base_price} ₽ × {item.quantity}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <p className="font-medium text-sm">{item.base_price * item.quantity} ₽</p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => removeItemCompletely(item.id)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="border-t pt-4 mb-4">
+            <div className="flex justify-between items-center font-medium text-lg">
+              <span>Итого:</span>
+              <span>{calculateTotal()} ₽</span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Имя *</label>
+              <Input
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Ваше имя"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Телефон *</label>
+              <Input
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                placeholder="+7 (999) 123-45-67"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Комментарий</label>
+              <Textarea
+                value={customerComment}
+                onChange={(e) => setCustomerComment(e.target.value)}
+                placeholder="Дополнительные пожелания..."
+                rows={3}
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {customerComment.length}/500
+              </p>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="w-full"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Отправляем заказ...
+                </>
+              ) : (
+                "Оформить заказ"
+              )}
+            </Button>
+          </form>
+        </>
+      )}
+    </>
+  );
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">Магазин</h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold">Магазин</h1>
+          
+          {/* Mobile Cart Button */}
+          <Sheet open={isMobileCartOpen} onOpenChange={setIsMobileCartOpen}>
+            <SheetTrigger asChild>
+              <Button className="lg:hidden relative" size="sm">
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Корзина
+                {cart.length > 0 && (
+                  <Badge className="ml-2 h-5 w-5 flex items-center justify-center p-0 rounded-full" variant="secondary">
+                    {getTotalItems()}
+                  </Badge>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <ShoppingCart className="h-5 w-5" />
+                  Корзина
+                </SheetTitle>
+              </SheetHeader>
+              <div className="mt-6">
+                <CartContent />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
         
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Items Grid */}
           <div className="lg:col-span-2">
-            <div className="grid gap-4">
-              {items.map((item) => (
+            {items.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-lg font-medium mb-2">Товаров пока нет</p>
+                  <p className="text-sm text-muted-foreground">
+                    Скоро здесь появятся товары
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {items.map((item) => (
                 <Card key={item.id}>
                   <CardContent className="p-0">
                     <div className="flex gap-4">
@@ -165,9 +399,21 @@ const ShopPage = () => {
                             >
                               <Minus className="h-4 w-4" />
                             </Button>
-                            <span className="w-8 text-center font-medium">
-                              {cart.find(cartItem => cartItem.id === item.id)?.quantity || 0}
-                            </span>
+                            <Input
+                              type="number"
+                              min="0"
+                              max={MAX_QUANTITY}
+                              value={cart.find(cartItem => cartItem.id === item.id)?.quantity || 0}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value) || 0;
+                                if (value === 0) {
+                                  removeItemCompletely(item.id);
+                                } else {
+                                  updateQuantity(item.id, value);
+                                }
+                              }}
+                              className="w-16 text-center h-8 px-2"
+                            />
                             <Button
                               variant="outline"
                               size="sm"
@@ -181,12 +427,13 @@ const ShopPage = () => {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Cart */}
-          <div className="lg:col-span-1">
+          {/* Desktop Cart */}
+          <div className="hidden lg:block lg:col-span-1">
             <Card className="sticky top-4">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -195,77 +442,7 @@ const ShopPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {cart.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">Корзина пуста</p>
-                ) : (
-                  <>
-                    <div className="space-y-3 mb-4">
-                      {cart.map((item) => (
-                        <div key={item.id} className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium">{item.name}</p>
-                            <p className="text-sm text-gray-500">
-                              {item.base_price} ₽ × {item.quantity}
-                            </p>
-                          </div>
-                          <p className="font-medium">{item.base_price * item.quantity} ₽</p>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <div className="border-t pt-4 mb-4">
-                      <div className="flex justify-between items-center font-medium text-lg">
-                        <span>Итого:</span>
-                        <span>{calculateTotal()} ₽</span>
-                      </div>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Имя *</label>
-                        <Input
-                          value={customerName}
-                          onChange={(e) => setCustomerName(e.target.value)}
-                          placeholder="Ваше имя"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Телефон *</label>
-                        <Input
-                          value={customerPhone}
-                          onChange={(e) => setCustomerPhone(e.target.value)}
-                          placeholder="+7 (999) 123-45-67"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Комментарий</label>
-                        <Textarea
-                          value={customerComment}
-                          onChange={(e) => setCustomerComment(e.target.value)}
-                          placeholder="Дополнительные пожелания..."
-                          rows={3}
-                        />
-                      </div>
-
-                      <Button
-                        type="submit"
-                        disabled={submitting}
-                        className="w-full"
-                      >
-                        {submitting ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Отправляем заказ...
-                          </>
-                        ) : (
-                          "Оформить заказ"
-                        )}
-                      </Button>
-                    </form>
-                  </>
-                )}
+                <CartContent />
               </CardContent>
             </Card>
           </div>
