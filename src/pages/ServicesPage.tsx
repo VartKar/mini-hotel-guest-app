@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useHotelServices } from "@/hooks/useHotelServices";
+import { useCart, CartItem } from "@/hooks/useCart";
+import { CartAuthPrompt } from "@/components/cart/CartAuthPrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,12 +12,23 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Phone, Mail, Clock, Star, MapPin, Info } from "lucide-react";
-import { Link } from "react-router-dom";
+
+interface ServiceCartItem extends CartItem {
+  category?: string;
+}
 
 const ServicesPage = () => {
   const { roomData, isPersonalized } = useRoomData();
   const { data: services = [], isLoading: loading } = useHotelServices();
-  const [selectedServices, setSelectedServices] = useState<any[]>([]);
+  
+  const {
+    items: selectedServices,
+    addItem,
+    removeItem,
+    clearCart,
+    calculateTotal,
+  } = useCart<ServiceCartItem>({ withQuantity: false });
+
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerComment, setCustomerComment] = useState("");
@@ -32,18 +45,17 @@ const ServicesPage = () => {
   }, [roomData]);
 
   const handleServiceToggle = (service: any) => {
-    setSelectedServices(prev => {
-      const isSelected = prev.some(s => s.id === service.id);
-      if (isSelected) {
-        return prev.filter(s => s.id !== service.id);
-      } else {
-        return [...prev, service];
-      }
-    });
-  };
-
-  const calculateTotal = () => {
-    return selectedServices.reduce((total, service) => total + Number(service.base_price), 0);
+    const isSelected = selectedServices.some(s => s.id === service.id);
+    if (isSelected) {
+      removeItem(service.id);
+    } else {
+      addItem({ 
+        id: service.id, 
+        name: service.title, 
+        price: service.base_price,
+        category: service.category || undefined
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,7 +79,11 @@ const ServicesPage = () => {
           customerName: customerName.trim(),
           customerPhone: customerPhone.trim(),
           roomNumber: roomData?.room_number || null,
-          services: selectedServices,
+          services: selectedServices.map(s => ({
+            id: s.id,
+            title: s.name,
+            base_price: s.price
+          })),
           bookingIdKey: roomData?.booking_record_id || null
         }
       });
@@ -76,8 +92,7 @@ const ServicesPage = () => {
 
       toast.success(`Заказ №${data.orderId} успешно создан! Мы свяжемся с вами в ближайшее время.`);
       
-      // Reset form
-      setSelectedServices([]);
+      clearCart();
       setCustomerComment("");
       if (!roomData?.guest_name) setCustomerName("");
       if (!roomData?.guest_phone) setCustomerPhone("");
@@ -199,8 +214,8 @@ const ServicesPage = () => {
                     <h3 className="font-medium mb-2">Выбранные услуги:</h3>
                     {selectedServices.map((service) => (
                       <div key={service.id} className="flex justify-between items-center mb-1">
-                        <span>{service.title}</span>
-                        <span>{service.base_price > 0 ? `${service.base_price} ₽` : 'Бесплатно'}</span>
+                        <span>{service.name}</span>
+                        <span>{service.price > 0 ? `${service.price} ₽` : 'Бесплатно'}</span>
                       </div>
                     ))}
                     <div className="border-t pt-2 mt-2">
@@ -212,16 +227,7 @@ const ServicesPage = () => {
                   </div>
 
                   {!isPersonalized ? (
-                    <div className="text-center space-y-3">
-                      <p className="text-sm text-muted-foreground">
-                        Для оформления заказа необходимо авторизоваться
-                      </p>
-                      <Link to="/feedback">
-                        <Button variant="outline" className="w-full">
-                          Перейти в личный кабинет
-                        </Button>
-                      </Link>
-                    </div>
+                    <CartAuthPrompt />
                   ) : (
                     <Button
                       type="submit"

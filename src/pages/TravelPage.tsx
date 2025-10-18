@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useTravelItinerary } from "@/hooks/useTravelItinerary";
 import { useTravelServices } from "@/hooks/useTravelServices";
+import { useCart, CartItem } from "@/hooks/useCart";
+import { CartAuthPrompt } from "@/components/cart/CartAuthPrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,13 +14,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, MapPin, Clock, Calendar, UtensilsCrossed, Plus, ChevronDown, ChevronUp } from "lucide-react";
-import { Link } from "react-router-dom";
+
+interface TravelCartItem extends CartItem {
+  duration_hours?: number;
+  category?: string;
+}
 
 const TravelPage = () => {
   const { roomData, isPersonalized } = useRoomData();
   const { itineraries, isLoading: itineraryLoading } = useTravelItinerary(roomData?.booking_id, roomData?.city || 'Сочи', roomData?.property_id);
   const { data: services = [], isLoading: servicesLoading } = useTravelServices(roomData?.city || 'Сочи');
-  const [selectedServices, setSelectedServices] = useState<any[]>([]);
+  
+  const {
+    items: selectedServices,
+    addItem,
+    removeItem,
+    clearCart,
+    calculateTotal,
+  } = useCart<TravelCartItem>({ withQuantity: false });
+
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerComment, setCustomerComment] = useState("");
@@ -36,18 +50,18 @@ const TravelPage = () => {
   }, [roomData]);
 
   const handleServiceToggle = (service: any) => {
-    setSelectedServices(prev => {
-      const isSelected = prev.some(s => s.id === service.id);
-      if (isSelected) {
-        return prev.filter(s => s.id !== service.id);
-      } else {
-        return [...prev, service];
-      }
-    });
-  };
-
-  const calculateTotal = () => {
-    return selectedServices.reduce((total, service) => total + Number(service.base_price), 0);
+    const isSelected = selectedServices.some(s => s.id === service.id);
+    if (isSelected) {
+      removeItem(service.id);
+    } else {
+      addItem({ 
+        id: service.id, 
+        name: service.title, 
+        price: service.base_price,
+        duration_hours: service.duration_hours || undefined,
+        category: service.category || undefined
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,7 +85,11 @@ const TravelPage = () => {
           customerName: customerName.trim(),
           customerPhone: customerPhone.trim(),
           customerComment: customerComment.trim() || null,
-          services: selectedServices,
+          services: selectedServices.map(s => ({
+            id: s.id,
+            title: s.name,
+            base_price: s.price
+          })),
           totalPrice: calculateTotal(),
           bookingIdKey: roomData?.booking_record_id || null
         }
@@ -81,8 +99,7 @@ const TravelPage = () => {
 
       toast.success(`Заказ №${data.orderId} успешно создан! Мы свяжемся с вами в ближайшее время.`);
       
-      // Reset form
-      setSelectedServices([]);
+      clearCart();
       setCustomerComment("");
       if (!roomData?.guest_name) setCustomerName("");
       if (!roomData?.guest_phone) setCustomerPhone("");
@@ -408,8 +425,8 @@ const TravelPage = () => {
                         <h3 className="font-medium mb-2 text-sm sm:text-base">Выбранные услуги:</h3>
                         {selectedServices.map((service) => (
                           <div key={service.id} className="flex justify-between items-center mb-1 text-xs sm:text-sm">
-                            <span className="truncate mr-2">{service.title}</span>
-                            <span className="font-medium whitespace-nowrap">{service.base_price} ₽</span>
+                            <span className="truncate mr-2">{service.name}</span>
+                            <span className="font-medium whitespace-nowrap">{service.price} ₽</span>
                           </div>
                         ))}
                         <div className="border-t pt-2 mt-2">
@@ -421,16 +438,7 @@ const TravelPage = () => {
                       </div>
 
                       {!isPersonalized ? (
-                        <div className="text-center space-y-3">
-                          <p className="text-sm text-muted-foreground">
-                            Для оформления заказа необходимо авторизоваться
-                          </p>
-                          <Link to="/feedback">
-                            <Button variant="outline" className="w-full">
-                              Перейти в личный кабинет
-                            </Button>
-                          </Link>
-                        </div>
+                        <CartAuthPrompt />
                       ) : (
                         <Button
                           type="submit"

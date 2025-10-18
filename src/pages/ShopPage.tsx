@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useShopItems } from "@/hooks/useShopItems";
+import { useCart, CartItem } from "@/hooks/useCart";
+import { CartAuthPrompt } from "@/components/cart/CartAuthPrompt";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,10 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Loader2, Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
-import { Link } from "react-router-dom";
 import { z } from "zod";
 
-const CART_STORAGE_KEY = "shop_cart";
 const MAX_QUANTITY = 99;
 
 const orderSchema = z.object({
@@ -32,32 +32,31 @@ const orderSchema = z.object({
     .optional()
 });
 
+interface ShopCartItem extends CartItem {
+  category: string;
+  image_url?: string;
+}
+
 const ShopPage = () => {
   const { roomData, isPersonalized } = useRoomData();
   const { data: items = [], isLoading: loading } = useShopItems();
-  const [cart, setCart] = useState<any[]>([]);
+  
+  const {
+    items: cart,
+    addItem,
+    removeItem,
+    removeItemCompletely,
+    updateQuantity,
+    clearCart,
+    calculateTotal,
+    getTotalItems,
+  } = useCart<ShopCartItem>({ storageKey: "shop_cart", withQuantity: true });
+
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerComment, setCustomerComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
-
-  // Load cart from localStorage
-  useEffect(() => {
-    const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart));
-      } catch (error) {
-        console.error("Error loading cart from localStorage:", error);
-      }
-    }
-  }, []);
-
-  // Save cart to localStorage
-  useEffect(() => {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-  }, [cart]);
 
   useEffect(() => {
     if (roomData?.guest_name) {
@@ -69,63 +68,29 @@ const ShopPage = () => {
   }, [roomData]);
 
   const addToCart = (item: any) => {
-    setCart(prev => {
-      const existingItem = prev.find(cartItem => cartItem.id === item.id);
-      if (existingItem) {
-        if (existingItem.quantity >= MAX_QUANTITY) {
-          toast.error(`Максимальное количество: ${MAX_QUANTITY} шт.`);
-          return prev;
-        }
-        toast.success(`${item.name} добавлен в корзину`);
-        return prev.map(cartItem =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
-        );
-      } else {
-        toast.success(`${item.name} добавлен в корзину`);
-        return [...prev, { ...item, quantity: 1 }];
-      }
+    const existingItem = cart.find(cartItem => cartItem.id === item.id);
+    if (existingItem && (existingItem.quantity || 0) >= MAX_QUANTITY) {
+      toast.error(`Максимальное количество: ${MAX_QUANTITY} шт.`);
+      return;
+    }
+    addItem({ 
+      id: item.id, 
+      name: item.name, 
+      price: item.base_price,
+      category: item.category,
+      image_url: item.image_url
     });
+    toast.success(`${item.name} добавлен в корзину`);
   };
 
-  const removeFromCart = (itemId: string) => {
-    setCart(prev => {
-      const existingItem = prev.find(cartItem => cartItem.id === itemId);
-      if (existingItem && existingItem.quantity > 1) {
-        return prev.map(cartItem =>
-          cartItem.id === itemId
-            ? { ...cartItem, quantity: cartItem.quantity - 1 }
-            : cartItem
-        );
-      } else {
-        return prev.filter(cartItem => cartItem.id !== itemId);
-      }
-    });
-  };
-
-  const removeItemCompletely = (itemId: string) => {
-    setCart(prev => prev.filter(cartItem => cartItem.id !== itemId));
+  const handleRemoveItem = (itemId: string) => {
+    removeItemCompletely(itemId);
     toast.success("Товар удален из корзины");
   };
 
-  const clearCart = () => {
-    setCart([]);
+  const handleClearCart = () => {
+    clearCart();
     toast.success("Корзина очищена");
-  };
-
-  const updateQuantity = (itemId: string, newQuantity: number) => {
-    if (newQuantity < 1 || newQuantity > MAX_QUANTITY) return;
-    
-    setCart(prev => prev.map(cartItem =>
-      cartItem.id === itemId
-        ? { ...cartItem, quantity: newQuantity }
-        : cartItem
-    ));
-  };
-
-  const calculateTotal = () => {
-    return cart.reduce((total, item) => total + (item.base_price * item.quantity), 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,7 +126,12 @@ const ShopPage = () => {
         customer_name: customerName.trim(),
         customer_phone: customerPhone.trim(),
         customer_comment: customerComment.trim(),
-        ordered_items: cart,
+        ordered_items: cart.map(item => ({
+          item_id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity || 1
+        })),
         total_amount: calculateTotal(),
         booking_id_key: roomData?.booking_record_id || null,
         room_number: roomData?.room_number || null,
@@ -176,9 +146,7 @@ const ShopPage = () => {
 
       toast.success("Заказ успешно отправлен!");
       
-      // Reset form and clear localStorage
-      setCart([]);
-      localStorage.removeItem(CART_STORAGE_KEY);
+      clearCart();
       setCustomerComment("");
       if (!roomData?.guest_name) setCustomerName("");
       if (!roomData?.guest_phone) setCustomerPhone("");
@@ -192,9 +160,6 @@ const ShopPage = () => {
     }
   };
 
-  const getTotalItems = () => {
-    return cart.reduce((total, item) => total + item.quantity, 0);
-  };
 
   if (loading) {
     return (
@@ -230,7 +195,7 @@ const ShopPage = () => {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Отмена</AlertDialogCancel>
-                  <AlertDialogAction onClick={clearCart}>Очистить</AlertDialogAction>
+                  <AlertDialogAction onClick={handleClearCart}>Очистить</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
@@ -242,16 +207,16 @@ const ShopPage = () => {
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm truncate">{item.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {item.base_price} ₽ × {item.quantity}
+                    {item.price} ₽ × {item.quantity || 1}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <p className="font-medium text-sm">{item.base_price * item.quantity} ₽</p>
+                  <p className="font-medium text-sm">{item.price * (item.quantity || 1)} ₽</p>
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-7 w-7 p-0"
-                    onClick={() => removeItemCompletely(item.id)}
+                    onClick={() => handleRemoveItem(item.id)}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -299,16 +264,7 @@ const ShopPage = () => {
             </div>
 
             {!isPersonalized ? (
-              <div className="text-center space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Для оформления заказа необходимо авторизоваться
-                </p>
-                <Link to="/feedback">
-                  <Button variant="outline" className="w-full">
-                    Перейти в личный кабинет
-                  </Button>
-                </Link>
-              </div>
+              <CartAuthPrompt />
             ) : (
               <Button
                 type="submit"
@@ -410,7 +366,7 @@ const ShopPage = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => removeFromCart(item.id)}
+                              onClick={() => removeItem(item.id)}
                               disabled={!cart.find(cartItem => cartItem.id === item.id)}
                             >
                               <Minus className="h-4 w-4" />
