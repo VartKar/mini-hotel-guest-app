@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, User, Loader2, MessageSquare } from "lucide-react";
 import { useHostData, HostBooking } from "@/hooks/useHostData";
 import { toast } from "sonner";
+import HotelServiceOrders from "@/components/host/HotelServiceOrders";
+import TravelServiceOrders from "@/components/host/TravelServiceOrders";
 
 const HostPage = () => {
   const { hostData, loading, error, isAuthenticated, loginWithEmail, logout, requestChange } = useHostData();
@@ -203,6 +205,12 @@ const HostPage = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Hotel Service Orders */}
+          <HotelServiceOrders hostEmail={hostData?.host_email || ''} />
+
+          {/* Travel Service Orders */}
+          <TravelServiceOrders hostEmail={hostData?.host_email || ''} />
 
           {/* Change Request Form */}
           {selectedBooking && (

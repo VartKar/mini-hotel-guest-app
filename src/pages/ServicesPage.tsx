@@ -61,24 +61,19 @@ const ServicesPage = () => {
     setSubmitting(true);
     
     try {
-      const orderData = {
-        customer_name: customerName,
-        customer_phone: customerPhone,
-        customer_comment: customerComment,
-        ordered_items: selectedServices,
-        total_amount: calculateTotal(),
-        booking_id_key: roomData?.booking_id || null,
-        room_number: roomData?.room_number || null,
-        order_status: 'pending'
-      };
-
-      const { error } = await supabase
-        .from('shop_orders')
-        .insert([orderData]);
+      const { data, error } = await supabase.functions.invoke('submit-service-order', {
+        body: {
+          customerName: customerName.trim(),
+          customerPhone: customerPhone.trim(),
+          roomNumber: roomData?.room_number || null,
+          services: selectedServices,
+          bookingIdKey: roomData?.booking_record_id || null
+        }
+      });
 
       if (error) throw error;
 
-      toast.success("Заказ успешно отправлен!");
+      toast.success(`Заказ №${data.orderId} успешно создан! Мы свяжемся с вами в ближайшее время.`);
       
       // Reset form
       setSelectedServices([]);

@@ -65,23 +65,20 @@ const TravelPage = () => {
     setSubmitting(true);
     
     try {
-      const orderData = {
-        customer_name: customerName,
-        customer_phone: customerPhone,
-        customer_comment: customerComment,
-        selected_services: selectedServices,
-        total_amount: calculateTotal(),
-        booking_id_key: roomData?.booking_id || null,
-        order_status: 'pending'
-      };
-
-      const { error } = await supabase
-        .from('travel_service_orders')
-        .insert([orderData]);
+      const { data, error } = await supabase.functions.invoke('submit-travel-order', {
+        body: {
+          customerName: customerName.trim(),
+          customerPhone: customerPhone.trim(),
+          customerComment: customerComment.trim() || null,
+          services: selectedServices,
+          totalPrice: calculateTotal(),
+          bookingIdKey: roomData?.booking_record_id || null
+        }
+      });
 
       if (error) throw error;
 
-      toast.success("Заказ успешно отправлен!");
+      toast.success(`Заказ №${data.orderId} успешно создан! Мы свяжемся с вами в ближайшее время.`);
       
       // Reset form
       setSelectedServices([]);

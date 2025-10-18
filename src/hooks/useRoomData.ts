@@ -29,7 +29,8 @@ export interface RoomData {
   property_manager_email: string | null;
   
   // Booking details (from bookings table, if applicable)
-  booking_id: string | null;
+  booking_id: string | null; // Текстовый код бронирования (например "book_013")
+  booking_record_id: string | null; // UUID записи из bookings.id
   guest_name: string | null;
   guest_email: string | null;
   guest_phone: string | null;
@@ -191,6 +192,7 @@ export const useRoomData = () => {
       const combinedData: RoomData = {
         ...roomData,
         booking_id: null,
+        booking_record_id: null,
         guest_name: null,
         guest_email: null,
         guest_phone: null,
@@ -260,6 +262,7 @@ export const useRoomData = () => {
       const combinedData: RoomData = {
         ...bookingData.rooms,
         booking_id: bookingData.booking_id,
+        booking_record_id: bookingData.id, // UUID из bookings.id
         guest_name: bookingData.guest_name,
         guest_email: bookingData.guest_email,
         guest_phone: bookingData.guest_phone,

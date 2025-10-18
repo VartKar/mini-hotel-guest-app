@@ -22,6 +22,28 @@ serve(async (req) => {
 
     console.log('Received service order:', { customerName, customerPhone, services })
 
+    // Валидация
+    if (!customerName || customerName.trim().length < 2 || customerName.trim().length > 100) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Имя должно содержать от 2 до 100 символов' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
+    if (!customerPhone || customerPhone.trim().length < 10) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Введите корректный номер телефона' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
+    if (!services || !Array.isArray(services) || services.length === 0) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Выберите хотя бы одну услугу' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
     // Insert the order into the database
     const { data: orderData, error: orderError } = await supabaseClient
       .from('shop_orders')
