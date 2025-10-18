@@ -12,9 +12,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, MapPin, Clock, Calendar, UtensilsCrossed, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const TravelPage = () => {
-  const { roomData } = useRoomData();
+  const { roomData, isPersonalized } = useRoomData();
   const { itineraries, isLoading: itineraryLoading } = useTravelItinerary(roomData?.booking_id, roomData?.city || 'Сочи', roomData?.property_id);
   const { data: services = [], isLoading: servicesLoading } = useTravelServices(roomData?.city || 'Сочи');
   const [selectedServices, setSelectedServices] = useState<any[]>([]);
@@ -51,6 +52,11 @@ const TravelPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!isPersonalized) {
+      toast.error("Для оформления заказа необходимо авторизоваться");
+      return;
+    }
     
     if (selectedServices.length === 0) {
       toast.error("Пожалуйста, выберите хотя бы одну услугу");
@@ -414,20 +420,33 @@ const TravelPage = () => {
                         </div>
                       </div>
 
-                      <Button
-                        type="submit"
-                        disabled={submitting}
-                        className="w-full"
-                      >
-                        {submitting ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Отправляем заказ...
-                          </>
-                        ) : (
-                          "Отправить заказ"
-                        )}
-                      </Button>
+                      {!isPersonalized ? (
+                        <div className="text-center space-y-3">
+                          <p className="text-sm text-muted-foreground">
+                            Для оформления заказа необходимо авторизоваться
+                          </p>
+                          <Link to="/feedback">
+                            <Button variant="outline" className="w-full">
+                              Перейти в личный кабинет
+                            </Button>
+                          </Link>
+                        </div>
+                      ) : (
+                        <Button
+                          type="submit"
+                          disabled={submitting}
+                          className="w-full"
+                        >
+                          {submitting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Отправляем заказ...
+                            </>
+                          ) : (
+                            "Отправить заказ"
+                          )}
+                        </Button>
+                      )}
                     </form>
                   </CardContent>
                 </Card>

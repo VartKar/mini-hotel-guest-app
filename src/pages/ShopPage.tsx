@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Loader2, Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
+import { Link } from "react-router-dom";
 import { z } from "zod";
 
 const CART_STORAGE_KEY = "shop_cart";
@@ -32,7 +33,7 @@ const orderSchema = z.object({
 });
 
 const ShopPage = () => {
-  const { roomData } = useRoomData();
+  const { roomData, isPersonalized } = useRoomData();
   const { data: items = [], isLoading: loading } = useShopItems();
   const [cart, setCart] = useState<any[]>([]);
   const [customerName, setCustomerName] = useState("");
@@ -129,6 +130,11 @@ const ShopPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!isPersonalized) {
+      toast.error("Для оформления заказа необходимо авторизоваться");
+      return;
+    }
     
     if (cart.length === 0) {
       toast.error("Корзина пуста");
@@ -292,20 +298,33 @@ const ShopPage = () => {
               </p>
             </div>
 
-            <Button
-              type="submit"
-              disabled={submitting}
-              className="w-full"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Отправляем заказ...
-                </>
-              ) : (
-                "Оформить заказ"
-              )}
-            </Button>
+            {!isPersonalized ? (
+              <div className="text-center space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Для оформления заказа необходимо авторизоваться
+                </p>
+                <Link to="/feedback">
+                  <Button variant="outline" className="w-full">
+                    Перейти в личный кабинет
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="w-full"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Отправляем заказ...
+                  </>
+                ) : (
+                  "Оформить заказ"
+                )}
+              </Button>
+            )}
           </form>
         </>
       )}
