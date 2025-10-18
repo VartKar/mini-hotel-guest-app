@@ -20,7 +20,8 @@ serve(async (req) => {
 
     const { customerName, customerPhone, roomNumber, services, bookingIdKey } = await req.json()
 
-    console.log('Received service order:', { customerName, customerPhone, services })
+    console.log('Received service order:', { customerName, customerPhone, services, bookingIdKey, roomNumber })
+    console.log('Services count:', services?.length)
 
     // Валидация
     if (!customerName || customerName.trim().length < 2 || customerName.trim().length > 100) {
@@ -38,12 +39,13 @@ serve(async (req) => {
     }
 
     // Insert the order into the database
+    console.log('Attempting to insert order into database...')
     const { data: orderData, error: orderError } = await supabaseClient
       .from('shop_orders')
       .insert({
         booking_id_key: bookingIdKey,
         customer_name: customerName,
-        customer_phone: customerPhone,
+        customer_phone: customerPhone || '',
         room_number: roomNumber,
         ordered_items: services,
         total_amount: 0, // Services might not have prices
@@ -54,6 +56,7 @@ serve(async (req) => {
 
     if (orderError) {
       console.error('Database error:', orderError)
+      console.error('Error details:', JSON.stringify(orderError, null, 2))
       throw orderError
     }
 

@@ -88,6 +88,8 @@ const ServicesPage = () => {
         }
       });
 
+      console.log('Edge function response:', { data, error });
+
       if (error) throw error;
 
       toast.success(`Заказ №${data.orderId} успешно создан! Мы свяжемся с вами в ближайшее время.`);
