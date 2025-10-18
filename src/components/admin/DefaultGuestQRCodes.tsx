@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCw } from "lucide-react";
+import { Download, RefreshCw, Copy, ExternalLink } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -129,8 +129,23 @@ export const DefaultGuestQRCodes = () => {
                   />
                 </div>
 
-                <div className="text-xs text-muted-foreground break-all">
+                <div className="text-xs text-muted-foreground break-all bg-muted p-2 rounded">
                   {guestUrl}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      navigator.clipboard.writeText(guestUrl);
+                      toast.success("Ссылка скопирована");
+                    }}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Копировать ссылку
+                  </Button>
                 </div>
 
                 <div className="flex gap-2">
@@ -141,7 +156,7 @@ export const DefaultGuestQRCodes = () => {
                     onClick={() => handleDownloadQR(booking.room_number, booking.access_token)}
                   >
                     <Download className="h-4 w-4 mr-2" />
-                    Скачать
+                    Скачать QR
                   </Button>
                   <Button
                     variant="outline"
