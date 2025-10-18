@@ -45,14 +45,14 @@ const ProfileTab = ({ profile, onProfileChange }: ProfileTabProps) => {
       const { data: shopOrders, error: shopError } = await supabase
         .from('shop_orders')
         .select('*')
-        .eq('booking_id_key', roomData.booking_id)
+        .eq('booking_id_key', roomData.booking_record_id)
         .order('created_at', { ascending: false });
 
       // Fetch travel orders
       const { data: travelOrders, error: travelError } = await supabase
         .from('travel_service_orders')
         .select('*')
-        .eq('booking_id_key', roomData.booking_id)
+        .eq('booking_id_key', roomData.booking_record_id)
         .order('created_at', { ascending: false });
 
       if (shopError) console.error('Error fetching shop orders:', shopError);
