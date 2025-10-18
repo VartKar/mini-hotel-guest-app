@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useHotelServices } from "@/hooks/useHotelServices";
 import { useCart, CartItem } from "@/hooks/useCart";
@@ -34,6 +34,7 @@ const ServicesPage = () => {
   const [customerComment, setCustomerComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [expandedService, setExpandedService] = useState<string | null>(null);
+  const orderFormRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (roomData?.guest_name) {
@@ -55,6 +56,14 @@ const ServicesPage = () => {
         price: service.base_price,
         category: service.category || undefined
       });
+      
+      // Scroll to order form with a slight delay to ensure it's rendered
+      setTimeout(() => {
+        orderFormRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+      }, 100);
     }
   };
 
@@ -177,9 +186,12 @@ const ServicesPage = () => {
 
           {/* Order Form */}
           {selectedServices.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Оформление заказа</CardTitle>
+            <Card ref={orderFormRef} className="animate-in fade-in slide-in-from-bottom-4 duration-500 border-primary/20 shadow-lg">
+              <CardHeader className="bg-primary/5">
+                <CardTitle className="flex items-center gap-2">
+                  <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                  Оформление заказа
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
