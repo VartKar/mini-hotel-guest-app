@@ -86,7 +86,7 @@ serve(async (req) => {
             <h3>Заказанные услуги:</h3>
             <ul>
               ${services.map((service: any) => `
-                <li>${service.title} - ${service.description}</li>
+                <li>${service.title} - ${service.description || 'Без описания'}</li>
               `).join('')}
             </ul>
           `,
