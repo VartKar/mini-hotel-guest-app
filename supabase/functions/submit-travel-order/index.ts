@@ -30,13 +30,6 @@ serve(async (req) => {
       )
     }
 
-    if (!customerPhone || customerPhone.trim().length < 10) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Введите корректный номер телефона' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
-    }
-
     if (!services || !Array.isArray(services) || services.length === 0) {
       return new Response(
         JSON.stringify({ success: false, error: 'Выберите хотя бы одну услугу' }),
@@ -84,7 +77,7 @@ serve(async (req) => {
           html: `
             <h2>Новый заказ услуг путешествия</h2>
             <p><strong>Имя клиента:</strong> ${customerName}</p>
-            <p><strong>Телефон:</strong> ${customerPhone}</p>
+            <p><strong>Телефон:</strong> ${customerPhone || 'Не указан'}</p>
             <p><strong>Комментарий:</strong> ${customerComment || 'Нет комментариев'}</p>
             <p><strong>Общая сумма:</strong> ${totalPrice} ₽</p>
             <p><strong>Заказ ID:</strong> ${orderData.id}</p>
