@@ -35,40 +35,59 @@ const ProfileTab = ({ profile, onProfileChange }: ProfileTabProps) => {
   }, [roomData]);
 
   const fetchOrders = async () => {
-    if (!roomData?.booking_id) {
+    const hasBooking = !!roomData?.booking_record_id;
+    const hasRoom = !!roomData?.room_number;
+
+    if (!hasBooking && !hasRoom) {
+      console.log('[ProfileTab] No booking_record_id or room_number available');
       setIsLoading(false);
       return;
     }
 
+    console.log('[ProfileTab] Fetching orders:', { hasBooking, hasRoom, booking_record_id: roomData?.booking_record_id, room_number: roomData?.room_number });
+
     try {
       // Fetch shop orders
-      const { data: shopOrders, error: shopError } = await supabase
+      let shopQuery = supabase
         .from('shop_orders')
         .select('*')
-        .eq('booking_id_key', roomData.booking_record_id)
         .order('created_at', { ascending: false });
 
-      // Fetch travel orders
-      const { data: travelOrders, error: travelError } = await supabase
-        .from('travel_service_orders')
-        .select('*')
-        .eq('booking_id_key', roomData.booking_record_id)
-        .order('created_at', { ascending: false });
+      if (hasBooking) {
+        shopQuery = shopQuery.eq('booking_id_key', roomData!.booking_record_id);
+      } else if (hasRoom) {
+        shopQuery = shopQuery.eq('room_number', roomData!.room_number);
+      }
+
+      const { data: shopOrders, error: shopError } = await shopQuery;
+
+      // Fetch travel orders - only if we have booking_id_key (table doesn't have room_number)
+      let travelOrders: any[] = [];
+      if (hasBooking) {
+        const { data, error: travelError } = await supabase
+          .from('travel_service_orders')
+          .select('*')
+          .eq('booking_id_key', roomData!.booking_record_id)
+          .order('created_at', { ascending: false });
+
+        if (travelError) console.error('Error fetching travel orders:', travelError);
+        travelOrders = data || [];
+      }
 
       if (shopError) console.error('Error fetching shop orders:', shopError);
-      if (travelError) console.error('Error fetching travel orders:', travelError);
 
       const allOrders: Order[] = [
         ...(shopOrders || []).map(order => ({
           ...order,
           type: 'shop' as const
         })),
-        ...(travelOrders || []).map(order => ({
+        ...travelOrders.map(order => ({
           ...order,
           type: 'travel' as const
         }))
       ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
+      console.log('[ProfileTab] Fetched orders:', allOrders.length);
       setOrders(allOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
