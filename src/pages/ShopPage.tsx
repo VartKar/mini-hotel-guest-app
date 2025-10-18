@@ -122,27 +122,31 @@ const ShopPage = () => {
     setSubmitting(true);
     
     try {
-      const orderData = {
-        customer_name: customerName.trim(),
-        customer_phone: customerPhone.trim(),
-        customer_comment: customerComment.trim(),
-        ordered_items: cart.map(item => ({
-          item_id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity || 1
-        })),
-        total_amount: calculateTotal(),
-        booking_id_key: roomData?.booking_record_id || null,
-        room_number: roomData?.room_number || null,
-        order_status: 'pending'
-      };
-
-      const { error } = await supabase
-        .from('shop_orders')
-        .insert([orderData]);
+      const totalAmount = calculateTotal();
+      
+      const { data, error } = await supabase.functions.invoke('submit-shop-order', {
+        body: {
+          customerName: customerName.trim(),
+          customerPhone: customerPhone.trim(),
+          customerComment: customerComment.trim(),
+          items: cart.map(item => ({
+            item_id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity || 1,
+            category: item.category
+          })),
+          totalAmount: totalAmount,
+          bookingIdKey: roomData?.booking_record_id || null,
+          roomNumber: roomData?.room_number || null
+        }
+      });
 
       if (error) throw error;
+      
+      if (!data?.success) {
+        throw new Error(data?.error || 'Failed to submit order');
+      }
 
       toast.success("Заказ успешно отправлен!");
       
@@ -202,27 +206,31 @@ const ShopPage = () => {
           </div>
 
           <div className="space-y-3 mb-4">
-            {cart.map((item) => (
-              <div key={item.id} className="flex justify-between items-start gap-2 p-2 rounded-lg border">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{item.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {item.price} ₽ × {item.quantity || 1}
-                  </p>
+            {cart.map((item) => {
+              const price = Number(item.price) || 0;
+              const quantity = item.quantity || 1;
+              return (
+                <div key={item.id} className="flex justify-between items-start gap-2 p-2 rounded-lg border">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{item.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {price} ₽ × {quantity}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <p className="font-medium text-sm">{price * quantity} ₽</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={() => handleRemoveItem(item.id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <p className="font-medium text-sm">{item.price * (item.quantity || 1)} ₽</p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={() => handleRemoveItem(item.id)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
           <div className="border-t pt-4 mb-4">

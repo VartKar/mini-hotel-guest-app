@@ -100,7 +100,8 @@ export function useCart<T extends CartItem>(options: UseCartOptions = {}) {
   const calculateTotal = () => {
     return items.reduce((sum, item) => {
       const quantity = withQuantity ? (item.quantity || 1) : 1;
-      return sum + item.price * quantity;
+      const price = Number(item.price) || 0;
+      return sum + price * quantity;
     }, 0);
   };
 
