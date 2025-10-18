@@ -20,13 +20,12 @@ const MAX_QUANTITY = 99;
 const orderSchema = z.object({
   customerName: z.string()
     .trim()
-    .min(2, { message: "Имя должно содержать минимум 2 символа" })
-    .max(100, { message: "Имя не должно превышать 100 символов" }),
+    .max(100, { message: "Имя не должно превышать 100 символов" })
+    .optional(),
   customerPhone: z.string()
     .trim()
-    .regex(/^\+?7?\s?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$/, { 
-      message: "Введите корректный российский номер телефона" 
-    }),
+    .max(20, { message: "Телефон не должен превышать 20 символов" })
+    .optional(),
   customerComment: z.string()
     .max(500, { message: "Комментарий не должен превышать 500 символов" })
     .optional()
@@ -264,21 +263,19 @@ const ShopPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Имя *</label>
+              <label className="block text-sm font-medium mb-1">Имя</label>
               <Input
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder="Ваше имя"
-                required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Телефон *</label>
+              <label className="block text-sm font-medium mb-1">Телефон</label>
               <Input
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 placeholder="+7 (999) 123-45-67"
-                required
               />
             </div>
             <div>

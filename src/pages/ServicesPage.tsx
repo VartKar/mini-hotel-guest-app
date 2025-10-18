@@ -53,11 +53,6 @@ const ServicesPage = () => {
       return;
     }
 
-    if (!customerName.trim() || !customerPhone.trim()) {
-      toast.error("Пожалуйста, заполните имя и телефон");
-      return;
-    }
-
     setSubmitting(true);
     
     try {
@@ -167,21 +162,19 @@ const ServicesPage = () => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Имя *</label>
+                      <label className="block text-sm font-medium mb-1">Имя</label>
                       <Input
                         value={customerName}
                         onChange={(e) => setCustomerName(e.target.value)}
                         placeholder="Ваше имя"
-                        required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Телефон *</label>
+                      <label className="block text-sm font-medium mb-1">Телефон</label>
                       <Input
                         value={customerPhone}
                         onChange={(e) => setCustomerPhone(e.target.value)}
                         placeholder="+7 (999) 123-45-67"
-                        required
                       />
                     </div>
                   </div>
