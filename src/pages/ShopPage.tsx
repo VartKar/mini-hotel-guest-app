@@ -158,7 +158,7 @@ const ShopPage = () => {
         customer_comment: customerComment.trim(),
         ordered_items: cart,
         total_amount: calculateTotal(),
-        booking_id_key: roomData?.booking_id || null,
+        booking_id_key: roomData?.booking_record_id || null,
         room_number: roomData?.room_number || null,
         order_status: 'pending'
       };
