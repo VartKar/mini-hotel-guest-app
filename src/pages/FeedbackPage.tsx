@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import ProfileTab from "@/components/feedback/ProfileTab";
 import BonusesTab from "@/components/feedback/BonusesTab";
 import FeedbackTab from "@/components/feedback/FeedbackTab";
+import OrdersTab from "@/components/feedback/OrdersTab";
 
 const PersonalAccountPage = () => {
   const { roomData, isPersonalized, lookupByEmail, logOut, loading, error, clearError } = useRoomData();
@@ -193,21 +194,27 @@ const PersonalAccountPage = () => {
           </div>
         </div>
         
-        <div className="flex mb-6 border-b">
+        <div className="flex mb-6 border-b overflow-x-auto">
           <button 
-            className={`pb-2 px-2 text-sm ${activeTab === "profile" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
+            className={`pb-2 px-2 text-sm whitespace-nowrap ${activeTab === "profile" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
             onClick={() => setActiveTab("profile")}
           >
             Профиль
           </button>
           <button 
-            className={`pb-2 px-2 text-sm ${activeTab === "bonuses" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
+            className={`pb-2 px-2 text-sm whitespace-nowrap ${activeTab === "orders" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
+            onClick={() => setActiveTab("orders")}
+          >
+            Мои заказы
+          </button>
+          <button 
+            className={`pb-2 px-2 text-sm whitespace-nowrap ${activeTab === "bonuses" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
             onClick={() => setActiveTab("bonuses")}
           >
             Бонусы
           </button>
           <button 
-            className={`pb-2 px-2 text-sm ${activeTab === "feedback" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
+            className={`pb-2 px-2 text-sm whitespace-nowrap ${activeTab === "feedback" ? "border-b-2 border-hotel-dark font-medium" : "text-hotel-neutral"}`}
             onClick={() => setActiveTab("feedback")}
           >
             Отзывы
@@ -216,6 +223,10 @@ const PersonalAccountPage = () => {
         
         {activeTab === "profile" && (
           <ProfileTab profile={profile} onProfileChange={handleProfileChange} />
+        )}
+        
+        {activeTab === "orders" && (
+          <OrdersTab bookingRecordId={roomData?.booking_record_id || null} />
         )}
         
         {activeTab === "bonuses" && (

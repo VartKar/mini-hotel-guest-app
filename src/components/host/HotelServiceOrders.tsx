@@ -52,7 +52,7 @@ const HotelServiceOrders = ({ hostEmail }: HotelServiceOrdersProps) => {
 
       const bookingIds = hostBookings.map(booking => booking.id);
 
-      // Get shop orders that are hotel services (not shop items)
+      // Get all shop orders (includes both hotel services and shop items)
       const { data: serviceOrders, error: ordersError } = await supabase
         .from('shop_orders')
         .select('*')
@@ -61,19 +61,7 @@ const HotelServiceOrders = ({ hostEmail }: HotelServiceOrdersProps) => {
 
       if (ordersError) throw ordersError;
 
-      // Filter orders to only include hotel services (those with service titles, not shop items)
-      const hotelServiceOrders = serviceOrders?.filter(order => 
-        order.ordered_items?.some((item: any) => 
-          item.title && (
-            item.title.includes('Уборка') || 
-            item.title.includes('Еда') || 
-            item.title.includes('прачечной') || 
-            item.title.includes('Спа')
-          )
-        )
-      ) || [];
-
-      return hotelServiceOrders as HotelServiceOrder[];
+      return serviceOrders as HotelServiceOrder[];
     },
   });
 
@@ -140,13 +128,13 @@ const HotelServiceOrders = ({ hostEmail }: HotelServiceOrdersProps) => {
       <CardHeader>
         <CardTitle className="flex items-center">
           <Calendar className="w-5 h-5 mr-2" />
-          Заказы гостиничных услуг
+          Заказы услуг и товаров
         </CardTitle>
       </CardHeader>
       <CardContent>
         {!orders || orders.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            Заказов услуг пока нет
+            Заказов пока нет
           </div>
         ) : (
           <Table>
