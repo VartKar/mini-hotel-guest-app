@@ -77,7 +77,8 @@ const OrdersTab = ({ bookingRecordId }: OrdersTabProps) => {
     return (
       <div className="text-center py-8 text-gray-500">
         <Package className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-        <p>Войдите с email для просмотра заказов</p>
+        <p className="font-medium mb-2">История заказов недоступна</p>
+        <p className="text-sm">Введите email в поле выше для персонализации, чтобы увидеть историю ваших заказов</p>
       </div>
     );
   }
