@@ -22,6 +22,7 @@ const BookingsManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [hideDefaultGuests, setHideDefaultGuests] = useState(true);
   const queryClient = useQueryClient();
 
   // Fetch all bookings with room data
@@ -72,7 +73,9 @@ const BookingsManagement = () => {
 
     const matchesStatus = statusFilter === "all" || booking.booking_status === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    const matchesDefaultFilter = !hideDefaultGuests || !(booking as any).is_default_guest;
+
+    return matchesSearch && matchesStatus && matchesDefaultFilter;
   }) || [];
 
   const handleEditBooking = (booking: Booking) => {
@@ -139,6 +142,18 @@ const BookingsManagement = () => {
                 <option value="paid">Оплачено</option>
                 <option value="completed">Завершено</option>
               </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="hideDefaultGuests"
+                checked={hideDefaultGuests}
+                onChange={(e) => setHideDefaultGuests(e.target.checked)}
+                className="rounded"
+              />
+              <label htmlFor="hideDefaultGuests" className="text-sm whitespace-nowrap">
+                Скрыть дефолтных гостей
+              </label>
             </div>
           </div>
 

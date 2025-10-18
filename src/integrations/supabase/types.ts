@@ -27,6 +27,7 @@ export type Database = {
           guest_phone: string | null
           id: string
           is_archived: boolean
+          is_default_guest: boolean
           last_updated_at: string | null
           last_updated_by: string | null
           notes_internal: string | null
@@ -50,6 +51,7 @@ export type Database = {
           guest_phone?: string | null
           id?: string
           is_archived?: boolean
+          is_default_guest?: boolean
           last_updated_at?: string | null
           last_updated_by?: string | null
           notes_internal?: string | null
@@ -73,6 +75,7 @@ export type Database = {
           guest_phone?: string | null
           id?: string
           is_archived?: boolean
+          is_default_guest?: boolean
           last_updated_at?: string | null
           last_updated_by?: string | null
           notes_internal?: string | null
