@@ -226,7 +226,10 @@ const PersonalAccountPage = () => {
         )}
         
         {activeTab === "orders" && (
-          <OrdersTab bookingRecordId={roomData?.booking_record_id || null} />
+          <OrdersTab 
+            bookingRecordId={roomData?.booking_record_id || null}
+            isPersonalized={isPersonalized}
+          />
         )}
         
         {activeTab === "bonuses" && (

@@ -8,9 +8,10 @@ import { Loader2, Package, MapPin, Calendar } from "lucide-react";
 
 interface OrdersTabProps {
   bookingRecordId: string | null;
+  isPersonalized: boolean;
 }
 
-const OrdersTab = ({ bookingRecordId }: OrdersTabProps) => {
+const OrdersTab = ({ bookingRecordId, isPersonalized }: OrdersTabProps) => {
   // Fetch shop orders (hotel services and shop items)
   const { data: shopOrders, isLoading: shopLoading } = useQuery({
     queryKey: ['guest-shop-orders', bookingRecordId],
@@ -26,7 +27,7 @@ const OrdersTab = ({ bookingRecordId }: OrdersTabProps) => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!bookingRecordId
+    enabled: !!bookingRecordId && isPersonalized
   });
 
   // Fetch travel service orders
@@ -44,7 +45,7 @@ const OrdersTab = ({ bookingRecordId }: OrdersTabProps) => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!bookingRecordId
+    enabled: !!bookingRecordId && isPersonalized
   });
 
   const getStatusBadge = (status: string) => {
@@ -73,12 +74,11 @@ const OrdersTab = ({ bookingRecordId }: OrdersTabProps) => {
     }
   };
 
-  if (!bookingRecordId) {
+  if (!isPersonalized) {
     return (
       <div className="text-center py-8 text-gray-500">
         <Package className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-        <p className="font-medium mb-2">История заказов недоступна</p>
-        <p className="text-sm">Введите email в поле выше для персонализации, чтобы увидеть историю ваших заказов</p>
+        <p className="text-sm">Введите email в поле выше для просмотра истории заказов</p>
       </div>
     );
   }
