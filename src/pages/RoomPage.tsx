@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Wifi, Car, Coffee, Tv, Shield, Bed } from "lucide-react";
 import { useRoomData } from "@/hooks/useRoomData";
+import logo from "@/assets/rentme-logo.jpg";
 
 const RoomPage = () => {
   const { roomData, loading } = useRoomData();
@@ -50,6 +51,20 @@ const RoomPage = () => {
 
   return (
     <div className="w-full max-w-md mx-auto pt-4">
+      {/* Logo */}
+      {roomData?.logo_url && (
+        <div className="flex justify-center mb-6">
+          <img 
+            src={logo} 
+            alt="Hotel logo" 
+            className="h-12 w-auto object-contain"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        </div>
+      )}
+      
       <h1 className="text-3xl font-light mb-6">Ваш номер</h1>
       
       {imageUrl && !imgError && (

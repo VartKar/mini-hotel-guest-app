@@ -27,6 +27,7 @@ export interface RoomData {
   property_manager_name: string | null;
   property_manager_phone: string | null;
   property_manager_email: string | null;
+  logo_url: string | null;
   
   // Booking details (from bookings table, if applicable)
   booking_id: string | null; // Текстовый код бронирования (например "book_013")
