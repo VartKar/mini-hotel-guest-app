@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useTravelItinerary } from "@/hooks/useTravelItinerary";
 import { useTravelServices } from "@/hooks/useTravelServices";
@@ -39,6 +39,7 @@ const TravelPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null);
   const [expandedRestaurantId, setExpandedRestaurantId] = useState<string | null>(null);
+  const orderFormRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (roomData?.guest_name) {
@@ -61,6 +62,14 @@ const TravelPage = () => {
         duration_hours: service.duration_hours || undefined,
         category: service.category || undefined
       });
+      
+      // Scroll to order form with a slight delay to ensure it's rendered
+      setTimeout(() => {
+        orderFormRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+      }, 100);
     }
   };
 
@@ -386,9 +395,12 @@ const TravelPage = () => {
 
               {/* Order Form */}
               {selectedServices.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-3 sm:pb-6">
-                    <CardTitle className="text-lg sm:text-xl">Оформление заказа</CardTitle>
+                <Card ref={orderFormRef} className="animate-in fade-in slide-in-from-bottom-4 duration-500 border-primary/20 shadow-lg">
+                  <CardHeader className="pb-3 sm:pb-6 bg-primary/5">
+                    <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                      <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                      Оформление заказа
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-4">
