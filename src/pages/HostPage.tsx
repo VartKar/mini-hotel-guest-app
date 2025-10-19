@@ -9,6 +9,7 @@ import { useHostData, HostBooking } from "@/hooks/useHostData";
 import { toast } from "sonner";
 import HotelServiceOrders from "@/components/host/HotelServiceOrders";
 import TravelServiceOrders from "@/components/host/TravelServiceOrders";
+import { HostMarketingDashboard } from "@/components/host/HostMarketingDashboard";
 
 const HostPage = () => {
   const { hostData, loading, error, isAuthenticated, loginWithEmail, logout, requestChange } = useHostData();
@@ -148,6 +149,9 @@ const HostPage = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Marketing Dashboard */}
+          <HostMarketingDashboard hostEmail={hostData?.host_email || ""} />
 
           {/* Bookings */}
           <Card>
