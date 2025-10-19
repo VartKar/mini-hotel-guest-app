@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useHotelServices } from "@/hooks/useHotelServices";
@@ -14,7 +15,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Loader2, ShoppingCart, Trash2, X, Info } from "lucide-react";
 import { z } from "zod";
-import logo from "@/assets/rentme-logo.jpg";
 
 const orderSchema = z.object({
   customerName: z.string()
@@ -344,18 +344,6 @@ const ServicesPage = () => {
   return (
     <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
       <div className="max-w-6xl mx-auto">
-        {/* Logo */}
-        <div className="flex justify-center mb-6">
-          <img 
-            src={logo} 
-            alt="Hotel logo" 
-            className="h-12 w-auto object-contain"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        </div>
-        
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold">Услуги отеля</h1>
           
