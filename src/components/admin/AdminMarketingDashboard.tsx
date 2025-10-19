@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MetricsCards } from "@/components/marketing/MetricsCards";
 import { GuestsTable } from "@/components/marketing/GuestsTable";
 import { BonusHistoryModal } from "@/components/marketing/BonusHistoryModal";
+import { BonusManagementDialog } from "@/components/marketing/BonusManagementDialog";
 import { useAdminMarketingMetrics } from "@/hooks/useAdminMarketingMetrics";
 import { useAdminGuests } from "@/hooks/useAdminGuests";
 
@@ -10,12 +11,22 @@ export const AdminMarketingDashboard = () => {
   const { data: guests, isLoading: guestsLoading } = useAdminGuests();
   const [selectedGuestId, setSelectedGuestId] = useState<string | null>(null);
   const [selectedGuestName, setSelectedGuestName] = useState("");
+  const [bonusManagementGuestId, setBonusManagementGuestId] = useState<string | null>(null);
+  const [bonusManagementGuestName, setBonusManagementGuestName] = useState("");
 
   const handleViewHistory = (guestId: string) => {
     const guest = guests?.find((g) => g.id === guestId);
     if (guest) {
       setSelectedGuestId(guestId);
       setSelectedGuestName(guest.name);
+    }
+  };
+
+  const handleManageBonuses = (guestId: string) => {
+    const guest = guests?.find((g) => g.id === guestId);
+    if (guest) {
+      setBonusManagementGuestId(guestId);
+      setBonusManagementGuestName(guest.name);
     }
   };
 
@@ -43,13 +54,26 @@ export const AdminMarketingDashboard = () => {
         revenue={metrics?.revenue || 0}
       />
 
-      <GuestsTable guests={guests || []} onViewHistory={handleViewHistory} />
+      <GuestsTable 
+        guests={guests || []} 
+        onViewHistory={handleViewHistory}
+        onManageBonuses={handleManageBonuses}
+        isAdmin={true}
+      />
 
       <BonusHistoryModal
         guestId={selectedGuestId}
         guestName={selectedGuestName}
         isOpen={!!selectedGuestId}
         onClose={() => setSelectedGuestId(null)}
+      />
+
+      <BonusManagementDialog
+        guestId={bonusManagementGuestId}
+        guestName={bonusManagementGuestName}
+        isOpen={!!bonusManagementGuestId}
+        onClose={() => setBonusManagementGuestId(null)}
+        adminEmail="admin@example.com"
       />
     </div>
   );

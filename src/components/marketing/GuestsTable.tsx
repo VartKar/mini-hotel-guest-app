@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, ChevronLeft, ChevronRight, Coins } from "lucide-react";
 import { GuestFilters } from "./GuestFilters";
 
 interface Guest {
@@ -27,6 +27,8 @@ interface Guest {
 interface GuestsTableProps {
   guests: Guest[];
   onViewHistory: (guestId: string) => void;
+  onManageBonuses?: (guestId: string) => void;
+  isAdmin?: boolean;
 }
 
 const getTierColor = (tier: string) => {
@@ -44,7 +46,7 @@ const getTierColor = (tier: string) => {
 
 const ITEMS_PER_PAGE = 20;
 
-export const GuestsTable = ({ guests, onViewHistory }: GuestsTableProps) => {
+export const GuestsTable = ({ guests, onViewHistory, onManageBonuses, isAdmin }: GuestsTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loyaltyTier, setLoyaltyTier] = useState("all");
   const [sortBy, setSortBy] = useState("last_visit_desc");
@@ -144,14 +146,26 @@ export const GuestsTable = ({ guests, onViewHistory }: GuestsTableProps) => {
                       : "—"}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onViewHistory(guest.id)}
-                    >
-                      <Eye className="w-4 h-4 mr-1" />
-                      История
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onViewHistory(guest.id)}
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        История
+                      </Button>
+                      {isAdmin && onManageBonuses && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onManageBonuses(guest.id)}
+                        >
+                          <Coins className="w-4 h-4 mr-1" />
+                          Бонусы
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
