@@ -511,7 +511,6 @@ export type Database = {
           host_phone: string | null
           id: string
           is_active: boolean
-          logo_url: string | null
           main_image_url: string | null
           notes_for_guests: string | null
           parking_info: string | null
@@ -540,7 +539,6 @@ export type Database = {
           host_phone?: string | null
           id?: string
           is_active?: boolean
-          logo_url?: string | null
           main_image_url?: string | null
           notes_for_guests?: string | null
           parking_info?: string | null
@@ -569,7 +567,6 @@ export type Database = {
           host_phone?: string | null
           id?: string
           is_active?: boolean
-          logo_url?: string | null
           main_image_url?: string | null
           notes_for_guests?: string | null
           parking_info?: string | null
