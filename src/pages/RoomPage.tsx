@@ -29,11 +29,11 @@ const RoomPage = () => {
       main_image_url: roomData.main_image_url
     });
     
-    if (roomData.room_image_url && roomData.room_image_url.trim()) {
+    if (roomData.room_image_url && roomData.room_image_url.trim() !== '') {
       console.log('✅ RoomPage using room_image_url:', roomData.room_image_url);
       return roomData.room_image_url;
     }
-    if (roomData.main_image_url && roomData.main_image_url.trim()) {
+    if (roomData.main_image_url && roomData.main_image_url.trim() !== '') {
       console.log('✅ RoomPage using main_image_url as fallback:', roomData.main_image_url);
       return roomData.main_image_url;
     }
