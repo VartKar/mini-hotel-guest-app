@@ -22,31 +22,37 @@ export interface HostData {
   bookings: HostBooking[];
 }
 
-let globalHostData: HostData | null = null;
-let globalIsAuthenticated = false;
-let listeners: (() => void)[] = [];
+const HOST_DATA_KEY = 'host_session_data';
+const HOST_AUTH_KEY = 'host_authenticated';
 
-const notifyListeners = () => {
-  listeners.forEach(listener => listener());
+const getStoredHostData = (): HostData | null => {
+  try {
+    const stored = localStorage.getItem(HOST_DATA_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+};
+
+const getStoredAuthStatus = (): boolean => {
+  return localStorage.getItem(HOST_AUTH_KEY) === 'true';
+};
+
+const setStoredHostData = (data: HostData | null) => {
+  if (data) {
+    localStorage.setItem(HOST_DATA_KEY, JSON.stringify(data));
+    localStorage.setItem(HOST_AUTH_KEY, 'true');
+  } else {
+    localStorage.removeItem(HOST_DATA_KEY);
+    localStorage.removeItem(HOST_AUTH_KEY);
+  }
 };
 
 export const useHostData = () => {
-  const [hostData, setHostData] = useState<HostData | null>(globalHostData);
+  const [hostData, setHostData] = useState<HostData | null>(getStoredHostData());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(globalIsAuthenticated);
-
-  useEffect(() => {
-    const listener = () => {
-      setHostData(globalHostData);
-      setIsAuthenticated(globalIsAuthenticated);
-    };
-    listeners.push(listener);
-
-    return () => {
-      listeners = listeners.filter(l => l !== listener);
-    };
-  }, []);
+  const [isAuthenticated, setIsAuthenticated] = useState(getStoredAuthStatus());
 
   const loginWithEmail = async (email: string) => {
     try {
@@ -109,11 +115,9 @@ export const useHostData = () => {
         }))
       };
 
-      globalHostData = hostInfo;
-      globalIsAuthenticated = true;
+      setStoredHostData(hostInfo);
       setHostData(hostInfo);
       setIsAuthenticated(true);
-      notifyListeners();
       return true;
     } catch (err) {
       console.error('Unexpected error during host login:', err);
@@ -125,11 +129,9 @@ export const useHostData = () => {
   };
 
   const logout = () => {
-    globalHostData = null;
-    globalIsAuthenticated = false;
+    setStoredHostData(null);
     setHostData(null);
     setIsAuthenticated(false);
-    notifyListeners();
   };
 
   const requestChange = async (booking: HostBooking, requestType: string, details: string) => {

@@ -38,13 +38,20 @@ const HotelServiceOrders = ({ hostEmail }: HotelServiceOrdersProps) => {
   const { data: orders, isLoading } = useQuery({
     queryKey: ['host-hotel-service-orders', hostEmail],
     queryFn: async () => {
-      // First get all bookings for this host
+      if (!hostEmail) return [];
+
+      // Get all bookings for this host through rooms table
       const { data: hostBookings, error: bookingsError } = await supabase
         .from('bookings')
-        .select('id')
-        .eq('host_email', hostEmail);
+        .select('id, rooms!inner(host_email)')
+        .eq('rooms.host_email', hostEmail)
+        .eq('visible_to_hosts', true)
+        .eq('is_archived', false);
 
-      if (bookingsError) throw bookingsError;
+      if (bookingsError) {
+        console.error('Error fetching host bookings:', bookingsError);
+        throw bookingsError;
+      }
 
       if (!hostBookings || hostBookings.length === 0) {
         return [];
@@ -59,10 +66,14 @@ const HotelServiceOrders = ({ hostEmail }: HotelServiceOrdersProps) => {
         .in('booking_id_key', bookingIds)
         .order('created_at', { ascending: false });
 
-      if (ordersError) throw ordersError;
+      if (ordersError) {
+        console.error('Error fetching shop orders:', ordersError);
+        throw ordersError;
+      }
 
       return serviceOrders as HotelServiceOrder[];
     },
+    enabled: !!hostEmail,
   });
 
   // Update order status mutation
