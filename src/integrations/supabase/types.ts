@@ -199,41 +199,53 @@ export type Database = {
       }
       guests: {
         Row: {
+          booking_source: string | null
           created_at: string
           email: string
           email_preferences: Json | null
           email_subscribed: boolean
+          guest_type: string | null
           id: string
+          last_visit_date: string | null
           loyalty_points: number
           loyalty_tier: string
           name: string
           phone: string | null
+          preferred_categories: Json | null
           total_spent: number
           updated_at: string
         }
         Insert: {
+          booking_source?: string | null
           created_at?: string
           email: string
           email_preferences?: Json | null
           email_subscribed?: boolean
+          guest_type?: string | null
           id?: string
+          last_visit_date?: string | null
           loyalty_points?: number
           loyalty_tier?: string
           name: string
           phone?: string | null
+          preferred_categories?: Json | null
           total_spent?: number
           updated_at?: string
         }
         Update: {
+          booking_source?: string | null
           created_at?: string
           email?: string
           email_preferences?: Json | null
           email_subscribed?: boolean
+          guest_type?: string | null
           id?: string
+          last_visit_date?: string | null
           loyalty_points?: number
           loyalty_tier?: string
           name?: string
           phone?: string | null
+          preferred_categories?: Json | null
           total_spent?: number
           updated_at?: string
         }
