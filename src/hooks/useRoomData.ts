@@ -7,6 +7,7 @@ export interface RoomData {
   id: string;
   room_number: string | null;
   apartment_name: string | null;
+  logo_url: string | null;
   property_id: string | null;
   city: string | null;
   wifi_network: string | null;
