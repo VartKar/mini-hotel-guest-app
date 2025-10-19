@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { MetricsCards } from "@/components/marketing/MetricsCards";
-import { TopGuestsCard } from "@/components/marketing/TopGuestsCard";
-import { LoyaltyDistributionCard } from "@/components/marketing/LoyaltyDistributionCard";
 import { GuestsTable } from "@/components/marketing/GuestsTable";
 import { BonusHistoryModal } from "@/components/marketing/BonusHistoryModal";
 import { useAdminMarketingMetrics } from "@/hooks/useAdminMarketingMetrics";
@@ -44,11 +42,6 @@ export const AdminMarketingDashboard = () => {
         totalBonuses={metrics?.totalBonuses || 0}
         revenue={metrics?.revenue || 0}
       />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TopGuestsCard guests={metrics?.topGuests || []} />
-        <LoyaltyDistributionCard distribution={metrics?.distribution || {}} />
-      </div>
 
       <GuestsTable guests={guests || []} onViewHistory={handleViewHistory} />
 
