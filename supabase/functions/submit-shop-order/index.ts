@@ -45,28 +45,6 @@ serve(async (req) => {
 
     console.log('Order saved to database:', orderData.id)
 
-    // Update guest's total_spent if we have a booking
-    if (bookingIdKey) {
-      const { data: booking } = await supabaseClient
-        .from('bookings')
-        .select('guest_email')
-        .eq('id', bookingIdKey)
-        .single()
-
-      if (booking?.guest_email) {
-        const { error: updateError } = await supabaseClient.rpc('increment_guest_spent', {
-          guest_email_param: booking.guest_email,
-          amount_param: totalAmount
-        })
-        
-        if (updateError) {
-          console.error('Failed to update guest total_spent:', updateError)
-        } else {
-          console.log('Updated guest total_spent for:', booking.guest_email)
-        }
-      }
-    }
-
     // Send email notification to admin
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
     if (resendApiKey) {

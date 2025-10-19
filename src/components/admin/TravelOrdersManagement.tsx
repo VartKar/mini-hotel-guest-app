@@ -38,6 +38,9 @@ const TravelOrdersManagement = () => {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
+      const order = orders.find(o => o.id === orderId);
+      const oldStatus = order?.order_status;
+
       const { error } = await supabase
         .from('travel_service_orders')
         .update({ 
@@ -47,6 +50,29 @@ const TravelOrdersManagement = () => {
         .eq('id', orderId);
 
       if (error) throw error;
+
+      // Update guest's total_spent when status changes to completed or processing
+      if (order && (newStatus === 'completed' || newStatus === 'processing') && 
+          oldStatus !== 'completed' && oldStatus !== 'processing') {
+        if (order.booking_id_key) {
+          const { data: booking } = await supabase
+            .from('bookings')
+            .select('guest_email')
+            .eq('id', order.booking_id_key)
+            .single();
+
+          if (booking?.guest_email) {
+            const { error: updateError } = await supabase.rpc('increment_guest_spent', {
+              guest_email_param: booking.guest_email,
+              amount_param: order.total_amount
+            });
+            
+            if (updateError) {
+              console.error('Failed to update guest total_spent:', updateError);
+            }
+          }
+        }
+      }
       
       setOrders(orders.map(order => 
         order.id === orderId 
