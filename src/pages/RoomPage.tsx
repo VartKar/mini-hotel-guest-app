@@ -52,18 +52,16 @@ const RoomPage = () => {
   return (
     <div className="w-full max-w-md mx-auto pt-4">
       {/* Logo */}
-      {roomData?.logo_url && (
-        <div className="flex justify-center mb-6">
-          <img 
-            src={logo} 
-            alt="Hotel logo" 
-            className="h-12 w-auto object-contain"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        </div>
-      )}
+      <div className="flex justify-center mb-6">
+        <img 
+          src={logo} 
+          alt="Hotel logo" 
+          className="h-12 w-auto object-contain"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+      </div>
       
       <h1 className="text-3xl font-light mb-6">Ваш номер</h1>
       

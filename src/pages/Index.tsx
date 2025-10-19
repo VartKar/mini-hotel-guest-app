@@ -88,18 +88,16 @@ const Index = () => {
     <div className="flex flex-col items-center">
       <div className="w-full max-w-md">
         {/* Logo */}
-        {roomData?.logo_url && (
-          <div className="flex justify-center pt-6 pb-4">
-            <img 
-              src={logo} 
-              alt="Hotel logo" 
-              className="h-16 w-auto object-contain"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-          </div>
-        )}
+        <div className="flex justify-center pt-6 pb-4">
+          <img 
+            src={logo} 
+            alt="Hotel logo" 
+            className="h-16 w-auto object-contain"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        </div>
         
         <div className="py-8">
           <h1 className="font-light mb-3 text-center text-2xl">

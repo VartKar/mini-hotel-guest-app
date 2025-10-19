@@ -345,18 +345,16 @@ const ServicesPage = () => {
     <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
       <div className="max-w-6xl mx-auto">
         {/* Logo */}
-        {roomData?.logo_url && (
-          <div className="flex justify-center mb-6">
-            <img 
-              src={logo} 
-              alt="Hotel logo" 
-              className="h-12 w-auto object-contain"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-          </div>
-        )}
+        <div className="flex justify-center mb-6">
+          <img 
+            src={logo} 
+            alt="Hotel logo" 
+            className="h-12 w-auto object-contain"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        </div>
         
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold">Услуги отеля</h1>
