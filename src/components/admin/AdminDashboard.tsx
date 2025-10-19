@@ -8,22 +8,28 @@ import ShopOrdersManagement from "./ShopOrdersManagement";
 import FeedbackManagement from "./FeedbackManagement";
 import DatabaseManagement from "./DatabaseManagement";
 import { DefaultGuestQRCodes } from "./DefaultGuestQRCodes";
+import { AdminMarketingDashboard } from "./AdminMarketingDashboard";
 
 const AdminDashboard = () => {
   return (
     <div className="w-full max-w-6xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Панель администратора</h1>
       
-      <Tabs defaultValue="bookings" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="bookings">Бронирования</TabsTrigger>
+    <Tabs defaultValue="marketing" className="w-full">
+      <TabsList className="grid w-full grid-cols-8">
+        <TabsTrigger value="marketing">📊 Маркетинг</TabsTrigger>
+        <TabsTrigger value="bookings">Бронирования</TabsTrigger>
           <TabsTrigger value="qr-codes">QR-коды</TabsTrigger>
           <TabsTrigger value="change-requests">Изменения</TabsTrigger>
           <TabsTrigger value="travel-orders">Экскурсии</TabsTrigger>
           <TabsTrigger value="shop-orders">Магазин</TabsTrigger>
           <TabsTrigger value="feedback">Отзывы</TabsTrigger>
           <TabsTrigger value="database">БД</TabsTrigger>
-        </TabsList>
+      </TabsList>
+        
+        <TabsContent value="marketing" className="mt-6">
+          <AdminMarketingDashboard />
+        </TabsContent>
         
         <TabsContent value="bookings" className="mt-6">
           <BookingsManagement />
