@@ -102,11 +102,11 @@ const saveToStorage = (roomData: RoomData | null, isPersonalized: boolean) => {
   }
 };
 
-// Create guest session
+// Create guest session (non-blocking - returns null on error)
 const createGuestSession = async (roomData: RoomData, sessionType: 'registered' | 'walk_in', bookingId?: string) => {
-  const sessionToken = generateSessionToken();
-  
   try {
+    const sessionToken = generateSessionToken();
+    
     const { data, error } = await supabase
       .from('guest_sessions')
       .insert({
@@ -123,7 +123,7 @@ const createGuestSession = async (roomData: RoomData, sessionType: 'registered' 
       .single();
 
     if (error) {
-      console.error('Error creating guest session:', error);
+      console.error('⚠️ Error creating guest session:', error);
       return null;
     }
 
@@ -131,7 +131,7 @@ const createGuestSession = async (roomData: RoomData, sessionType: 'registered' 
     console.log('✅ Guest session created:', data);
     return sessionToken;
   } catch (error) {
-    console.error('Error creating guest session:', error);
+    console.error('⚠️ Failed to create guest session:', error);
     return null;
   }
 };
@@ -173,21 +173,23 @@ export const useRoomData = () => {
       setLoading(true);
       console.log('🔄 Fetching default room data');
       
-      // Get default room from rooms table
+      // Get default room from rooms table (always select the first created active room for consistency)
       const { data: roomData, error: roomError } = await supabase
         .from('rooms')
         .select('*')
         .eq('is_active', true)
+        .order('created_at', { ascending: true })
         .limit(1)
         .single();
 
       if (roomError) {
-        console.error('Error fetching default room:', roomError);
+        console.error('❌ Error fetching default room:', roomError);
         setError('Failed to load room data');
+        setLoading(false);
         return;
       }
 
-      console.log('✅ Default room fetched:', roomData);
+      console.log('✅ Default room fetched:', { id: roomData.id, room_number: roomData.room_number });
 
       const combinedData: RoomData = {
         ...roomData,
@@ -206,11 +208,15 @@ export const useRoomData = () => {
         session_type: null
       };
 
-      // Create walk-in session for default room
+      // Create walk-in session (non-blocking - continues even if session creation fails)
+      console.log('🔐 Creating walk-in session...');
       const sessionToken = await createGuestSession(combinedData, 'walk_in');
       if (sessionToken) {
         combinedData.session_token = sessionToken;
         combinedData.session_type = 'walk_in';
+        console.log('✅ Session created successfully');
+      } else {
+        console.log('⚠️ Session creation failed, continuing without session');
       }
 
       globalRoomData = combinedData;
@@ -219,8 +225,9 @@ export const useRoomData = () => {
       setIsPersonalized(false);
       saveToStorage(combinedData, false);
       notifyListeners();
+      console.log('✅ Room data loaded and saved');
     } catch (err) {
-      console.error('Unexpected error:', err);
+      console.error('❌ Unexpected error:', err);
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
