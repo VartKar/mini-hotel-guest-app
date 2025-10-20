@@ -137,6 +137,7 @@ const ShopPage = () => {
             category: item.category
           })),
           totalAmount: totalAmount,
+          guestId: (roomData as any)?.guest_id || null,
           bookingIdKey: roomData?.booking_record_id || null,
           roomNumber: roomData?.room_number || null
         }

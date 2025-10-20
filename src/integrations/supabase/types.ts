@@ -61,6 +61,7 @@ export type Database = {
           check_out_date: string | null
           created_at: string
           guest_email: string
+          guest_id: string | null
           guest_name: string
           guest_phone: string | null
           id: string
@@ -85,6 +86,7 @@ export type Database = {
           check_out_date?: string | null
           created_at?: string
           guest_email: string
+          guest_id?: string | null
           guest_name: string
           guest_phone?: string | null
           id?: string
@@ -109,6 +111,7 @@ export type Database = {
           check_out_date?: string | null
           created_at?: string
           guest_email?: string
+          guest_id?: string | null
           guest_name?: string
           guest_phone?: string | null
           id?: string
@@ -126,6 +129,13 @@ export type Database = {
           visible_to_hosts?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookings_room_id_fkey"
             columns: ["room_id"]
@@ -238,6 +248,8 @@ export type Database = {
       guests: {
         Row: {
           booking_source: string | null
+          consent_date: string | null
+          consent_given: boolean | null
           created_at: string
           email: string
           email_preferences: Json | null
@@ -255,6 +267,8 @@ export type Database = {
         }
         Insert: {
           booking_source?: string | null
+          consent_date?: string | null
+          consent_given?: boolean | null
           created_at?: string
           email: string
           email_preferences?: Json | null
@@ -272,6 +286,8 @@ export type Database = {
         }
         Update: {
           booking_source?: string | null
+          consent_date?: string | null
+          consent_given?: boolean | null
           created_at?: string
           email?: string
           email_preferences?: Json | null
@@ -511,6 +527,7 @@ export type Database = {
           host_phone: string | null
           id: string
           is_active: boolean
+          logo_url: string | null
           main_image_url: string | null
           notes_for_guests: string | null
           parking_info: string | null
@@ -539,6 +556,7 @@ export type Database = {
           host_phone?: string | null
           id?: string
           is_active?: boolean
+          logo_url?: string | null
           main_image_url?: string | null
           notes_for_guests?: string | null
           parking_info?: string | null
@@ -567,6 +585,7 @@ export type Database = {
           host_phone?: string | null
           id?: string
           is_active?: boolean
+          logo_url?: string | null
           main_image_url?: string | null
           notes_for_guests?: string | null
           parking_info?: string | null
@@ -630,6 +649,7 @@ export type Database = {
           customer_comment: string | null
           customer_name: string
           customer_phone: string
+          guest_id: string | null
           id: string
           order_status: string
           ordered_items: Json
@@ -643,6 +663,7 @@ export type Database = {
           customer_comment?: string | null
           customer_name: string
           customer_phone: string
+          guest_id?: string | null
           id?: string
           order_status?: string
           ordered_items: Json
@@ -656,6 +677,7 @@ export type Database = {
           customer_comment?: string | null
           customer_name?: string
           customer_phone?: string
+          guest_id?: string | null
           id?: string
           order_status?: string
           ordered_items?: Json
@@ -663,7 +685,15 @@ export type Database = {
           total_amount?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shop_orders_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       travel_itineraries: {
         Row: {
@@ -738,6 +768,7 @@ export type Database = {
           customer_comment: string | null
           customer_name: string
           customer_phone: string
+          guest_id: string | null
           id: string
           order_status: string
           selected_services: Json
@@ -750,6 +781,7 @@ export type Database = {
           customer_comment?: string | null
           customer_name: string
           customer_phone: string
+          guest_id?: string | null
           id?: string
           order_status?: string
           selected_services: Json
@@ -762,13 +794,22 @@ export type Database = {
           customer_comment?: string | null
           customer_name?: string
           customer_phone?: string
+          guest_id?: string | null
           id?: string
           order_status?: string
           selected_services?: Json
           total_amount?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "travel_service_orders_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       travel_services: {
         Row: {
@@ -867,6 +908,7 @@ export type Database = {
     }
     Enums: {
       action_type: "training" | "visit" | "promotion" | "research"
+      guest_type_enum: "booked" | "walk_in" | "family_member"
       session_status: "waiting" | "in_progress" | "completed"
       user_role: "player" | "moderator" | "admin"
     }
@@ -997,6 +1039,7 @@ export const Constants = {
   public: {
     Enums: {
       action_type: ["training", "visit", "promotion", "research"],
+      guest_type_enum: ["booked", "walk_in", "family_member"],
       session_status: ["waiting", "in_progress", "completed"],
       user_role: ["player", "moderator", "admin"],
     },

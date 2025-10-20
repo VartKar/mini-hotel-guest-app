@@ -18,7 +18,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     )
 
-    const { customerName, customerPhone, customerComment, services, totalPrice, bookingIdKey } = await req.json()
+    const { customerName, customerPhone, customerComment, services, totalPrice, bookingIdKey, guestId } = await req.json()
 
     console.log('Received travel order:', { customerName, customerPhone, services, totalPrice })
 
@@ -41,10 +41,11 @@ serve(async (req) => {
     const { data: orderData, error: orderError } = await supabaseClient
       .from('travel_service_orders')
       .insert({
-        booking_id_key: bookingIdKey,
-        customer_name: customerName,
-        customer_phone: customerPhone,
-        customer_comment: customerComment,
+        guest_id: guestId || null,
+        booking_id_key: bookingIdKey || null,
+        customer_name: customerName.trim(),
+        customer_phone: customerPhone?.trim() || null,
+        customer_comment: customerComment?.trim() || null,
         selected_services: services,
         total_amount: totalPrice,
         order_status: 'pending'
@@ -58,6 +59,42 @@ serve(async (req) => {
     }
 
     console.log('Order saved to database:', orderData.id)
+
+    // Award loyalty points if guest_id is provided
+    if (guestId) {
+      const bonusEarned = Math.floor(Number(totalPrice) * 0.01) // 1%
+      
+      const { data: guest } = await supabaseClient
+        .from('guests')
+        .select('loyalty_points, total_spent')
+        .eq('id', guestId)
+        .single()
+
+      if (guest && bonusEarned > 0) {
+        const newLoyaltyPoints = Number(guest.loyalty_points) + bonusEarned
+        const newTotalSpent = Number(guest.total_spent) + Number(totalPrice)
+
+        await supabaseClient
+          .from('guests')
+          .update({
+            loyalty_points: newLoyaltyPoints,
+            total_spent: newTotalSpent
+          })
+          .eq('id', guestId)
+
+        await supabaseClient
+          .from('bonus_transactions')
+          .insert({
+            guest_id: guestId,
+            amount: bonusEarned,
+            balance_after: newLoyaltyPoints,
+            note: `Бонусы за заказ №${orderData.id} (${totalPrice} ₽)`,
+            created_by: 'system'
+          })
+
+        console.log(`Awarded ${bonusEarned} loyalty points to guest ${guestId}`)
+      }
+    }
 
     // Send email notification to admin
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
@@ -84,7 +121,7 @@ serve(async (req) => {
             <h3>Выбранные услуги:</h3>
             <ul>
               ${services.map((service: any) => `
-                <li>${service.day}: ${service.title} - ${service.price}</li>
+                <li>${service.title} - ${service.base_price} ₽</li>
               `).join('')}
             </ul>
           `,

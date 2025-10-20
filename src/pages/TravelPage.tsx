@@ -101,6 +101,7 @@ const TravelPage = () => {
             base_price: s.price
           })),
           totalPrice: calculateTotal(),
+          guestId: (roomData as any)?.guest_id || null,
           bookingIdKey: roomData?.booking_record_id || null
         }
       });

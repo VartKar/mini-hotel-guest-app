@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import ProfileTab from "@/components/feedback/ProfileTab";
 import BonusesTab from "@/components/feedback/BonusesTab";
 import FeedbackTab from "@/components/feedback/FeedbackTab";
+import { WalkInRegistrationCard } from "@/components/feedback/WalkInRegistrationCard";
 
 const PersonalAccountPage = () => {
   const { roomData, isPersonalized, lookupByEmail, logOut, loading, error, clearError } = useRoomData();
@@ -127,9 +128,22 @@ const PersonalAccountPage = () => {
         </a>
       </div>
 
-      {/* Compact login section at the top */}
+      {/* Walk-in Registration Card */}
+      {!isPersonalized && (
+        <WalkInRegistrationCard
+          onSuccess={() => {
+            // Reload to fetch updated data
+            window.location.reload();
+          }}
+          currentRoomId={roomData?.id || ''}
+          sessionToken={roomData?.session_token || ''}
+        />
+      )}
+      
+      {/* Compact login section */}
       {!isPersonalized && (
         <div className="bg-blue-50 rounded-lg p-3 mb-4 border border-blue-200">
+          <p className="text-xs text-gray-600 mb-2 text-center">Уже были у нас?</p>
           <form onSubmit={handleEmailLookup} className="flex gap-2">
             <Input
               type="email"

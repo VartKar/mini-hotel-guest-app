@@ -35,16 +35,24 @@ const ProfileTab = ({ profile, onProfileChange }: ProfileTabProps) => {
   }, [roomData]);
 
   const fetchOrders = async () => {
+    const hasGuestId = !!(roomData as any)?.guest_id;
     const hasBooking = !!roomData?.booking_record_id;
     const hasRoom = !!roomData?.room_number;
 
-    if (!hasBooking && !hasRoom) {
-      console.log('[ProfileTab] No booking_record_id or room_number available');
+    if (!hasGuestId && !hasBooking && !hasRoom) {
+      console.log('[ProfileTab] No identifiers available');
       setIsLoading(false);
       return;
     }
 
-    console.log('[ProfileTab] Fetching orders:', { hasBooking, hasRoom, booking_record_id: roomData?.booking_record_id, room_number: roomData?.room_number });
+    console.log('[ProfileTab] Fetching orders:', { 
+      hasGuestId, 
+      hasBooking, 
+      hasRoom,
+      guest_id: (roomData as any)?.guest_id,
+      booking_record_id: roomData?.booking_record_id, 
+      room_number: roomData?.room_number 
+    });
 
     try {
       // Fetch shop orders
@@ -53,7 +61,10 @@ const ProfileTab = ({ profile, onProfileChange }: ProfileTabProps) => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (hasBooking) {
+      if (hasGuestId) {
+        // Priority: guest_id (most reliable)
+        shopQuery = shopQuery.eq('guest_id', (roomData as any)!.guest_id);
+      } else if (hasBooking) {
         shopQuery = shopQuery.eq('booking_id_key', roomData!.booking_record_id);
       } else if (hasRoom) {
         shopQuery = shopQuery.eq('room_number', roomData!.room_number);
@@ -61,17 +72,25 @@ const ProfileTab = ({ profile, onProfileChange }: ProfileTabProps) => {
 
       const { data: shopOrders, error: shopError } = await shopQuery;
 
-      // Fetch travel orders - only if we have booking_id_key (table doesn't have room_number)
+      // Fetch travel orders
       let travelOrders: any[] = [];
-      if (hasBooking) {
-        const { data, error: travelError } = await supabase
+      
+      if (hasGuestId) {
+        const { data, error } = await supabase
+          .from('travel_service_orders')
+          .select('*')
+          .eq('guest_id', (roomData as any)!.guest_id)
+          .order('created_at', { ascending: false });
+        
+        if (!error) travelOrders = data || [];
+      } else if (hasBooking) {
+        const { data, error } = await supabase
           .from('travel_service_orders')
           .select('*')
           .eq('booking_id_key', roomData!.booking_record_id)
           .order('created_at', { ascending: false });
-
-        if (travelError) console.error('Error fetching travel orders:', travelError);
-        travelOrders = data || [];
+        
+        if (!error) travelOrders = data || [];
       }
 
       if (shopError) console.error('Error fetching shop orders:', shopError);
