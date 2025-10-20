@@ -128,7 +128,7 @@ const PersonalAccountPage = () => {
         </a>
       </div>
 
-      {/* Walk-in Registration Card */}
+      {/* Walk-in Registration Card - PRIMARY CTA */}
       {!isPersonalized && (
         <WalkInRegistrationCard
           onSuccess={() => {
@@ -140,7 +140,7 @@ const PersonalAccountPage = () => {
         />
       )}
       
-      {/* Compact login section */}
+      {/* Compact login section - SECONDARY action */}
       {!isPersonalized && (
         <div className="bg-blue-50 rounded-lg p-3 mb-4 border border-blue-200">
           <p className="text-xs text-gray-600 mb-2 text-center">Уже были у нас?</p>

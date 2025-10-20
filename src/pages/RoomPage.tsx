@@ -54,6 +54,7 @@ const RoomPage = () => {
       
       {imageUrl && !imgError && (
         <div className="mb-6">
+          {/* Recommended: 800x533px (3:2) or 800x450px (16:9), WebP/JPEG, 80-85% quality, <200KB - See IMAGE_GUIDELINES.md */}
           <img 
             src={imageUrl} 
             alt={roomData.apartment_name || "Room"} 
