@@ -13,7 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, MapPin, Clock, Calendar, UtensilsCrossed, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Loader2, MapPin, Clock, Calendar, UtensilsCrossed, Plus, ChevronDown, ChevronUp, ShoppingCart, X, Trash2 } from "lucide-react";
 
 interface TravelCartItem extends CartItem {
   duration_hours?: number;
@@ -39,7 +41,7 @@ const TravelPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null);
   const [expandedRestaurantId, setExpandedRestaurantId] = useState<string | null>(null);
-  const orderFormRef = useRef<HTMLDivElement>(null);
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
 
   useEffect(() => {
     if (roomData?.guest_name) {
@@ -54,6 +56,7 @@ const TravelPage = () => {
     const isSelected = selectedServices.some(s => s.id === service.id);
     if (isSelected) {
       removeItem(service.id);
+      toast.success("Услуга удалена из корзины");
     } else {
       addItem({ 
         id: service.id, 
@@ -62,15 +65,13 @@ const TravelPage = () => {
         duration_hours: service.duration_hours || undefined,
         category: service.category || undefined
       });
-      
-      // Scroll to order form with a slight delay to ensure it's rendered
-      setTimeout(() => {
-        orderFormRef.current?.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'center' 
-        });
-      }, 100);
+      toast.success(`${service.title} добавлен в корзину`);
     }
+  };
+
+  const handleClearCart = () => {
+    clearCart();
+    toast.success("Корзина очищена");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -112,6 +113,7 @@ const TravelPage = () => {
       setCustomerComment("");
       if (!roomData?.guest_name) setCustomerName("");
       if (!roomData?.guest_phone) setCustomerPhone("");
+      setIsMobileCartOpen(false);
       
     } catch (error) {
       console.error('Error submitting order:', error);
@@ -129,10 +131,162 @@ const TravelPage = () => {
     );
   }
 
+  const CartContent = () => (
+    <>
+      {selectedServices.length === 0 ? (
+        <p className="text-muted-foreground text-center py-4">Корзина пуста</p>
+      ) : (
+        <>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm text-muted-foreground">
+              {selectedServices.length} {selectedServices.length === 1 ? 'услуга' : selectedServices.length < 5 ? 'услуги' : 'услуг'}
+            </p>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 text-xs">
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Очистить
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Очистить корзину?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Все услуги будут удалены из корзины. Это действие нельзя отменить.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Отмена</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearCart}>Очистить</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+
+          <div className="space-y-3 mb-4">
+            {selectedServices.map((service) => {
+              const price = Number(service.price) || 0;
+              return (
+                <div key={service.id} className="flex justify-between items-start gap-2 p-2 rounded-lg border">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{service.name}</p>
+                    {service.duration_hours && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {service.duration_hours} часов
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <p className="font-medium text-sm">{price > 0 ? `${price} ₽` : 'Бесплатно'}</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={() => removeItem(service.id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          <div className="border-t pt-4 mb-4">
+            <div className="flex justify-between items-center font-medium text-lg">
+              <span>Итого:</span>
+              <span>{calculateTotal()} ₽</span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Имя</label>
+              <Input
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Ваше имя"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Телефон</label>
+              <Input
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                placeholder="+7 (999) 123-45-67"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Комментарий</label>
+              <Textarea
+                value={customerComment}
+                onChange={(e) => setCustomerComment(e.target.value)}
+                placeholder="Дополнительные пожелания..."
+                rows={3}
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {customerComment.length}/500
+              </p>
+            </div>
+
+            {!isPersonalized ? (
+              <CartAuthPrompt />
+            ) : (
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="w-full"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Отправляем заказ...
+                  </>
+                ) : (
+                  "Оформить заказ"
+                )}
+              </Button>
+            )}
+          </form>
+        </>
+      )}
+    </>
+  );
+
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-24 lg:pb-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-8 text-center">Путешествия и экскурсии</h1>
+        <div className="flex items-center justify-between mb-4 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold">Путешествия и экскурсии</h1>
+          
+          {/* Mobile Cart Button */}
+          <Sheet open={isMobileCartOpen} onOpenChange={setIsMobileCartOpen}>
+            <SheetTrigger asChild>
+              <Button className="lg:hidden relative" size="sm">
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Корзина
+                {selectedServices.length > 0 && (
+                  <Badge className="ml-2 h-5 w-5 flex items-center justify-center p-0 rounded-full" variant="secondary">
+                    {selectedServices.length}
+                  </Badge>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <ShoppingCart className="h-5 w-5" />
+                  Корзина
+                </SheetTitle>
+              </SheetHeader>
+              <div className="mt-6">
+                <CartContent />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
         
         <Tabs defaultValue="itinerary" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
@@ -335,12 +489,12 @@ const TravelPage = () => {
             )}
           </TabsContent>
           
-          <TabsContent value="services" className="space-y-6">
-            <div className="grid gap-6">
+          <TabsContent value="services">
+            <div className="grid lg:grid-cols-3 gap-8">
               {/* Services Grid */}
-              <div className="grid gap-4">
+              <div className="lg:col-span-2 grid gap-4">
                 {services.map((service) => (
-                <Card key={service.id}>
+                  <Card key={service.id}>
                     <CardContent className="p-3 sm:p-6">
                       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                         {service.image_url && (
@@ -384,7 +538,7 @@ const TravelPage = () => {
                             size="sm"
                             className="w-full sm:w-auto text-xs sm:text-sm"
                           >
-                            {selectedServices.some(s => s.id === service.id) ? "Убрать из заказа" : "Добавить в заказ"}
+                            {selectedServices.some(s => s.id === service.id) ? "В корзине" : "Добавить"}
                           </Button>
                         </div>
                       </div>
@@ -393,84 +547,20 @@ const TravelPage = () => {
                 ))}
               </div>
 
-              {/* Order Form */}
-              {selectedServices.length > 0 && (
-                <Card ref={orderFormRef} className="animate-in fade-in slide-in-from-bottom-4 duration-500 border-primary/20 shadow-lg">
-                  <CardHeader className="pb-3 sm:pb-6 bg-primary/5">
-                    <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
-                      <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-                      Оформление заказа
+              {/* Desktop Cart */}
+              <div className="hidden lg:block lg:col-span-1">
+                <Card className="sticky top-4">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ShoppingCart className="h-5 w-5" />
+                      Корзина
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Имя</label>
-                          <Input
-                            value={customerName}
-                            onChange={(e) => setCustomerName(e.target.value)}
-                            placeholder="Ваше имя"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Телефон</label>
-                          <Input
-                            value={customerPhone}
-                            onChange={(e) => setCustomerPhone(e.target.value)}
-                            placeholder="+7 (999) 123-45-67"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Комментарий</label>
-                        <Textarea
-                          value={customerComment}
-                          onChange={(e) => setCustomerComment(e.target.value)}
-                          placeholder="Дополнительные пожелания..."
-                          rows={3}
-                        />
-                      </div>
-
-                      <div className="bg-muted/50 p-3 sm:p-4 rounded-lg">
-                        <h3 className="font-medium mb-2 text-sm sm:text-base">Выбранные услуги:</h3>
-                        {selectedServices.map((service) => (
-                          <div key={service.id} className="flex justify-between items-center mb-1 text-xs sm:text-sm">
-                            <span className="truncate mr-2">{service.name}</span>
-                            <span className="font-medium whitespace-nowrap">{service.price} ₽</span>
-                          </div>
-                        ))}
-                        <div className="border-t pt-2 mt-2">
-                          <div className="flex justify-between items-center font-medium text-sm sm:text-base">
-                            <span>Итого:</span>
-                            <span>{calculateTotal()} ₽</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {!isPersonalized ? (
-                        <CartAuthPrompt />
-                      ) : (
-                        <Button
-                          type="submit"
-                          disabled={submitting}
-                          className="w-full"
-                        >
-                          {submitting ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Отправляем заказ...
-                            </>
-                          ) : (
-                            "Отправить заказ"
-                          )}
-                        </Button>
-                      )}
-                    </form>
+                    <CartContent />
                   </CardContent>
                 </Card>
-              )}
+              </div>
             </div>
           </TabsContent>
         </Tabs>
