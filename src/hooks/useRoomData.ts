@@ -173,12 +173,13 @@ export const useRoomData = () => {
       setLoading(true);
       console.log('🔄 Fetching default room data');
       
-      // Get default room from rooms table (always select the first created active room for consistency)
+      // Get default room from rooms table (always select the same room for consistency)
       const { data: roomData, error: roomError } = await supabase
         .from('rooms')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
         .limit(1)
         .single();
 
