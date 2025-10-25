@@ -1,36 +1,99 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, User, Loader2, MessageSquare } from "lucide-react";
 import { useHostData, HostBooking } from "@/hooks/useHostData";
 import { useHostAuth } from "@/hooks/useHostAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import HotelServiceOrders from "@/components/host/HotelServiceOrders";
 import TravelServiceOrders from "@/components/host/TravelServiceOrders";
 import { HostMarketingDashboard } from "@/components/host/HostMarketingDashboard";
 
 const HostPage = () => {
-  const { isHostAuthenticated, loading: authLoading, logout: hostLogout } = useHostAuth();
+  const { isHostAuthenticated, loading: hostAuthLoading, logout: hostLogout, user } = useHostAuth();
   const { hostData, loading, error, requestChange } = useHostData();
   const [selectedBooking, setSelectedBooking] = useState<HostBooking | null>(null);
   const [requestType, setRequestType] = useState("");
   const [requestDetails, setRequestDetails] = useState("");
   const [requestSubmitting, setRequestSubmitting] = useState(false);
-  const navigate = useNavigate();
+  
+  // Auth form state
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isNewHost, setIsNewHost] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading && !isHostAuthenticated) {
-      navigate('/auth');
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (error) throw error;
+      toast.success('Вход выполнен');
+    } catch (error: any) {
+      toast.error(error.message || 'Ошибка входа');
+    } finally {
+      setAuthLoading(false);
     }
-  }, [isHostAuthenticated, authLoading, navigate]);
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+
+    try {
+      const redirectUrl = `${window.location.origin}/host`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          emailRedirectTo: redirectUrl
+        }
+      });
+
+      if (error) throw error;
+
+      // If new host checkbox is checked, assign host role
+      if (isNewHost && data.user) {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: data.user.id,
+            role: 'host'
+          });
+
+        if (roleError) {
+          console.error('Error assigning host role:', roleError);
+          toast.error('Регистрация успешна, но не удалось назначить роль. Обратитесь к администратору.');
+        } else {
+          toast.success('Регистрация успешна! Проверьте email для подтверждения.');
+        }
+      } else {
+        toast.success('Регистрация успешна! Проверьте email. Администратор должен назначить вам роль хоста.');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Ошибка регистрации');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     await hostLogout();
     toast.success('Вы вышли из панели хоста');
-    navigate('/auth');
   };
 
   const handleRequestSubmit = async (e: React.FormEvent) => {
@@ -58,7 +121,7 @@ const HostPage = () => {
     }
   };
 
-  if (authLoading || loading) {
+  if (hostAuthLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -66,8 +129,129 @@ const HostPage = () => {
     );
   }
 
+  // Show login form if not authenticated
   if (!isHostAuthenticated) {
-    return null; // Will redirect to /auth
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Панель хоста</CardTitle>
+            <CardDescription>
+              Управление бронированиями и заказами
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="login">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Вход</TabsTrigger>
+                <TabsTrigger value="signup">Регистрация</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input
+                      id="login-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      placeholder="host@example.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Пароль</Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={authLoading}>
+                    {authLoading ? 'Вход...' : 'Войти'}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="signup">
+                <form onSubmit={handleSignup} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      placeholder="host@example.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Пароль</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      placeholder="••••••••"
+                      minLength={6}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="new-host"
+                      checked={isNewHost}
+                      onCheckedChange={(checked) => setIsNewHost(checked as boolean)}
+                    />
+                    <Label
+                      htmlFor="new-host"
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      Я новый хост (автоматически назначить роль)
+                    </Label>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={authLoading}>
+                    {authLoading ? 'Регистрация...' : 'Зарегистрироваться'}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show error if authenticated but not host
+  if (user && !isHostAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-red-600">Доступ запрещен</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p>У вас нет прав хоста. Обратитесь к администратору системы.</p>
+            <Button onClick={handleLogout} variant="outline" className="w-full">
+              Выйти
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   return (
