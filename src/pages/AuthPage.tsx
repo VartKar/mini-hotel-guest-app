@@ -69,8 +69,10 @@ export default function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Вход для сотрудников</CardTitle>
-          <CardDescription>Администраторы и хосты</CardDescription>
+          <CardTitle>Вход для администраторов</CardTitle>
+          <CardDescription>
+            Только для администраторов системы
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login">
@@ -135,8 +137,21 @@ export default function AuthPage() {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Регистрация...' : 'Зарегистрироваться'}
+                  {loading ? 'Регистрация...' : 'Зарегистрироваться (Админ)'}
                 </Button>
+                <div className="text-center mt-4 pt-4 border-t">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Регистрация для владельцев недвижимости:
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => navigate('/host-register')}
+                  >
+                    Регистрация хоста
+                  </Button>
+                </div>
               </form>
             </TabsContent>
           </Tabs>
