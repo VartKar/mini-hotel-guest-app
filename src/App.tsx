@@ -17,6 +17,7 @@ const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const HostPage = lazy(() => import("./pages/HostPage"));
 const GuestPage = lazy(() => import("./pages/GuestPage"));
+const AuthPage = lazy(() => import("./pages/AuthPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -95,6 +96,11 @@ function App() {
                   <HostPage />
                 </Suspense>
               </Layout>
+            } />
+            <Route path="/auth" element={
+              <Suspense fallback={<div>Загрузка...</div>}>
+                <AuthPage />
+              </Suspense>
             } />
             <Route path="*" element={
               <Suspense fallback={<div>Загрузка...</div>}>

@@ -1,70 +1,42 @@
 
 import { useState, useEffect } from 'react';
-
-let globalIsAdminAuthenticated = false;
-let adminListeners: (() => void)[] = [];
-
-const notifyAdminListeners = () => {
-  adminListeners.forEach(listener => listener());
-};
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 
 export const useAdminAuth = () => {
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(globalIsAdminAuthenticated);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const listener = () => {
-      setIsAdminAuthenticated(globalIsAdminAuthenticated);
-    };
-    adminListeners.push(listener);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
 
-    // Check if admin is already logged in (from localStorage)
-    const adminAuth = localStorage.getItem('admin_authenticated');
-    if (adminAuth === 'true') {
-      globalIsAdminAuthenticated = true;
-      setIsAdminAuthenticated(true);
-    }
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-    return () => {
-      adminListeners = adminListeners.filter(l => l !== listener);
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
-  const loginAsAdmin = async (email: string) => {
-    setLoading(true);
-    setError(null);
-
-    // Simple email-based auth for MVP - only monaco1@ya.ru allowed
-    if (email.toLowerCase().trim() !== 'monaco1@ya.ru') {
-      setError('Неавторизованный доступ');
-      setLoading(false);
-      return false;
-    }
-
-    // Store auth state
-    localStorage.setItem('admin_authenticated', 'true');
-    globalIsAdminAuthenticated = true;
-    setIsAdminAuthenticated(true);
-    notifyAdminListeners();
-    
-    setLoading(false);
-    return true;
-  };
-
-  const logoutAdmin = () => {
-    localStorage.removeItem('admin_authenticated');
-    globalIsAdminAuthenticated = false;
-    setIsAdminAuthenticated(false);
-    notifyAdminListeners();
+  const logout = async () => {
+    await supabase.auth.signOut();
   };
 
   return {
-    isAdminAuthenticated,
+    user,
+    session,
+    isAdminAuthenticated: !!user,
     loading,
-    error,
-    loginAsAdmin,
-    logoutAdmin,
-    clearError: () => setError(null)
+    logout
   };
 };
