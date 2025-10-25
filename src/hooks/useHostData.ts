@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useHostAuth } from './useHostAuth';
 
 export interface HostBooking {
   id: string;
@@ -22,44 +23,26 @@ export interface HostData {
   bookings: HostBooking[];
 }
 
-const HOST_DATA_KEY = 'host_session_data';
-const HOST_AUTH_KEY = 'host_authenticated';
-
-const getStoredHostData = (): HostData | null => {
-  try {
-    const stored = localStorage.getItem(HOST_DATA_KEY);
-    return stored ? JSON.parse(stored) : null;
-  } catch {
-    return null;
-  }
-};
-
-const getStoredAuthStatus = (): boolean => {
-  return localStorage.getItem(HOST_AUTH_KEY) === 'true';
-};
-
-const setStoredHostData = (data: HostData | null) => {
-  if (data) {
-    localStorage.setItem(HOST_DATA_KEY, JSON.stringify(data));
-    localStorage.setItem(HOST_AUTH_KEY, 'true');
-  } else {
-    localStorage.removeItem(HOST_DATA_KEY);
-    localStorage.removeItem(HOST_AUTH_KEY);
-  }
-};
-
 export const useHostData = () => {
-  const [hostData, setHostData] = useState<HostData | null>(getStoredHostData());
+  const { user, isHostAuthenticated, loading: authLoading } = useHostAuth();
+  const [hostData, setHostData] = useState<HostData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(getStoredAuthStatus());
 
-  const loginWithEmail = async (email: string) => {
+  useEffect(() => {
+    if (isHostAuthenticated && user?.email) {
+      loadHostData(user.email);
+    } else {
+      setHostData(null);
+    }
+  }, [isHostAuthenticated, user]);
+
+  const loadHostData = async (email: string) => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('🔍 Looking up host by email:', email);
+      console.log('🔍 Loading host data for:', email);
       
       // Look up bookings for this host
       const { data: bookingsData, error: bookingsError } = await supabase
@@ -80,17 +63,17 @@ export const useHostData = () => {
       if (bookingsError) {
         console.error('Error looking up bookings:', bookingsError);
         setError('Ошибка при поиске данных хоста');
-        return false;
+        return;
       }
 
-      // Filter bookings where room host_email matches the provided email
+      // Filter bookings where room host_email matches the authenticated user's email
       const hostBookings = bookingsData.filter(booking => 
         booking.rooms?.host_email?.toLowerCase() === email.toLowerCase().trim()
       );
 
       if (hostBookings.length === 0) {
-        setError('Хост с таким email не найден или нет активных бронирований');
-        return false;
+        setError('Нет активных бронирований для этого хоста');
+        return;
       }
 
       console.log('✅ Host bookings found:', hostBookings.length);
@@ -101,7 +84,7 @@ export const useHostData = () => {
         host_name: firstRoom.host_name,
         host_email: firstRoom.host_email,
         host_phone: firstRoom.host_phone,
-        host_company: null, // Not available in current schema
+        host_company: null,
         bookings: hostBookings.map(booking => ({
           id: booking.id,
           guest_name: booking.guest_name,
@@ -115,23 +98,13 @@ export const useHostData = () => {
         }))
       };
 
-      setStoredHostData(hostInfo);
       setHostData(hostInfo);
-      setIsAuthenticated(true);
-      return true;
     } catch (err) {
-      console.error('Unexpected error during host login:', err);
+      console.error('Unexpected error loading host data:', err);
       setError('Произошла непредвиденная ошибка');
-      return false;
     } finally {
       setLoading(false);
     }
-  };
-
-  const logout = () => {
-    setStoredHostData(null);
-    setHostData(null);
-    setIsAuthenticated(false);
   };
 
   const requestChange = async (booking: HostBooking, requestType: string, details: string) => {
@@ -176,11 +149,9 @@ export const useHostData = () => {
 
   return { 
     hostData, 
-    loading, 
+    loading: loading || authLoading, 
     error, 
-    isAuthenticated, 
-    loginWithEmail, 
-    logout,
+    isAuthenticated: isHostAuthenticated, 
     requestChange,
     clearError: () => setError(null)
   };

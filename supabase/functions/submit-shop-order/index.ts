@@ -7,6 +7,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const escapeHtml = (text: string) => {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -20,6 +30,32 @@ serve(async (req) => {
 
     const { customerName, customerPhone, roomNumber, items, totalAmount, bookingIdKey, customerComment, guestId } = await req.json()
 
+    // Input validation
+    if (!customerName || customerName.trim().length < 2 || customerName.trim().length > 100) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Имя должно содержать от 2 до 100 символов' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+    if (customerComment && customerComment.length > 500) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Комментарий слишком длинный (максимум 500 символов)' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+    if (!totalAmount || totalAmount < 0 || totalAmount > 1000000) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Некорректная сумма заказа' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+    if (customerPhone && !/^[+]?[0-9\s\-\(\)]{7,20}$/.test(customerPhone)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Некорректный формат телефона' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
     console.log('Received shop order:', { customerName, customerPhone, items, totalAmount, customerComment })
 
     // Insert the order into the database
@@ -28,12 +64,12 @@ serve(async (req) => {
       .insert({
         guest_id: guestId || null,
         booking_id_key: bookingIdKey || null,
-        customer_name: customerName,
-        customer_phone: customerPhone,
+        customer_name: customerName.trim(),
+        customer_phone: customerPhone?.trim() || '',
         room_number: roomNumber,
         ordered_items: items,
         total_amount: totalAmount,
-        customer_comment: customerComment,
+        customer_comment: customerComment?.trim() || null,
         order_status: 'pending'
       })
       .select()
@@ -99,16 +135,16 @@ serve(async (req) => {
           subject: 'Новый заказ в магазине',
           html: `
             <h2>Новый заказ в магазине</h2>
-            <p><strong>Имя клиента:</strong> ${customerName}</p>
-            <p><strong>Телефон:</strong> ${customerPhone || 'Не указан'}</p>
-            <p><strong>Номер комнаты:</strong> ${roomNumber || 'Не указан'}</p>
-            <p><strong>Общая сумма:</strong> ${totalAmount} ₽</p>
-            <p><strong>Заказ ID:</strong> ${orderData.id}</p>
-            ${customerComment ? `<p><strong>Комментарий:</strong> ${customerComment}</p>` : ''}
+            <p><strong>Имя клиента:</strong> ${escapeHtml(customerName)}</p>
+            <p><strong>Телефон:</strong> ${escapeHtml(customerPhone) || 'Не указан'}</p>
+            <p><strong>Номер комнаты:</strong> ${escapeHtml(roomNumber) || 'Не указан'}</p>
+            <p><strong>Общая сумма:</strong> ${escapeHtml(String(totalAmount))} ₽</p>
+            <p><strong>Заказ ID:</strong> ${escapeHtml(orderData.id)}</p>
+            ${customerComment ? `<p><strong>Комментарий:</strong> ${escapeHtml(customerComment)}</p>` : ''}
             <h3>Заказанные товары:</h3>
             <ul>
               ${items.map((item: any) => `
-                <li>${item.name} - ${item.price} ₽ x ${item.quantity} (${item.category})</li>
+                <li>${escapeHtml(item.name)} - ${escapeHtml(String(item.price))} ₽ x ${escapeHtml(String(item.quantity))} (${escapeHtml(item.category)})</li>
               `).join('')}
             </ul>
           `,

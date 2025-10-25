@@ -28,6 +28,7 @@ export default function AuthPage() {
 
       if (data.user) {
         toast.success('Успешный вход');
+        // Default redirect to admin, the specific pages will handle role checks
         navigate('/admin');
       }
     } catch (error: any) {
@@ -55,7 +56,7 @@ export default function AuthPage() {
       if (error) throw error;
 
       if (data.user) {
-        toast.success('Регистрация успешна! Проверьте email для подтверждения.');
+        toast.success('Регистрация успешна! Проверьте email для подтверждения. После подтверждения администратор должен назначить вам роль.');
       }
     } catch (error: any) {
       toast.error(error.message || 'Ошибка регистрации');

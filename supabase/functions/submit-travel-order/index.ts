@@ -7,6 +7,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const escapeHtml = (text: string) => {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -20,9 +30,7 @@ serve(async (req) => {
 
     const { customerName, customerPhone, customerComment, services, totalPrice, bookingIdKey, guestId } = await req.json()
 
-    console.log('Received travel order:', { customerName, customerPhone, services, totalPrice })
-
-    // Валидация
+    // Validation
     if (!customerName || customerName.trim().length < 2 || customerName.trim().length > 100) {
       return new Response(
         JSON.stringify({ success: false, error: 'Имя должно содержать от 2 до 100 символов' }),
@@ -36,6 +44,29 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       )
     }
+
+    if (customerComment && customerComment.length > 500) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Комментарий слишком длинный (максимум 500 символов)' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
+    if (!totalPrice || totalPrice < 0 || totalPrice > 1000000) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Некорректная сумма заказа' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
+    if (customerPhone && !/^[+]?[0-9\s\-\(\)]{7,20}$/.test(customerPhone)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Некорректный формат телефона' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
+    console.log('Received travel order:', { customerName, customerPhone, services, totalPrice })
 
     // Insert the order into the database
     const { data: orderData, error: orderError } = await supabaseClient
@@ -113,15 +144,15 @@ serve(async (req) => {
           subject: 'Новый заказ услуг путешествия',
           html: `
             <h2>Новый заказ услуг путешествия</h2>
-            <p><strong>Имя клиента:</strong> ${customerName}</p>
-            <p><strong>Телефон:</strong> ${customerPhone || 'Не указан'}</p>
-            <p><strong>Комментарий:</strong> ${customerComment || 'Нет комментариев'}</p>
-            <p><strong>Общая сумма:</strong> ${totalPrice} ₽</p>
-            <p><strong>Заказ ID:</strong> ${orderData.id}</p>
+            <p><strong>Имя клиента:</strong> ${escapeHtml(customerName)}</p>
+            <p><strong>Телефон:</strong> ${escapeHtml(customerPhone) || 'Не указан'}</p>
+            <p><strong>Комментарий:</strong> ${escapeHtml(customerComment) || 'Нет комментариев'}</p>
+            <p><strong>Общая сумма:</strong> ${escapeHtml(String(totalPrice))} ₽</p>
+            <p><strong>Заказ ID:</strong> ${escapeHtml(orderData.id)}</p>
             <h3>Выбранные услуги:</h3>
             <ul>
               ${services.map((service: any) => `
-                <li>${service.title} - ${service.base_price} ₽</li>
+                <li>${escapeHtml(service.title)} - ${escapeHtml(String(service.base_price))} ₽</li>
               `).join('')}
             </ul>
           `,

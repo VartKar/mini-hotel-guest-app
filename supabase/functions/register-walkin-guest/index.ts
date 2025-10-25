@@ -37,6 +37,20 @@ serve(async (req) => {
       )
     }
 
+    if (name.trim().length < 2 || name.trim().length > 100) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Имя должно содержать от 2 до 100 символов' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
+    if (phone && !/^[+]?[0-9\s\-\(\)]{7,20}$/.test(phone)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Некорректный формат телефона' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
     // Check if guest already exists
     const { data: existingGuest } = await supabaseClient
       .from('guests')

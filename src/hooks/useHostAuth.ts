@@ -1,13 +1,12 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 
-export const useAdminAuth = () => {
+export const useHostAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isHost, setIsHost] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -16,13 +15,13 @@ export const useAdminAuth = () => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Check if user has admin role
+        // Check if user has host role
         if (session?.user) {
           setTimeout(() => {
-            checkAdminRole(session.user.id);
+            checkHostRole(session.user.id);
           }, 0);
         } else {
-          setIsAdmin(false);
+          setIsHost(false);
           setLoading(false);
         }
       }
@@ -34,7 +33,7 @@ export const useAdminAuth = () => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        checkAdminRole(session.user.id);
+        checkHostRole(session.user.id);
       } else {
         setLoading(false);
       }
@@ -43,23 +42,23 @@ export const useAdminAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkAdminRole = async (userId: string) => {
+  const checkHostRole = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .eq('role', 'admin')
+        .eq('role', 'host')
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error checking admin role:', error);
+        console.error('Error checking host role:', error);
       }
 
-      setIsAdmin(!!data);
+      setIsHost(!!data);
     } catch (err) {
-      console.error('Unexpected error checking admin role:', err);
-      setIsAdmin(false);
+      console.error('Unexpected error checking host role:', err);
+      setIsHost(false);
     } finally {
       setLoading(false);
     }
@@ -67,13 +66,13 @@ export const useAdminAuth = () => {
 
   const logout = async () => {
     await supabase.auth.signOut();
-    setIsAdmin(false);
+    setIsHost(false);
   };
 
   return {
     user,
     session,
-    isAdminAuthenticated: isAdmin,
+    isHostAuthenticated: isHost,
     loading,
     logout
   };

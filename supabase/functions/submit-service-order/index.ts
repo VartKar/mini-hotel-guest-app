@@ -7,6 +7,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const escapeHtml = (text: string) => {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -23,7 +33,7 @@ serve(async (req) => {
     console.log('Received service order:', { customerName, customerPhone, services, bookingIdKey, roomNumber })
     console.log('Services count:', services?.length)
 
-    // Валидация
+    // Validation
     if (!customerName || customerName.trim().length < 2 || customerName.trim().length > 100) {
       return new Response(
         JSON.stringify({ success: false, error: 'Имя должно содержать от 2 до 100 символов' }),
@@ -38,14 +48,21 @@ serve(async (req) => {
       )
     }
 
+    if (customerPhone && !/^[+]?[0-9\s\-\(\)]{7,20}$/.test(customerPhone)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Некорректный формат телефона' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
     // Insert the order into the database
     console.log('Attempting to insert order into database...')
     const { data: orderData, error: orderError } = await supabaseClient
       .from('shop_orders')
       .insert({
         booking_id_key: bookingIdKey,
-        customer_name: customerName,
-        customer_phone: customerPhone || '',
+        customer_name: customerName.trim(),
+        customer_phone: customerPhone?.trim() || '',
         room_number: roomNumber,
         ordered_items: services,
         total_amount: 0, // Services might not have prices
@@ -79,14 +96,14 @@ serve(async (req) => {
           subject: 'Новый заказ услуг в номере',
           html: `
             <h2>Новый заказ услуг в номере</h2>
-            <p><strong>Имя клиента:</strong> ${customerName}</p>
-            <p><strong>Телефон:</strong> ${customerPhone || 'Не указан'}</p>
-            <p><strong>Номер комнаты:</strong> ${roomNumber || 'Не указан'}</p>
-            <p><strong>Заказ ID:</strong> ${orderData.id}</p>
+            <p><strong>Имя клиента:</strong> ${escapeHtml(customerName)}</p>
+            <p><strong>Телефон:</strong> ${escapeHtml(customerPhone) || 'Не указан'}</p>
+            <p><strong>Номер комнаты:</strong> ${escapeHtml(roomNumber) || 'Не указан'}</p>
+            <p><strong>Заказ ID:</strong> ${escapeHtml(orderData.id)}</p>
             <h3>Заказанные услуги:</h3>
             <ul>
               ${services.map((service: any) => `
-                <li>${service.title} - ${service.description || 'Без описания'}</li>
+                <li>${escapeHtml(service.title)} - ${escapeHtml(service.description) || 'Без описания'}</li>
               `).join('')}
             </ul>
           `,

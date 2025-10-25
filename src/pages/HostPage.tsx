@@ -1,33 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, User, Loader2, MessageSquare } from "lucide-react";
 import { useHostData, HostBooking } from "@/hooks/useHostData";
+import { useHostAuth } from "@/hooks/useHostAuth";
 import { toast } from "sonner";
 import HotelServiceOrders from "@/components/host/HotelServiceOrders";
 import TravelServiceOrders from "@/components/host/TravelServiceOrders";
 import { HostMarketingDashboard } from "@/components/host/HostMarketingDashboard";
 
 const HostPage = () => {
-  const { hostData, loading, error, isAuthenticated, loginWithEmail, logout, requestChange } = useHostData();
-  const [email, setEmail] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const { isHostAuthenticated, loading: authLoading, logout: hostLogout } = useHostAuth();
+  const { hostData, loading, error, requestChange } = useHostData();
   const [selectedBooking, setSelectedBooking] = useState<HostBooking | null>(null);
   const [requestType, setRequestType] = useState("");
   const [requestDetails, setRequestDetails] = useState("");
   const [requestSubmitting, setRequestSubmitting] = useState(false);
+  const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      await loginWithEmail(email);
-    } finally {
-      setSubmitting(false);
+  useEffect(() => {
+    if (!authLoading && !isHostAuthenticated) {
+      navigate('/auth');
     }
+  }, [isHostAuthenticated, authLoading, navigate]);
+
+  const handleLogout = async () => {
+    await hostLogout();
+    toast.success('Вы вышли из панели хоста');
+    navigate('/auth');
   };
 
   const handleRequestSubmit = async (e: React.FormEvent) => {
@@ -55,7 +58,7 @@ const HostPage = () => {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -63,50 +66,8 @@ const HostPage = () => {
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-md mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-center">Вход для хостов</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-1">
-                    Email хоста
-                  </label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    required
-                  />
-                </div>
-                
-                {error && (
-                  <div className="text-red-600 text-sm">{error}</div>
-                )}
-                
-                <Button type="submit" disabled={submitting} className="w-full">
-                  {submitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Вход...
-                    </>
-                  ) : (
-                    "Войти"
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+  if (!isHostAuthenticated) {
+    return null; // Will redirect to /auth
   }
 
   return (
@@ -114,7 +75,7 @@ const HostPage = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Панель хоста</h1>
-          <Button onClick={logout} variant="outline">
+          <Button onClick={handleLogout} variant="outline">
             Выйти
           </Button>
         </div>
