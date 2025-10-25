@@ -21,16 +21,21 @@ const ShopOrdersManagement = () => {
 
   const fetchOrders = async () => {
     try {
+      console.log('[ShopOrdersManagement] Fetching shop orders...');
       const { data, error } = await supabase
         .from('shop_orders')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[ShopOrdersManagement] Error fetching shop orders:', error);
+        throw error;
+      }
+      console.log('[ShopOrdersManagement] Fetched orders:', data?.length || 0);
       setOrders(data || []);
-    } catch (error) {
-      console.error('Error fetching shop orders:', error);
-      toast.error('Ошибка загрузки заказов');
+    } catch (error: any) {
+      console.error('[ShopOrdersManagement] Error fetching shop orders:', error);
+      toast.error(`Ошибка загрузки заказов: ${error.message || 'неизвестная ошибка'}`);
     } finally {
       setIsLoading(false);
     }

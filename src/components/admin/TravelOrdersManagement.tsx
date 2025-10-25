@@ -21,16 +21,21 @@ const TravelOrdersManagement = () => {
 
   const fetchOrders = async () => {
     try {
+      console.log('[TravelOrdersManagement] Fetching travel orders...');
       const { data, error } = await supabase
         .from('travel_service_orders')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[TravelOrdersManagement] Error fetching travel orders:', error);
+        throw error;
+      }
+      console.log('[TravelOrdersManagement] Fetched orders:', data?.length || 0);
       setOrders(data || []);
-    } catch (error) {
-      console.error('Error fetching travel orders:', error);
-      toast.error('Ошибка загрузки заказов');
+    } catch (error: any) {
+      console.error('[TravelOrdersManagement] Error fetching travel orders:', error);
+      toast.error(`Ошибка загрузки заказов: ${error.message || 'неизвестная ошибка'}`);
     } finally {
       setIsLoading(false);
     }
