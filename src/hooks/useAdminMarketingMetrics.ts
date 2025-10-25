@@ -5,10 +5,16 @@ export const useAdminMarketingMetrics = () => {
   return useQuery({
     queryKey: ["admin-marketing-metrics"],
     queryFn: async () => {
+      console.log("[useAdminMarketingMetrics] Fetching metrics...");
+      
       // 1. Total guests count
-      const { count: guestsCount } = await supabase
+      const { count: guestsCount, error: guestsError } = await supabase
         .from("guests")
         .select("*", { count: "exact", head: true });
+
+      if (guestsError) {
+        console.error("[useAdminMarketingMetrics] Error fetching guests count:", guestsError);
+      }
 
       // 2. Orders count (last 30 days)
       const thirtyDaysAgo = new Date();

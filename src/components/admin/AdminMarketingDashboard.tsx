@@ -7,8 +7,8 @@ import { useAdminMarketingMetrics } from "@/hooks/useAdminMarketingMetrics";
 import { useAdminGuests } from "@/hooks/useAdminGuests";
 
 export const AdminMarketingDashboard = () => {
-  const { data: metrics, isLoading: metricsLoading } = useAdminMarketingMetrics();
-  const { data: guests, isLoading: guestsLoading } = useAdminGuests();
+  const { data: metrics, isLoading: metricsLoading, error: metricsError } = useAdminMarketingMetrics();
+  const { data: guests, isLoading: guestsLoading, error: guestsError } = useAdminGuests();
   const [selectedGuestId, setSelectedGuestId] = useState<string | null>(null);
   const [selectedGuestName, setSelectedGuestName] = useState("");
   const [bonusManagementGuestId, setBonusManagementGuestId] = useState<string | null>(null);
@@ -34,6 +34,20 @@ export const AdminMarketingDashboard = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <p className="text-muted-foreground">Загрузка...</p>
+      </div>
+    );
+  }
+
+  if (metricsError || guestsError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 space-y-4">
+        <p className="text-destructive font-semibold">Ошибка загрузки данных</p>
+        <p className="text-sm text-muted-foreground">
+          {metricsError?.message || guestsError?.message || "Неизвестная ошибка"}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Проверьте консоль браузера для деталей
+        </p>
       </div>
     );
   }
