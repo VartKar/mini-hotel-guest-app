@@ -117,24 +117,15 @@ const PersonalAccountPage = () => {
       {/* Host Link in Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-light">Личный кабинет</h1>
-        <div className="flex gap-2">
-          <a
-            href="/host-register"
-            className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            Регистрация хоста
-            <ExternalLink className="w-3 h-3" />
-          </a>
-          <a
-            href="/host"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            Для владельцев
-            <ExternalLink className="w-3 h-3" />
-          </a>
-        </div>
+        <a
+          href="/host"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+        >
+          Для владельцев
+          <ExternalLink className="w-3 h-3" />
+        </a>
       </div>
 
       {/* Walk-in Registration Card - PRIMARY CTA */}
