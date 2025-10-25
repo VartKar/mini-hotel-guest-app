@@ -166,9 +166,11 @@ const DatabaseManagement = () => {
       setIsDialogOpen(false);
       setEditingRecord(null);
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving record:', error);
-      toast.error('Ошибка сохранения записи');
+      const errorMessage = error?.message || 'Неизвестная ошибка';
+      const errorDetails = error?.details ? ` (${error.details})` : '';
+      toast.error(`Ошибка сохранения записи: ${errorMessage}${errorDetails}`);
     }
   };
 
@@ -319,8 +321,10 @@ const DatabaseManagement = () => {
     }
     
     if (fieldType === 'boolean') {
+      // Default is_active to true for new records, others to false
+      const defaultValue = value !== undefined ? value.toString() : (key === 'is_active' ? 'true' : 'false');
       return (
-        <Select name={`boolean_${key}`} defaultValue={value?.toString() || 'false'}>
+        <Select name={`boolean_${key}`} defaultValue={defaultValue}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
