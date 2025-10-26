@@ -423,6 +423,22 @@ const DatabaseManagement = () => {
       );
     }
     
+    // Handle booking_id with helper text
+    if (selectedTable === 'bookings' && key === 'booking_id') {
+      return (
+        <div className="space-y-2">
+          <Input
+            name={key}
+            defaultValue={value || ''}
+            placeholder="Опционально: внешний номер брони (например, из Booking.com)"
+          />
+          <p className="text-xs text-muted-foreground">
+            Внутренний ID генерируется автоматически. Это поле для номера из внешних систем бронирования.
+          </p>
+        </div>
+      );
+    }
+    
     return (
       <Input
         name={key}
