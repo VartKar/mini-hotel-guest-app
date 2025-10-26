@@ -262,7 +262,7 @@ const DatabaseManagement = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="new">✨ Создать новый объект недвижимости</SelectItem>
+              <SelectItem value="new">✨ Создать новый отель/объект</SelectItem>
               {relatedData.existing_properties.map(p => (
                 <SelectItem key={p.property_id} value={p.property_id}>
                   {p.property_id} ({p.count} {p.count === 1 ? 'комната' : 'комнат'})
@@ -271,7 +271,7 @@ const DatabaseManagement = () => {
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            Выберите существующий объект или создайте новый. При создании нового будет автоматически сгенерирован UUID.
+            <strong>Объект недвижимости</strong> объединяет несколько комнат в один отель/гостиницу. Выберите существующий объект, чтобы добавить комнату к нему, или создайте новый для отдельного отеля.
           </p>
         </div>
       );

@@ -302,7 +302,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               />
             </div>
             <div>
-              <Label htmlFor="property_id">ID объекта</Label>
+              <Label htmlFor="property_id">Объект недвижимости (Отель)</Label>
               <Select 
                 value={formData.property_id} 
                 onValueChange={(value) => {
@@ -314,7 +314,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
                   <SelectValue placeholder="Выберите объект" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="new">✨ Создать новый объект недвижимости</SelectItem>
+                  <SelectItem value="new">✨ Создать новый отель/объект</SelectItem>
                   {existingProperties.map(p => (
                     <SelectItem key={p.property_id} value={p.property_id}>
                       {p.property_id} ({p.count} {p.count === 1 ? 'комната' : 'комнат'})
@@ -323,7 +323,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground mt-1">
-                Выберите существующий объект или создайте новый
+                Объект объединяет несколько комнат в один отель. Выберите существующий для добавления комнаты или создайте новый для отдельного отеля.
               </p>
             </div>
             <div>
