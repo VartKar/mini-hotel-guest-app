@@ -478,6 +478,161 @@ const DatabaseManagement = () => {
       );
     }
     
+    // Handle booking_status with select
+    if (selectedTable === 'bookings' && key === 'booking_status') {
+      return (
+        <div className="space-y-2">
+          <Select name={key} defaultValue={value || 'confirmed'}>
+            <SelectTrigger>
+              <SelectValue placeholder="Выберите статус" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="confirmed">Подтверждено</SelectItem>
+              <SelectItem value="pending">Ожидает</SelectItem>
+              <SelectItem value="cancelled">Отменено</SelectItem>
+              <SelectItem value="completed">Завершено</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Статус бронирования (по умолчанию: подтверждено)
+          </p>
+        </div>
+      );
+    }
+    
+    // Handle stay_duration with helper
+    if (selectedTable === 'bookings' && key === 'stay_duration') {
+      return (
+        <div className="space-y-2">
+          <Input
+            name={key}
+            defaultValue={value || ''}
+            placeholder="Например: 3 ночи, 1 неделя"
+          />
+          <p className="text-xs text-muted-foreground">
+            Длительность пребывания в свободной форме (опционально, автозаполняется из дат)
+          </p>
+        </div>
+      );
+    }
+    
+    // Handle access_token with helper
+    if (selectedTable === 'bookings' && key === 'access_token') {
+      return (
+        <div className="space-y-2">
+          <Input
+            name={key}
+            defaultValue={value || ''}
+            placeholder="Оставьте пустым для автогенерации"
+          />
+          <p className="text-xs text-muted-foreground">
+            Токен доступа для гостя. Генерируется автоматически, если оставить пустым.
+          </p>
+        </div>
+      );
+    }
+    
+    // Handle notes_internal
+    if (selectedTable === 'bookings' && key === 'notes_internal') {
+      return (
+        <div className="space-y-2">
+          <Textarea
+            name={key}
+            defaultValue={value || ''}
+            placeholder="Внутренние заметки для администрации"
+            className="min-h-[80px]"
+          />
+          <p className="text-xs text-muted-foreground">
+            Внутренние примечания (не видны гостям)
+          </p>
+        </div>
+      );
+    }
+    
+    // Handle visibility flags with helper text
+    if (selectedTable === 'bookings' && (key === 'visible_to_guests' || key === 'visible_to_hosts' || key === 'visible_to_admin')) {
+      const defaultValue = value !== undefined ? value.toString() : 'true';
+      const labels = {
+        visible_to_guests: 'Видимость для гостей',
+        visible_to_hosts: 'Видимость для хостов',
+        visible_to_admin: 'Видимость для администраторов'
+      };
+      return (
+        <div className="space-y-2">
+          <Select name={`boolean_${key}`} defaultValue={defaultValue}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="true">Да</SelectItem>
+              <SelectItem value="false">Нет</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            {labels[key as keyof typeof labels]} (по умолчанию: Да)
+          </p>
+        </div>
+      );
+    }
+    
+    // Handle is_archived
+    if (selectedTable === 'bookings' && key === 'is_archived') {
+      const defaultValue = value !== undefined ? value.toString() : 'false';
+      return (
+        <div className="space-y-2">
+          <Select name={`boolean_${key}`} defaultValue={defaultValue}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="true">Да</SelectItem>
+              <SelectItem value="false">Нет</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Архивное бронирование (скрыто из основного списка, по умолчанию: Нет)
+          </p>
+        </div>
+      );
+    }
+    
+    // Handle is_default_guest
+    if (selectedTable === 'bookings' && key === 'is_default_guest') {
+      const defaultValue = value !== undefined ? value.toString() : 'false';
+      return (
+        <div className="space-y-2">
+          <Select name={`boolean_${key}`} defaultValue={defaultValue}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="true">Да</SelectItem>
+              <SelectItem value="false">Нет</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Гость по умолчанию для демонстрации (по умолчанию: Нет)
+          </p>
+        </div>
+      );
+    }
+    
+    // Handle last_updated_by with helper
+    if (selectedTable === 'bookings' && key === 'last_updated_by') {
+      return (
+        <div className="space-y-2">
+          <Input
+            name={key}
+            defaultValue={value || ''}
+            placeholder="Email пользователя"
+          />
+          <p className="text-xs text-muted-foreground">
+            Email пользователя, который последним обновил запись (автозаполняется системой)
+          </p>
+        </div>
+      );
+    }
+    
     return (
       <Input
         name={key}
