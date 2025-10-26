@@ -429,6 +429,8 @@ const DatabaseManagement = () => {
         defaultValue = value.toString();
       } else if (key === 'is_active' || key === 'visible_to_guests' || key === 'visible_to_hosts' || key === 'visible_to_admin') {
         defaultValue = 'true';
+      } else if (selectedTable === 'guests' && key === 'email_subscribed') {
+        defaultValue = 'true';
       }
       
       return (
@@ -450,6 +452,11 @@ const DatabaseManagement = () => {
       if (value === undefined && selectedTable === 'bookings' && key === 'number_of_guests') {
         defaultValue = 2;
       }
+      if (value === undefined && selectedTable === 'guests') {
+        if (key === 'total_spent' || key === 'loyalty_points') {
+          defaultValue = 0;
+        }
+      }
       
       return (
         <Input
@@ -464,10 +471,20 @@ const DatabaseManagement = () => {
     
     // Check if it's a real object (not null, and is Array or Object)
     if (fieldType === 'object' && actualValue !== null && (Array.isArray(actualValue) || typeof actualValue === 'object')) {
+      let jsonValue = actualValue;
+      // Set defaults for guests table JSON fields
+      if (selectedTable === 'guests' && value === undefined) {
+        if (key === 'email_preferences') {
+          jsonValue = { marketing: true, newsletters: true, transactional: true };
+        } else if (key === 'preferred_categories') {
+          jsonValue = [];
+        }
+      }
+      
       return (
         <Textarea
           name={`json_${key}`}
-          defaultValue={JSON.stringify(actualValue, null, 2)}
+          defaultValue={JSON.stringify(jsonValue, null, 2)}
           placeholder={`JSON для ${key}`}
           className="min-h-[120px] font-mono text-sm"
         />
@@ -689,10 +706,16 @@ const DatabaseManagement = () => {
       );
     }
     
+    // Handle loyalty_tier default for guests
+    let textDefaultValue = value || '';
+    if (selectedTable === 'guests' && key === 'loyalty_tier' && !value) {
+      textDefaultValue = 'Стандарт';
+    }
+    
     return (
       <Input
         name={key}
-        defaultValue={value || ''}
+        defaultValue={textDefaultValue}
         placeholder={`Введите ${key}`}
       />
     );
