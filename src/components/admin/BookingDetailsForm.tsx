@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
   onClose,
   onSuccess
 }) => {
+  const [existingProperties, setExistingProperties] = useState<{ property_id: string; count: number }[]>([]);
   const [formData, setFormData] = useState({
     // Booking data
     guest_name: booking.guest_name || '',
@@ -53,6 +54,38 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
   });
 
   const queryClient = useQueryClient();
+
+  // Fetch existing properties on mount
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        const { data: roomsData } = await supabase
+          .from('rooms')
+          .select('property_id')
+          .not('property_id', 'is', null)
+          .order('property_id', { ascending: true });
+
+        if (roomsData) {
+          // Group by property_id and count rooms
+          const propertyMap = roomsData.reduce((acc: any, room: any) => {
+            const propId = room.property_id;
+            if (!acc[propId]) {
+              acc[propId] = { property_id: propId, count: 0 };
+            }
+            acc[propId].count++;
+            return acc;
+          }, {});
+
+          const properties = Object.values(propertyMap) as { property_id: string; count: number }[];
+          setExistingProperties(properties);
+        }
+      } catch (error) {
+        console.error('Error fetching properties:', error);
+      }
+    };
+
+    fetchProperties();
+  }, []);
 
   const updateBookingMutation = useMutation({
     mutationFn: async (updatedData: typeof formData) => {
@@ -270,12 +303,28 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
             </div>
             <div>
               <Label htmlFor="property_id">ID объекта</Label>
-              <Input
-                type="text"
-                id="property_id"
-                value={formData.property_id}
-                onChange={(e) => handleInputChange('property_id', e.target.value)}
-              />
+              <Select 
+                value={formData.property_id} 
+                onValueChange={(value) => {
+                  const finalValue = value === 'new' ? crypto.randomUUID() : value;
+                  handleInputChange('property_id', finalValue);
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Выберите объект" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">✨ Создать новый объект недвижимости</SelectItem>
+                  {existingProperties.map(p => (
+                    <SelectItem key={p.property_id} value={p.property_id}>
+                      {p.property_id} ({p.count} {p.count === 1 ? 'комната' : 'комнат'})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Выберите существующий объект или создайте новый
+              </p>
             </div>
             <div>
               <Label htmlFor="city">Город</Label>

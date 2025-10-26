@@ -29,7 +29,8 @@ const DatabaseManagement = () => {
   const [relatedData, setRelatedData] = useState<{
     travel_services: any[];
     restaurant_recommendations: any[];
-  }>({ travel_services: [], restaurant_recommendations: [] });
+    existing_properties: { property_id: string; count: number }[];
+  }>({ travel_services: [], restaurant_recommendations: [], existing_properties: [] });
 
   const tables = [
     { value: 'rooms', label: 'Номера' },
@@ -70,10 +71,43 @@ const DatabaseManagement = () => {
 
         setRelatedData({
           travel_services: servicesRes.data || [],
-          restaurant_recommendations: restaurantsRes.data || []
+          restaurant_recommendations: restaurantsRes.data || [],
+          existing_properties: []
         });
       } catch (error) {
         console.error('Error fetching related data:', error);
+      }
+    }
+    
+    // Fetch existing property_ids when working with rooms table
+    if (selectedTable === 'rooms') {
+      try {
+        const { data: roomsData } = await supabase
+          .from('rooms')
+          .select('property_id')
+          .not('property_id', 'is', null)
+          .order('property_id', { ascending: true });
+
+        if (roomsData) {
+          // Group by property_id and count rooms
+          const propertyMap = roomsData.reduce((acc: any, room: any) => {
+            const propId = room.property_id;
+            if (!acc[propId]) {
+              acc[propId] = { property_id: propId, count: 0 };
+            }
+            acc[propId].count++;
+            return acc;
+          }, {});
+
+          const properties = Object.values(propertyMap) as { property_id: string; count: number }[];
+          
+          setRelatedData(prev => ({
+            ...prev,
+            existing_properties: properties
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching properties:', error);
       }
     }
   };
@@ -121,6 +155,12 @@ const DatabaseManagement = () => {
       
       // Convert FormData to object
       for (const [key, value] of formData.entries()) {
+        // Handle property_id - generate new UUID if "new" is selected
+        if (key === 'property_id' && value === 'new') {
+          recordData[key] = crypto.randomUUID();
+          continue;
+        }
+        
         // Handle NULL values for FK fields (travel_service_id, restaurant_id)
         if (value === 'null') {
           recordData[key] = null;
@@ -212,6 +252,30 @@ const DatabaseManagement = () => {
 
   const renderFormField = (key: string, value: any) => {
     const fieldType = typeof value;
+    
+    // Handle property_id for rooms table
+    if (selectedTable === 'rooms' && key === 'property_id') {
+      return (
+        <div className="space-y-2">
+          <Select name={key} defaultValue={value || 'new'}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="new">✨ Создать новый объект недвижимости</SelectItem>
+              {relatedData.existing_properties.map(p => (
+                <SelectItem key={p.property_id} value={p.property_id}>
+                  {p.property_id} ({p.count} {p.count === 1 ? 'комната' : 'комнат'})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Выберите существующий объект или создайте новый. При создании нового будет автоматически сгенерирован UUID.
+          </p>
+        </div>
+      );
+    }
     
     // Handle travel_service_id for travel_itineraries
     if (selectedTable === 'travel_itineraries' && key === 'travel_service_id') {
