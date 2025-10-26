@@ -53,12 +53,22 @@ const HostPage = () => {
 
         // If no host role exists, create it
         if (!existingRole) {
-          await supabase
+          const { error: roleError } = await supabase
             .from('user_roles')
             .insert({
               user_id: data.user.id,
               role: 'host'
             });
+
+          if (roleError) {
+            console.error('Error assigning host role:', roleError);
+            toast.error('Вход выполнен, но не удалось назначить роль хоста. Свяжитесь с администратором.');
+          } else {
+            toast.success('Вход выполнен успешно! Роль хоста назначена.');
+            // Reload page to trigger useHostAuth check
+            window.location.reload();
+            return;
+          }
         }
       }
 
@@ -77,31 +87,19 @@ const HostPage = () => {
     try {
       const redirectUrl = `${window.location.origin}/host`;
       
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
-          emailRedirectTo: redirectUrl
+          emailRedirectTo: redirectUrl,
+          data: isNewHost ? { role: 'host' } : undefined
         }
       });
 
       if (error) throw error;
 
-      // If new host checkbox is checked, assign host role
-      if (isNewHost && data.user) {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: data.user.id,
-            role: 'host'
-          });
-
-        if (roleError) {
-          console.error('Error assigning host role:', roleError);
-          toast.error('Регистрация успешна, но не удалось назначить роль. Обратитесь к администратору.');
-        } else {
-          toast.success('Регистрация успешна! Проверьте email для подтверждения.');
-        }
+      if (isNewHost) {
+        toast.success('Регистрация успешна! Проверьте email для подтверждения. Роль хоста будет назначена автоматически.');
       } else {
         toast.success('Регистрация успешна! Проверьте email. Администратор должен назначить вам роль хоста.');
       }
