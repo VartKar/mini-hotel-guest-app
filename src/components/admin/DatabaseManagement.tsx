@@ -16,7 +16,7 @@ import { useImageUpload } from "@/hooks/useImageUpload";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-type TableName = 'rooms' | 'bookings' | 'guest_sessions' | 'shop_orders' | 'travel_service_orders' | 'feedback' | 'host_change_requests' | 'hotel_services' | 'travel_services' | 'shop_items' | 'travel_itineraries';
+type TableName = 'rooms' | 'bookings' | 'guests' | 'guest_sessions' | 'shop_orders' | 'travel_service_orders' | 'feedback' | 'host_change_requests' | 'hotel_services' | 'travel_services' | 'shop_items' | 'travel_itineraries';
 
 const DatabaseManagement = () => {
   const [selectedTable, setSelectedTable] = useState<TableName>('rooms');
@@ -31,11 +31,13 @@ const DatabaseManagement = () => {
     restaurant_recommendations: any[];
     existing_properties: { property_id: string; count: number }[];
     rooms: any[];
-  }>({ travel_services: [], restaurant_recommendations: [], existing_properties: [], rooms: [] });
+    guests: any[];
+  }>({ travel_services: [], restaurant_recommendations: [], existing_properties: [], rooms: [], guests: [] });
 
   const tables = [
     { value: 'rooms', label: 'Номера' },
     { value: 'bookings', label: 'Бронирования' },
+    { value: 'guests', label: 'Гости' },
     { value: 'guest_sessions', label: 'Сессии гостей' },
     { value: 'shop_orders', label: 'Заказы магазина' },
     { value: 'travel_service_orders', label: 'Заказы путешествий' },
@@ -74,28 +76,36 @@ const DatabaseManagement = () => {
           travel_services: servicesRes.data || [],
           restaurant_recommendations: restaurantsRes.data || [],
           existing_properties: [],
-          rooms: []
+          rooms: [],
+          guests: []
         });
       } catch (error) {
         console.error('Error fetching related data:', error);
       }
     }
     
-    // Fetch rooms for bookings table
+    // Fetch rooms and guests for bookings table
     if (selectedTable === 'bookings') {
       try {
-        const { data: roomsData } = await supabase
-          .from('rooms')
-          .select('id, room_number, apartment_name, property_id')
-          .eq('is_active', true)
-          .order('property_id');
+        const [roomsRes, guestsRes] = await Promise.all([
+          supabase
+            .from('rooms')
+            .select('id, room_number, apartment_name, property_id')
+            .eq('is_active', true)
+            .order('property_id'),
+          supabase
+            .from('guests')
+            .select('id, name, email, phone')
+            .order('name')
+        ]);
 
         setRelatedData(prev => ({
           ...prev,
-          rooms: roomsData || []
+          rooms: roomsRes.data || [],
+          guests: guestsRes.data || []
         }));
       } catch (error) {
-        console.error('Error fetching rooms:', error);
+        console.error('Error fetching rooms and guests:', error);
       }
     }
     
@@ -472,7 +482,7 @@ const DatabaseManagement = () => {
           <SelectTrigger>
             <SelectValue placeholder="Выберите комнату" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-background">
             {rooms.map((room: any) => (
               <SelectItem key={room.id} value={room.id}>
                 Номер {room.room_number} - {room.apartment_name || room.property_id}
@@ -480,6 +490,31 @@ const DatabaseManagement = () => {
             ))}
           </SelectContent>
         </Select>
+      );
+    }
+    
+    // Handle guest_id for bookings with guest select
+    if (selectedTable === 'bookings' && key === 'guest_id') {
+      const guests = relatedData?.guests || [];
+      return (
+        <div className="space-y-2">
+          <Select name={key} defaultValue={value || 'null'}>
+            <SelectTrigger>
+              <SelectValue placeholder="Выберите гостя (опционально)" />
+            </SelectTrigger>
+            <SelectContent className="bg-background">
+              <SelectItem value="null">(Без привязки к гостю)</SelectItem>
+              {guests.map((guest: any) => (
+                <SelectItem key={guest.id} value={guest.id}>
+                  {guest.name} - {guest.email} {guest.phone ? `(${guest.phone})` : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Если гостя нет в списке, добавьте его в таблице "Гости"
+          </p>
+        </div>
       );
     }
     
