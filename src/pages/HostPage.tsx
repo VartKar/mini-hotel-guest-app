@@ -35,12 +35,33 @@ const HostPage = () => {
     setAuthLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
 
       if (error) throw error;
+
+      // Auto-assign host role if user doesn't have it
+      if (data.user) {
+        const { data: existingRole } = await supabase
+          .from('user_roles')
+          .select('id')
+          .eq('user_id', data.user.id)
+          .eq('role', 'host')
+          .maybeSingle();
+
+        // If no host role exists, create it
+        if (!existingRole) {
+          await supabase
+            .from('user_roles')
+            .insert({
+              user_id: data.user.id,
+              role: 'host'
+            });
+        }
+      }
+
       toast.success('Вход выполнен');
     } catch (error: any) {
       toast.error(error.message || 'Ошибка входа');
