@@ -277,7 +277,9 @@ const DatabaseManagement = () => {
   const renderFormField = (key: string, value: any) => {
     // Use sample data from first row to determine type when creating new records
     const sampleValue = data[0]?.[key];
-    const fieldType = typeof (value !== undefined ? value : sampleValue);
+    const actualValue = value !== undefined ? value : sampleValue;
+    // typeof null === 'object', so we need special handling
+    const fieldType = actualValue === null ? 'null' : typeof actualValue;
     
     // Handle property_id for rooms table
     if (selectedTable === 'rooms' && key === 'property_id') {
@@ -411,8 +413,14 @@ const DatabaseManagement = () => {
     }
     
     if (fieldType === 'boolean') {
-      // Default is_active to true for new records, others to false
-      const defaultValue = value !== undefined ? value.toString() : (key === 'is_active' ? 'true' : 'false');
+      // Smart defaults for new records
+      let defaultValue = 'false';
+      if (value !== undefined) {
+        defaultValue = value.toString();
+      } else if (key === 'is_active' || key === 'visible_to_guests' || key === 'visible_to_hosts' || key === 'visible_to_admin') {
+        defaultValue = 'true';
+      }
+      
       return (
         <Select name={`boolean_${key}`} defaultValue={defaultValue}>
           <SelectTrigger>
@@ -427,22 +435,29 @@ const DatabaseManagement = () => {
     }
     
     if (fieldType === 'number') {
+      // Smart defaults for common fields
+      let defaultValue = value;
+      if (value === undefined && selectedTable === 'bookings' && key === 'number_of_guests') {
+        defaultValue = 2;
+      }
+      
       return (
         <Input
           name={`number_${key}`}
           type="number"
           step="0.01"
-          defaultValue={value || ''}
+          defaultValue={defaultValue !== undefined ? defaultValue : ''}
           placeholder={`Введите ${key}`}
         />
       );
     }
     
-    if (fieldType === 'object' && (value !== null || sampleValue !== null)) {
+    // Check if it's a real object (not null, and is Array or Object)
+    if (fieldType === 'object' && actualValue !== null && (Array.isArray(actualValue) || typeof actualValue === 'object')) {
       return (
         <Textarea
           name={`json_${key}`}
-          defaultValue={value !== undefined ? JSON.stringify(value, null, 2) : (sampleValue ? JSON.stringify(sampleValue, null, 2) : '')}
+          defaultValue={JSON.stringify(actualValue, null, 2)}
           placeholder={`JSON для ${key}`}
           className="min-h-[120px] font-mono text-sm"
         />
@@ -488,7 +503,7 @@ const DatabaseManagement = () => {
     if (selectedTable === 'bookings' && key === 'booking_status') {
       return (
         <div className="space-y-2">
-          <Select name={key} defaultValue={value || 'confirmed'}>
+          <Select name={key} defaultValue={value !== undefined ? value : 'confirmed'}>
             <SelectTrigger>
               <SelectValue placeholder="Выберите статус" />
             </SelectTrigger>
