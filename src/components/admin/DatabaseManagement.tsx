@@ -275,7 +275,9 @@ const DatabaseManagement = () => {
   };
 
   const renderFormField = (key: string, value: any) => {
-    const fieldType = typeof value;
+    // Use sample data from first row to determine type when creating new records
+    const sampleValue = data[0]?.[key];
+    const fieldType = typeof (value !== undefined ? value : sampleValue);
     
     // Handle property_id for rooms table
     if (selectedTable === 'rooms' && key === 'property_id') {
@@ -436,11 +438,11 @@ const DatabaseManagement = () => {
       );
     }
     
-    if (fieldType === 'object' && value !== null) {
+    if (fieldType === 'object' && (value !== null || sampleValue !== null)) {
       return (
         <Textarea
           name={`json_${key}`}
-          defaultValue={JSON.stringify(value, null, 2)}
+          defaultValue={value !== undefined ? JSON.stringify(value, null, 2) : (sampleValue ? JSON.stringify(sampleValue, null, 2) : '')}
           placeholder={`JSON для ${key}`}
           className="min-h-[120px] font-mono text-sm"
         />
