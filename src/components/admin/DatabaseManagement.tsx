@@ -30,7 +30,8 @@ const DatabaseManagement = () => {
     travel_services: any[];
     restaurant_recommendations: any[];
     existing_properties: { property_id: string; count: number }[];
-  }>({ travel_services: [], restaurant_recommendations: [], existing_properties: [] });
+    rooms: any[];
+  }>({ travel_services: [], restaurant_recommendations: [], existing_properties: [], rooms: [] });
 
   const tables = [
     { value: 'rooms', label: 'Номера' },
@@ -72,10 +73,29 @@ const DatabaseManagement = () => {
         setRelatedData({
           travel_services: servicesRes.data || [],
           restaurant_recommendations: restaurantsRes.data || [],
-          existing_properties: []
+          existing_properties: [],
+          rooms: []
         });
       } catch (error) {
         console.error('Error fetching related data:', error);
+      }
+    }
+    
+    // Fetch rooms for bookings table
+    if (selectedTable === 'bookings') {
+      try {
+        const { data: roomsData } = await supabase
+          .from('rooms')
+          .select('id, room_number, apartment_name, property_id')
+          .eq('is_active', true)
+          .order('property_id');
+
+        setRelatedData(prev => ({
+          ...prev,
+          rooms: roomsData || []
+        }));
+      } catch (error) {
+        console.error('Error fetching rooms:', error);
       }
     }
     
@@ -420,6 +440,25 @@ const DatabaseManagement = () => {
           placeholder={`JSON для ${key}`}
           className="min-h-[120px] font-mono text-sm"
         />
+      );
+    }
+    
+    // Handle room_id for bookings with readable room select
+    if (selectedTable === 'bookings' && key === 'room_id') {
+      const rooms = relatedData?.rooms || [];
+      return (
+        <Select name={key} defaultValue={value || ''}>
+          <SelectTrigger>
+            <SelectValue placeholder="Выберите комнату" />
+          </SelectTrigger>
+          <SelectContent>
+            {rooms.map((room: any) => (
+              <SelectItem key={room.id} value={room.id}>
+                Номер {room.room_number} - {room.apartment_name || room.property_id}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       );
     }
     
