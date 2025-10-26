@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Edit, Trash2, Upload } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -203,6 +203,8 @@ const DatabaseManagement = () => {
           recordData[key] = value || null;
         }
       }
+      
+      console.log('Saving record data:', recordData);
 
       let result;
       if (editingRecord) {
@@ -228,9 +230,11 @@ const DatabaseManagement = () => {
       fetchData();
     } catch (error: any) {
       console.error('Error saving record:', error);
+      console.error('Error details:', error?.message, error?.details, error?.hint);
       const errorMessage = error?.message || 'Неизвестная ошибка';
       const errorDetails = error?.details ? ` (${error.details})` : '';
-      toast.error(`Ошибка сохранения записи: ${errorMessage}${errorDetails}`);
+      const errorHint = error?.hint ? ` Подсказка: ${error.hint}` : '';
+      toast.error(`Ошибка сохранения записи: ${errorMessage}${errorDetails}${errorHint}`);
     }
   };
 
@@ -698,6 +702,9 @@ const DatabaseManagement = () => {
                 <DialogTitle>
                   {editingRecord ? 'Редактировать запись' : 'Добавить запись'}
                 </DialogTitle>
+                <DialogDescription>
+                  {editingRecord ? 'Изменение существующей записи в таблице' : 'Создание новой записи в таблице'} {tables.find(t => t.value === selectedTable)?.label}
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={(e) => {
                 e.preventDefault();
