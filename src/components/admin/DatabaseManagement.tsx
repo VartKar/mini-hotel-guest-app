@@ -187,17 +187,17 @@ const DatabaseManagement = () => {
           continue;
         }
         
-        if (key.includes('json_') && value) {
+        if (key.startsWith('json_') && value) {
           try {
             recordData[key.replace('json_', '')] = JSON.parse(value as string);
           } catch {
             recordData[key.replace('json_', '')] = value;
           }
-        } else if (key.includes('number_')) {
+        } else if (key.startsWith('number_')) {
           recordData[key.replace('number_', '')] = value ? Number(value) : null;
-        } else if (key.includes('boolean_')) {
+        } else if (key.startsWith('boolean_')) {
           recordData[key.replace('boolean_', '')] = value === 'true';
-        } else if (key.includes('date_')) {
+        } else if (key.startsWith('date_')) {
           recordData[key.replace('date_', '')] = value ? new Date(value as string).toISOString() : null;
         } else {
           recordData[key] = value || null;
