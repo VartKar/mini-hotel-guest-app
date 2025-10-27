@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { User, Mail, LogOut, Loader2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { useRoomData } from "@/hooks/useRoomData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import FeedbackTab from "@/components/feedback/FeedbackTab";
 import { WalkInRegistrationCard } from "@/components/feedback/WalkInRegistrationCard";
 
 const PersonalAccountPage = () => {
+  const navigate = useNavigate();
   const { roomData, isPersonalized, lookupByEmail, logOut, loading, error, clearError } = useRoomData();
   const [activeTab, setActiveTab] = useState("profile");
   const [email, setEmail] = useState("");
@@ -61,9 +63,13 @@ const PersonalAccountPage = () => {
     
     if (success) {
       toast.success("Ваши данные найдены!", {
-        description: "Добро пожаловать в ваш персональный кабинет"
+        description: "Перенаправление на главную..."
       });
       setEmail("");
+      // Redirect to home page after successful login
+      setTimeout(() => {
+        navigate("/");
+      }, 500);
     }
     
     setIsLookingUp(false);
@@ -128,7 +134,39 @@ const PersonalAccountPage = () => {
         </a>
       </div>
 
-      {/* Walk-in Registration Card - PRIMARY CTA */}
+      {/* Compact login section - PRIMARY action */}
+      {!isPersonalized && (
+        <div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-200">
+          <p className="text-sm font-medium text-gray-700 mb-3 text-center">Уже были у нас?</p>
+          <form onSubmit={handleEmailLookup} className="flex gap-2">
+            <Input
+              type="email"
+              placeholder="Введите ваш email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="flex-1"
+              disabled={isLookingUp}
+            />
+            <Button
+              type="submit"
+              size="default"
+              className="bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap"
+              disabled={isLookingUp || !email.trim()}
+            >
+              {isLookingUp ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                'Войти'
+              )}
+            </Button>
+          </form>
+          {error && (
+            <p className="text-sm text-red-600 mt-2">{error}</p>
+          )}
+        </div>
+      )}
+      
+      {/* Walk-in Registration Card - SECONDARY CTA */}
       {!isPersonalized && (
         <WalkInRegistrationCard
           onSuccess={() => {
@@ -138,38 +176,6 @@ const PersonalAccountPage = () => {
           currentRoomId={roomData?.id || ''}
           sessionToken={roomData?.session_token || ''}
         />
-      )}
-      
-      {/* Compact login section - SECONDARY action */}
-      {!isPersonalized && (
-        <div className="bg-blue-50 rounded-lg p-3 mb-4 border border-blue-200">
-          <p className="text-xs text-gray-600 mb-2 text-center">Уже были у нас?</p>
-          <form onSubmit={handleEmailLookup} className="flex gap-2">
-            <Input
-              type="email"
-              placeholder="Email для персонализации"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 text-sm"
-              disabled={isLookingUp}
-            />
-            <Button
-              type="submit"
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap"
-              disabled={isLookingUp || !email.trim()}
-            >
-              {isLookingUp ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                'Найти'
-              )}
-            </Button>
-          </form>
-          {error && (
-            <p className="text-xs text-red-600 mt-1">{error}</p>
-          )}
-        </div>
       )}
       
       <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
