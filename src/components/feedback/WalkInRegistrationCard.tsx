@@ -95,12 +95,15 @@ export const WalkInRegistrationCard: React.FC<WalkInRegistrationCardProps> = ({
   };
 
   return (
-    <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white">
+    <Card className="border-gray-200 bg-white">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Gift className="h-5 w-5 text-blue-600" />
-          Зарегистрируйтесь и получите бонусы
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Gift className="h-5 w-5 text-gray-600" />
+          Впервые у нас? Создайте профиль
         </CardTitle>
+        <p className="text-sm text-muted-foreground mt-1">
+          Для гостей без предварительной регистрации
+        </p>
       </CardHeader>
       <CardContent>
         <div className="space-y-3 mb-4">
@@ -190,7 +193,7 @@ export const WalkInRegistrationCard: React.FC<WalkInRegistrationCardProps> = ({
           <Button
             type="submit"
             disabled={isSubmitting || !consentGiven}
-            className="w-full bg-blue-600 hover:bg-blue-700"
+            className="w-full"
           >
             {isSubmitting ? (
               <>

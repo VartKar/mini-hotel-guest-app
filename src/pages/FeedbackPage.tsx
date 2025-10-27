@@ -137,7 +137,7 @@ const PersonalAccountPage = () => {
       {/* Compact login section - PRIMARY action */}
       {!isPersonalized && (
         <div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-200">
-          <p className="text-sm font-medium text-gray-700 mb-3 text-center">Уже были у нас?</p>
+          <p className="text-sm font-medium text-gray-700 mb-3 text-center">Войти по email</p>
           <form onSubmit={handleEmailLookup} className="flex gap-2">
             <Input
               type="email"
