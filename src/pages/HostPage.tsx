@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import HotelServiceOrders from "@/components/host/HotelServiceOrders";
 import TravelServiceOrders from "@/components/host/TravelServiceOrders";
 import { HostMarketingDashboard } from "@/components/host/HostMarketingDashboard";
+import { HostGuestLinks } from "@/components/host/HostGuestLinks";
 
 const HostPage = () => {
   const { isHostAuthenticated, loading: hostAuthLoading, logout: hostLogout, user } = useHostAuth();
@@ -316,6 +317,9 @@ const HostPage = () => {
 
           {/* Marketing Dashboard */}
           <HostMarketingDashboard hostEmail={hostData?.host_email || ""} />
+
+          {/* Guest Links */}
+          <HostGuestLinks bookings={hostData?.bookings || []} />
 
           {/* Bookings */}
           <Card>

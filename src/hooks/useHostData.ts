@@ -13,6 +13,7 @@ export interface HostBooking {
   check_out_date: string | null;
   booking_status: string | null;
   booking_id: string | null;
+  access_token: string | null;
 }
 
 export interface HostData {
@@ -95,6 +96,7 @@ export const useHostData = () => {
           check_out_date: booking.check_out_date,
           booking_status: booking.booking_status,
           booking_id: booking.booking_id,
+          access_token: booking.access_token,
         }))
       };
 

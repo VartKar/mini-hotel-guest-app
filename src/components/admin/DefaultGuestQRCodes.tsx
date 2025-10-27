@@ -21,29 +21,62 @@ export const DefaultGuestQRCodes = () => {
   const { data: defaultBookings, isLoading, refetch } = useQuery({
     queryKey: ["default-guest-bookings"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bookings")
-        .select(`
-          id,
-          access_token,
-          guest_name,
-          rooms (
-            room_number,
-            property_id
-          )
-        `)
-        .eq("is_default_guest", true)
-        .order("rooms(room_number)");
+      // Get all active rooms
+      const { data: rooms, error: roomsError } = await supabase
+        .from("rooms")
+        .select("id, room_number, property_id")
+        .eq("is_active", true)
+        .order("room_number");
 
-      if (error) throw error;
+      if (roomsError) throw roomsError;
 
-      return data.map((booking) => ({
-        id: booking.id,
-        access_token: booking.access_token || "",
-        guest_name: booking.guest_name,
-        room_number: (booking.rooms as any)?.room_number || "",
-        property_id: (booking.rooms as any)?.property_id || "",
-      })) as DefaultBooking[];
+      // For each room, ensure a default booking exists
+      const bookingsData: DefaultBooking[] = [];
+
+      for (const room of rooms || []) {
+        // Check if default booking exists
+        let { data: booking, error } = await supabase
+          .from("bookings")
+          .select("id, access_token, guest_name")
+          .eq("room_id", room.id)
+          .eq("is_default_guest", true)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        // If no default booking exists, create one
+        if (!booking) {
+          const newToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+
+          const { data: newBooking, error: insertError } = await supabase
+            .from("bookings")
+            .insert({
+              room_id: room.id,
+              guest_name: `Комната ${room.room_number}`,
+              guest_email: `room_${room.room_number}@default.local`,
+              access_token: newToken,
+              is_default_guest: true,
+              booking_status: "confirmed",
+            })
+            .select("id, access_token, guest_name")
+            .single();
+
+          if (insertError) throw insertError;
+          booking = newBooking;
+        }
+
+        bookingsData.push({
+          id: booking.id,
+          access_token: booking.access_token || "",
+          guest_name: booking.guest_name,
+          room_number: room.room_number,
+          property_id: room.property_id,
+        });
+      }
+
+      return bookingsData;
     },
   });
 
