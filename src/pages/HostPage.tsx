@@ -319,7 +319,7 @@ const HostPage = () => {
           <HostMarketingDashboard hostEmail={hostData?.host_email || ""} />
 
           {/* Guest Links */}
-          <HostGuestLinks bookings={hostData?.bookings || []} />
+          <HostGuestLinks hostEmail={hostData?.host_email || ""} />
 
           {/* Bookings */}
           <Card>
