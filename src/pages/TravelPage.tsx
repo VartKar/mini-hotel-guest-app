@@ -24,7 +24,12 @@ interface TravelCartItem extends CartItem {
 
 const TravelPage = () => {
   const { roomData, isPersonalized } = useRoomData();
-  const { itineraries, isLoading: itineraryLoading } = useTravelItinerary(roomData?.booking_id, roomData?.city || 'Сочи', roomData?.property_id);
+  const { itineraries, isLoading: itineraryLoading } = useTravelItinerary(
+    roomData?.booking_record_id || null, 
+    roomData?.check_in_date || null, 
+    roomData?.check_out_date || null, 
+    roomData?.city || 'Сочи'
+  );
   const { data: services = [], isLoading: servicesLoading } = useTravelServices(roomData?.city || 'Сочи');
   
   const {
