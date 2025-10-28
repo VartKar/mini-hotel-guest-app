@@ -155,6 +155,13 @@ export const useRoomData = () => {
   }, []);
 
   useEffect(() => {
+    // Skip initialization on admin and host routes
+    const currentPath = window.location.pathname;
+    if (currentPath.startsWith('/admin') || currentPath.startsWith('/host')) {
+      setLoading(false);
+      return;
+    }
+
     // Try to load from storage first
     const hasStoredData = loadFromStorage();
     

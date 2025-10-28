@@ -83,18 +83,14 @@ function App() {
               </Layout>
             } />
             <Route path="/admin" element={
-              <Layout>
-                <Suspense fallback={<div>Загрузка...</div>}>
-                  <AdminPage />
-                </Suspense>
-              </Layout>
+              <Suspense fallback={<div>Загрузка...</div>}>
+                <AdminPage />
+              </Suspense>
             } />
             <Route path="/host" element={
-              <Layout>
-                <Suspense fallback={<div>Загрузка...</div>}>
-                  <HostPage />
-                </Suspense>
-              </Layout>
+              <Suspense fallback={<div>Загрузка...</div>}>
+                <HostPage />
+              </Suspense>
             } />
             <Route path="*" element={
               <Suspense fallback={<div>Загрузка...</div>}>
