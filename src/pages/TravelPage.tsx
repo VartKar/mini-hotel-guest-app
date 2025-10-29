@@ -47,7 +47,7 @@ const TravelPage = () => {
   const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null);
   const [expandedRestaurantId, setExpandedRestaurantId] = useState<string | null>(null);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
-  const [useBonuses, setUseBonuses] = useState(false);
+  const [wantsBonusDiscount, setWantsBonusDiscount] = useState(false);
   const [guestBalance, setGuestBalance] = useState(0);
 
   useEffect(() => {
@@ -115,11 +115,6 @@ const TravelPage = () => {
     
     try {
       const totalAmount = calculateTotal();
-      const bonusDiscount = useBonuses ? Math.min(
-        Math.floor(totalAmount * 0.5), // Max 50% of order
-        guestBalance // Can't use more than available
-      ) : 0;
-      const finalAmount = totalAmount - bonusDiscount;
       
       const { data, error } = await supabase.functions.invoke('submit-travel-order', {
         body: {
@@ -131,8 +126,8 @@ const TravelPage = () => {
             title: s.name,
             base_price: s.price
           })),
-          totalPrice: finalAmount,
-          bonusDiscount: bonusDiscount,
+          totalPrice: totalAmount,
+          wantsBonusDiscount: wantsBonusDiscount,
           guestId: (roomData as any)?.guest_id || null,
           bookingIdKey: roomData?.booking_record_id || null
         }
@@ -228,38 +223,27 @@ const TravelPage = () => {
           
           <div className="border-t pt-4 mb-4 space-y-3">
             {isPersonalized && guestBalance > 0 && (
-              <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+              <div className="flex items-center gap-2 p-3 bg-accent/10 rounded-lg border">
                 <input
                   type="checkbox"
-                  id="useBonuses"
-                  checked={useBonuses}
-                  onChange={(e) => setUseBonuses(e.target.checked)}
+                  id="wantsBonusDiscount"
+                  checked={wantsBonusDiscount}
+                  onChange={(e) => setWantsBonusDiscount(e.target.checked)}
                   className="w-4 h-4"
                 />
-                <label htmlFor="useBonuses" className="text-sm flex-1 cursor-pointer">
-                  Использовать бонусы (доступно: {guestBalance} б.)
+                <label htmlFor="wantsBonusDiscount" className="text-sm flex-1 cursor-pointer">
+                  Использовать бонусы для оплаты
+                  <span className="block text-xs text-muted-foreground mt-0.5">
+                    Доступно: {guestBalance} бонусов
+                  </span>
                 </label>
               </div>
             )}
             
             <div className="space-y-1">
-              <div className="flex justify-between items-center text-sm">
-                <span>Сумма заказа:</span>
-                <span>{calculateTotal()} ₽</span>
-              </div>
-              {useBonuses && (
-                <div className="flex justify-between items-center text-sm text-green-600">
-                  <span>Скидка бонусами:</span>
-                  <span>-{Math.min(Math.floor(calculateTotal() * 0.5), guestBalance)} ₽</span>
-                </div>
-              )}
-              <div className="flex justify-between items-center font-medium text-lg pt-2 border-t">
+              <div className="flex justify-between items-center font-medium text-lg pt-2">
                 <span>Итого:</span>
-                <span>
-                  {useBonuses 
-                    ? calculateTotal() - Math.min(Math.floor(calculateTotal() * 0.5), guestBalance)
-                    : calculateTotal()} ₽
-                </span>
+                <span>{calculateTotal()} ₽</span>
               </div>
             </div>
           </div>

@@ -183,6 +183,11 @@ const TravelServiceOrders = ({ hostEmail }: TravelServiceOrdersProps) => {
                           💬 {order.customer_comment}
                         </div>
                       )}
+                      {(order as any).wants_bonus_discount && (
+                        <div className="text-xs text-green-600 font-medium mt-1">
+                          🎁 Гость хочет использовать бонусы
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>

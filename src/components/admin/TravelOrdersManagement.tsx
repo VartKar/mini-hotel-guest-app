@@ -120,7 +120,10 @@ const TravelOrdersManagement = () => {
                     <Badge variant={getStatusBadgeVariant(order.order_status)}>
                       {translateStatus(order.order_status)}
                     </Badge>
-                    <span className="font-bold text-lg">{order.total_amount} ₽</span>
+                    <span className="font-bold text-lg">
+                      {order.total_amount} ₽
+                      {(order as any).wants_bonus_discount && <span className="ml-1">🎁</span>}
+                    </span>
                   </div>
                 </div>
               </CardHeader>

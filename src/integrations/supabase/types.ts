@@ -649,6 +649,7 @@ export type Database = {
           room_number: string | null
           total_amount: number
           updated_at: string
+          wants_bonus_discount: boolean
         }
         Insert: {
           booking_id_key?: string | null
@@ -663,6 +664,7 @@ export type Database = {
           room_number?: string | null
           total_amount: number
           updated_at?: string
+          wants_bonus_discount?: boolean
         }
         Update: {
           booking_id_key?: string | null
@@ -677,6 +679,7 @@ export type Database = {
           room_number?: string | null
           total_amount?: number
           updated_at?: string
+          wants_bonus_discount?: boolean
         }
         Relationships: [
           {
@@ -767,6 +770,7 @@ export type Database = {
           selected_services: Json
           total_amount: number
           updated_at: string
+          wants_bonus_discount: boolean
         }
         Insert: {
           booking_id_key?: string | null
@@ -780,6 +784,7 @@ export type Database = {
           selected_services: Json
           total_amount: number
           updated_at?: string
+          wants_bonus_discount?: boolean
         }
         Update: {
           booking_id_key?: string | null
@@ -793,6 +798,7 @@ export type Database = {
           selected_services?: Json
           total_amount?: number
           updated_at?: string
+          wants_bonus_discount?: boolean
         }
         Relationships: [
           {
