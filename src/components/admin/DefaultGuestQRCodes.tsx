@@ -12,6 +12,7 @@ interface DefaultBooking {
   access_token: string;
   room_number: string;
   property_id: string;
+  apartment_name: string | null;
   guest_name: string;
 }
 
@@ -24,7 +25,7 @@ export const DefaultGuestQRCodes = () => {
       // Get all active rooms
       const { data: rooms, error: roomsError } = await supabase
         .from("rooms")
-        .select("id, room_number, property_id")
+        .select("id, room_number, property_id, apartment_name")
         .eq("is_active", true)
         .order("room_number");
 
@@ -73,6 +74,7 @@ export const DefaultGuestQRCodes = () => {
           guest_name: booking.guest_name,
           room_number: room.room_number,
           property_id: room.property_id,
+          apartment_name: room.apartment_name,
         });
       }
 
@@ -148,7 +150,9 @@ export const DefaultGuestQRCodes = () => {
           return (
             <Card key={booking.id}>
               <CardHeader>
-                <CardTitle>Комната {booking.room_number}</CardTitle>
+                <CardTitle>
+                  {booking.apartment_name ? `${booking.apartment_name} - ` : ""}Комната {booking.room_number}
+                </CardTitle>
                 <CardDescription>{booking.property_id}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
