@@ -31,6 +31,7 @@ export interface RoomData {
   // Booking details (from bookings table, if applicable)
   booking_id: string | null; // Текстовый код бронирования (например "book_013")
   booking_record_id: string | null; // UUID записи из bookings.id
+  guest_id: string | null; // UUID from guests table for bonus tracking
   guest_name: string | null;
   guest_email: string | null;
   guest_phone: string | null;
@@ -203,6 +204,7 @@ export const useRoomData = () => {
         ...roomData,
         booking_id: null,
         booking_record_id: null,
+        guest_id: null,
         guest_name: null,
         guest_email: null,
         guest_phone: null,
@@ -274,10 +276,24 @@ export const useRoomData = () => {
 
       console.log('✅ Booking found:', bookingData);
 
+      // Fetch guest_id from guests table
+      let guestId: string | null = null;
+      if (bookingData.guest_email) {
+        const { data: guestData } = await supabase
+          .from('guests')
+          .select('id')
+          .eq('email', bookingData.guest_email.toLowerCase().trim())
+          .single();
+        
+        guestId = guestData?.id || null;
+        console.log('💎 Guest ID found:', guestId);
+      }
+
       const combinedData: RoomData = {
         ...bookingData.rooms,
         booking_id: bookingData.booking_id,
         booking_record_id: bookingData.id, // UUID из bookings.id
+        guest_id: guestId,
         guest_name: bookingData.guest_name,
         guest_email: bookingData.guest_email,
         guest_phone: bookingData.guest_phone,
