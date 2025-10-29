@@ -239,7 +239,7 @@ const PersonalAccountPage = () => {
         )}
         
         {activeTab === "bonuses" && (
-          <BonusesTab profile={profile} />
+          <BonusesTab guestId={roomData?.guest_id || null} />
         )}
         
         {activeTab === "feedback" && (

@@ -57,6 +57,8 @@ const ShopPage = () => {
   const [customerComment, setCustomerComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
+  const [useBonuses, setUseBonuses] = useState(false);
+  const [guestBalance, setGuestBalance] = useState(0);
 
   useEffect(() => {
     if (roomData?.guest_name) {
@@ -65,6 +67,23 @@ const ShopPage = () => {
     if (roomData?.guest_phone) {
       setCustomerPhone(roomData.guest_phone);
     }
+    
+    // Fetch guest balance if logged in
+    const fetchGuestBalance = async () => {
+      if (roomData?.guest_id) {
+        const { data, error } = await supabase
+          .from("guests")
+          .select("loyalty_points")
+          .eq("id", roomData.guest_id)
+          .single();
+        
+        if (!error && data) {
+          setGuestBalance(data.loyalty_points || 0);
+        }
+      }
+    };
+    
+    fetchGuestBalance();
   }, [roomData]);
 
   const addToCart = (item: any) => {
@@ -123,6 +142,11 @@ const ShopPage = () => {
     
     try {
       const totalAmount = calculateTotal();
+      const bonusDiscount = useBonuses ? Math.min(
+        Math.floor(totalAmount * 0.5), // Max 50% of order
+        guestBalance // Can't use more than available
+      ) : 0;
+      const finalAmount = totalAmount - bonusDiscount;
       
       const { data, error } = await supabase.functions.invoke('submit-shop-order', {
         body: {
@@ -136,7 +160,8 @@ const ShopPage = () => {
             quantity: item.quantity || 1,
             category: item.category
           })),
-          totalAmount: totalAmount,
+          totalAmount: finalAmount,
+          bonusDiscount: bonusDiscount,
           guestId: (roomData as any)?.guest_id || null,
           bookingIdKey: roomData?.booking_record_id || null,
           roomNumber: roomData?.room_number || null
@@ -234,10 +259,41 @@ const ShopPage = () => {
             })}
           </div>
           
-          <div className="border-t pt-4 mb-4">
-            <div className="flex justify-between items-center font-medium text-lg">
-              <span>Итого:</span>
-              <span>{calculateTotal()} ₽</span>
+          <div className="border-t pt-4 mb-4 space-y-3">
+            {isPersonalized && guestBalance > 0 && (
+              <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                <input
+                  type="checkbox"
+                  id="useBonuses"
+                  checked={useBonuses}
+                  onChange={(e) => setUseBonuses(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="useBonuses" className="text-sm flex-1 cursor-pointer">
+                  Использовать бонусы (доступно: {guestBalance} б.)
+                </label>
+              </div>
+            )}
+            
+            <div className="space-y-1">
+              <div className="flex justify-between items-center text-sm">
+                <span>Сумма заказа:</span>
+                <span>{calculateTotal()} ₽</span>
+              </div>
+              {useBonuses && (
+                <div className="flex justify-between items-center text-sm text-green-600">
+                  <span>Скидка бонусами:</span>
+                  <span>-{Math.min(Math.floor(calculateTotal() * 0.5), guestBalance)} ₽</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center font-medium text-lg pt-2 border-t">
+                <span>Итого:</span>
+                <span>
+                  {useBonuses 
+                    ? calculateTotal() - Math.min(Math.floor(calculateTotal() * 0.5), guestBalance)
+                    : calculateTotal()} ₽
+                </span>
+              </div>
             </div>
           </div>
 
