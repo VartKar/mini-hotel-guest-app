@@ -28,7 +28,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     )
 
-    const { customerName, customerPhone, customerComment, services, totalPrice, bookingIdKey, guestId } = await req.json()
+    const { customerName, customerPhone, customerComment, services, totalPrice, bookingIdKey, guestId, bonusDiscount } = await req.json()
 
     // Validation
     if (!customerName || customerName.trim().length < 2 || customerName.trim().length > 100) {
@@ -91,39 +91,63 @@ serve(async (req) => {
 
     console.log('Order saved to database:', orderData.id)
 
-    // Award loyalty points if guest_id is provided
+    // Process bonuses if guest_id is provided
     if (guestId) {
-      const bonusEarned = Math.floor(Number(totalPrice) * 0.01) // 1%
-      
       const { data: guest } = await supabaseClient
         .from('guests')
         .select('loyalty_points, total_spent')
         .eq('id', guestId)
         .single()
 
-      if (guest && bonusEarned > 0) {
-        const newLoyaltyPoints = Number(guest.loyalty_points) + bonusEarned
-        const newTotalSpent = Number(guest.total_spent) + Number(totalPrice)
-
+      if (guest) {
+        let currentBalance = Number(guest.loyalty_points)
+        const originalTotal = Number(totalPrice) + Number(bonusDiscount || 0)
+        
+        // Deduct bonuses if used
+        if (bonusDiscount && Number(bonusDiscount) > 0) {
+          currentBalance -= Number(bonusDiscount)
+          
+          await supabaseClient
+            .from('bonus_transactions')
+            .insert({
+              guest_id: guestId,
+              amount: -Number(bonusDiscount),
+              balance_after: currentBalance,
+              note: `Оплата заказа №${orderData.id}`,
+              created_by: 'system'
+            })
+          
+          console.log(`Deducted ${bonusDiscount} bonuses for order ${orderData.id}`)
+        }
+        
+        // Award loyalty points (1% of original total before discount)
+        const bonusEarned = Math.floor(originalTotal * 0.01)
+        if (bonusEarned > 0) {
+          currentBalance += bonusEarned
+          
+          await supabaseClient
+            .from('bonus_transactions')
+            .insert({
+              guest_id: guestId,
+              amount: bonusEarned,
+              balance_after: currentBalance,
+              note: `Бонусы за заказ №${orderData.id} (${originalTotal} ₽)`,
+              created_by: 'system'
+            })
+          
+          console.log(`Awarded ${bonusEarned} loyalty points to guest ${guestId}`)
+        }
+        
+        // Update guest balance and total spent
+        const newTotalSpent = Number(guest.total_spent) + originalTotal
+        
         await supabaseClient
           .from('guests')
           .update({
-            loyalty_points: newLoyaltyPoints,
+            loyalty_points: currentBalance,
             total_spent: newTotalSpent
           })
           .eq('id', guestId)
-
-        await supabaseClient
-          .from('bonus_transactions')
-          .insert({
-            guest_id: guestId,
-            amount: bonusEarned,
-            balance_after: newLoyaltyPoints,
-            note: `Бонусы за заказ №${orderData.id} (${totalPrice} ₽)`,
-            created_by: 'system'
-          })
-
-        console.log(`Awarded ${bonusEarned} loyalty points to guest ${guestId}`)
       }
     }
 
