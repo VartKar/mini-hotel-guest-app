@@ -55,7 +55,7 @@ export const DefaultGuestQRCodes = () => {
             .from("bookings")
             .insert({
               room_id: room.id,
-              guest_name: `Комната ${room.room_number}`,
+              guest_name: "Гость",
               guest_email: `room_${room.room_number}@default.local`,
               access_token: newToken,
               is_default_guest: true,
