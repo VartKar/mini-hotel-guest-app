@@ -145,7 +145,7 @@ export const DefaultGuestQRCodes = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {defaultBookings?.map((booking) => {
-          const guestUrl = `${window.location.origin}/guest/${booking.access_token}`;
+          const guestUrl = `https://mini-hotel-guest-app.lovable.app/guest/${booking.access_token}`;
 
           return (
             <Card key={booking.id}>

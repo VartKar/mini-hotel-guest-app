@@ -56,7 +56,7 @@ export const HostGuestLinks = ({ hostEmail }: HostGuestLinksProps) => {
     },
   });
   const handleCopyLink = (token: string) => {
-    const url = `${window.location.origin}/guest/${token}`;
+    const url = `https://mini-hotel-guest-app.lovable.app/guest/${token}`;
     navigator.clipboard.writeText(url);
     toast.success("Ссылка скопирована");
   };
@@ -120,7 +120,7 @@ export const HostGuestLinks = ({ hostEmail }: HostGuestLinksProps) => {
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {roomQRCodes.map((room) => {
-            const guestUrl = `${window.location.origin}/guest/${room.access_token}`;
+            const guestUrl = `https://mini-hotel-guest-app.lovable.app/guest/${room.access_token}`;
 
             return (
               <div key={room.id} className="border rounded-lg p-4 space-y-4">
