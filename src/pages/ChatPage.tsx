@@ -41,7 +41,10 @@ const ChatPage: React.FC = () => {
 
   // Init TalkMe and pass user data when available
   useEffect(() => {
-    if (loading) return;
+    if (loading) {
+      console.log("[TalkMe] Waiting for room data to load...");
+      return;
+    }
 
     const name =
       roomData?.guest_name?.trim() ||
@@ -53,33 +56,66 @@ const ChatPage: React.FC = () => {
       localStorage.getItem("guestEmail") ||
       "guest@example.com";
 
+    console.log("[TalkMe] Initializing with user data:", { name, email });
+    console.log("[TalkMe] Data sources:", {
+      fromRoomData: !!roomData?.guest_name && !!roomData?.guest_email,
+      fromLocalStorage: !!localStorage.getItem("guestName") || !!localStorage.getItem("guestEmail"),
+      usingDefaults: !roomData?.guest_name || !roomData?.guest_email
+    });
+
     const script = document.createElement("script");
     script.id = "supportScript";
     script.src = `https://lcab.talk-me.ru/support/support.js?h=${CHAT_ID}`;
+    console.log("[TalkMe] Loading script:", script.src);
     document.head.appendChild(script);
 
+    let applyAttempts = 0;
+
     const applyUser = () => {
+      applyAttempts++;
+      console.log(`[TalkMe] Attempt ${applyAttempts} to apply user data`);
+      
       try {
-        window.TalkMe?.("setUserData", { name, email });
-      } catch (_) {
-        setTimeout(applyUser, 800);
+        if (typeof window.TalkMe === "function") {
+          console.log("[TalkMe] window.TalkMe is available, calling setUserData");
+          window.TalkMe("setUserData", { name, email });
+          console.log("[TalkMe] setUserData called successfully");
+          return true;
+        } else {
+          console.log("[TalkMe] window.TalkMe is not available yet, type:", typeof window.TalkMe);
+          return false;
+        }
+      } catch (error) {
+        console.error("[TalkMe] Error calling setUserData:", error);
+        setTimeout(() => applyUser(), 800);
+        return false;
       }
     };
 
+    let pollAttempts = 0;
     const poll = setInterval(() => {
+      pollAttempts++;
+      console.log(`[TalkMe] Polling attempt ${pollAttempts}, checking for window.TalkMe...`);
+      
       if (typeof window.TalkMe === "function") {
+        console.log("[TalkMe] window.TalkMe detected! Stopping poll and applying user data");
         clearInterval(poll);
         applyUser();
       }
     }, 400);
 
     const timeout = setTimeout(() => {
+      console.log("[TalkMe] Timeout reached after 10 seconds");
       clearInterval(poll);
-      // Try to apply once more in case the script became available later
-      applyUser();
+      console.log("[TalkMe] Final attempt to apply user data");
+      const success = applyUser();
+      if (!success) {
+        console.warn("[TalkMe] Failed to initialize after timeout. window.TalkMe:", typeof window.TalkMe);
+      }
     }, 10000);
 
     return () => {
+      console.log("[TalkMe] Cleanup: removing script and clearing intervals");
       clearInterval(poll);
       clearTimeout(timeout);
       script.remove();
