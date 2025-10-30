@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { Wifi, Car, Coffee, Tv, Shield, Bed } from "lucide-react";
 import { useRoomData } from "@/hooks/useRoomData";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import InstructionCard from "@/components/room/InstructionCard";
 
 const RoomPage = () => {
+  useDocumentTitle("Ваш номер");
   const { roomData, loading } = useRoomData();
   const [imgError, setImgError] = useState(false);
 
@@ -22,22 +25,13 @@ const RoomPage = () => {
     );
   }
 
-  // For room page: prioritize room_image_url first, then main_image_url
-  const getImageUrl = () => {
-    console.log('🖼️ RoomPage getImageUrl called with:', {
-      room_image_url: roomData.room_image_url,
-      main_image_url: roomData.main_image_url
-    });
-    
+  const getImageUrl = (): string | null => {
     if (roomData.room_image_url && roomData.room_image_url.trim() !== '') {
-      console.log('✅ RoomPage using room_image_url:', roomData.room_image_url);
       return roomData.room_image_url;
     }
     if (roomData.main_image_url && roomData.main_image_url.trim() !== '') {
-      console.log('✅ RoomPage using main_image_url as fallback:', roomData.main_image_url);
       return roomData.main_image_url;
     }
-    console.log('⚠️ RoomPage no valid image URL found');
     return null;
   };
 
@@ -49,23 +43,16 @@ const RoomPage = () => {
   }, [roomData?.main_image_url, roomData?.room_image_url]);
 
   return (
-    <div className="w-full max-w-md mx-auto pt-4">
+    <main className="w-full max-w-md mx-auto pt-4">
       <h1 className="text-3xl font-light mb-6">Ваш номер</h1>
       
       {imageUrl && !imgError && (
         <div className="mb-6">
-          {/* Recommended: 800x533px (3:2) or 800x450px (16:9), WebP/JPEG, 80-85% quality, <200KB - See IMAGE_GUIDELINES.md */}
           <img 
             src={imageUrl} 
             alt={roomData.apartment_name || "Room"} 
             className="w-full h-48 object-cover rounded-lg"
-            onError={() => {
-              console.error('❌ RoomPage image failed to load:', imageUrl);
-              setImgError(true);
-            }}
-            onLoad={() => {
-              console.log('✅ RoomPage image loaded successfully:', imageUrl);
-            }}
+            onError={() => setImgError(true)}
           />
         </div>
       )}
@@ -76,7 +63,7 @@ const RoomPage = () => {
         </div>
       )}
       
-      <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
+      <section className="bg-white rounded-lg p-6 shadow-sm mb-4">
         <h2 className="text-2xl font-medium mb-4">{roomData.apartment_name}</h2>
         <p className="text-hotel-neutral mb-4">Номер: {roomData.room_number}</p>
         
@@ -86,11 +73,10 @@ const RoomPage = () => {
             <p className="font-medium">{roomData.check_in_date} - {roomData.check_out_date}</p>
           </div>
         )}
-      </div>
+      </section>
 
-      {/* WiFi Information */}
       {(roomData.wifi_network || roomData.wifi_password) && (
-        <div className="bg-white rounded-lg p-6 shadow-sm mb-4">
+        <section className="bg-white rounded-lg p-6 shadow-sm mb-4">
           <div className="flex items-center mb-3">
             <Wifi className="w-5 h-5 text-hotel-accent mr-2" />
             <h3 className="text-lg font-medium">Wi-Fi</h3>
@@ -105,76 +91,37 @@ const RoomPage = () => {
               Пароль: <span className="font-medium">{roomData.wifi_password}</span>
             </p>
           )}
-        </div>
+        </section>
       )}
 
-      {/* Instructions Grid */}
-      <div className="space-y-4">
+      <section className="space-y-4">
         {roomData.ac_instructions && (
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="flex items-center mb-2">
-              <div className="w-8 h-8 rounded-full bg-hotel-accent flex items-center justify-center text-hotel-dark mr-3">
-                ❄️
-              </div>
-              <h4 className="font-medium">Кондиционер</h4>
-            </div>
-            <p className="text-sm text-hotel-neutral ml-11">{roomData.ac_instructions}</p>
-          </div>
+          <InstructionCard icon="❄️" title="Кондиционер" content={roomData.ac_instructions} />
         )}
 
         {roomData.coffee_instructions && (
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="flex items-center mb-2">
-              <Coffee className="w-5 h-5 text-hotel-accent mr-3 ml-1" />
-              <h4 className="font-medium">Кофеварка</h4>
-            </div>
-            <p className="text-sm text-hotel-neutral ml-11">{roomData.coffee_instructions}</p>
-          </div>
+          <InstructionCard icon={Coffee} title="Кофеварка" content={roomData.coffee_instructions} />
         )}
 
         {roomData.tv_instructions && (
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="flex items-center mb-2">
-              <Tv className="w-5 h-5 text-hotel-accent mr-3 ml-1" />
-              <h4 className="font-medium">Телевизор</h4>
-            </div>
-            <p className="text-sm text-hotel-neutral ml-11">{roomData.tv_instructions}</p>
-          </div>
+          <InstructionCard icon={Tv} title="Телевизор" content={roomData.tv_instructions} />
         )}
 
         {roomData.safe_instructions && (
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="flex items-center mb-2">
-              <Shield className="w-5 h-5 text-hotel-accent mr-3 ml-1" />
-              <h4 className="font-medium">Сейф</h4>
-            </div>
-            <p className="text-sm text-hotel-neutral ml-11">{roomData.safe_instructions}</p>
-          </div>
+          <InstructionCard icon={Shield} title="Сейф" content={roomData.safe_instructions} />
         )}
 
         {roomData.parking_info && (
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="flex items-center mb-2">
-              <Car className="w-5 h-5 text-hotel-accent mr-3 ml-1" />
-              <h4 className="font-medium">Парковка</h4>
-            </div>
-            <p className="text-sm text-hotel-neutral ml-11">{roomData.parking_info}</p>
-          </div>
+          <InstructionCard icon={Car} title="Парковка" content={roomData.parking_info} />
         )}
 
         {roomData.extra_bed_info && (
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="flex items-center mb-2">
-              <Bed className="w-5 h-5 text-hotel-accent mr-3 ml-1" />
-              <h4 className="font-medium">Дополнительное спальное место</h4>
-            </div>
-            <p className="text-sm text-hotel-neutral ml-11">{roomData.extra_bed_info}</p>
-          </div>
+          <InstructionCard icon={Bed} title="Дополнительное спальное место" content={roomData.extra_bed_info} />
         )}
-      </div>
+      </section>
 
       {roomData.notes_for_guests && (
-        <div className="bg-blue-50 border-l-4 border-hotel-accent rounded-lg p-4 shadow-sm mt-6">
+        <section className="bg-blue-50 border-l-4 border-hotel-accent rounded-lg p-4 shadow-sm mt-6">
           <div className="flex items-center mb-2">
             <div className="w-8 h-8 rounded-full bg-hotel-accent flex items-center justify-center text-hotel-dark mr-3">
               📝
@@ -184,16 +131,16 @@ const RoomPage = () => {
           <p className="text-sm text-hotel-neutral ml-11 whitespace-pre-wrap">
             {roomData.notes_for_guests}
           </p>
-        </div>
+        </section>
       )}
 
       {roomData.checkout_time && (
-        <div className="bg-gradient-to-r from-hotel-accent to-yellow-100 rounded-lg p-4 shadow-sm mt-6">
+        <section className="bg-gradient-to-r from-hotel-accent to-yellow-100 rounded-lg p-4 shadow-sm mt-6">
           <h4 className="font-medium text-hotel-dark mb-1">Время выезда</h4>
           <p className="text-sm text-hotel-dark">{roomData.checkout_time}</p>
-        </div>
+        </section>
       )}
-    </div>
+    </main>
   );
 };
 
