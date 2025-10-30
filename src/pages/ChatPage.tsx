@@ -1,8 +1,17 @@
 
 import React, { useEffect } from "react";
+import { useRoomData } from "@/hooks/useRoomData";
 
 const ChatPage = () => {
+  const { roomData, loading } = useRoomData();
+
   useEffect(() => {
+    if (loading || !roomData) return;
+
+    // Extract guest data
+    const guestName = roomData.guest_name || "Гость";
+    const guestEmail = roomData.guest_email || "guest@example.com";
+
     // Настройка Talk-Me виджета
     (function(){(function c(d,w,m,i) {
         window.supportAPIMethod = m;
@@ -15,8 +24,24 @@ const ChatPage = () => {
         (d.head ? d.head : d.body).appendChild(s);
     })(document,window,'TalkMe')})();
 
+    // Wait for widget to load, then set user data
+    const initUserData = setInterval(() => {
+      if (window.TalkMe) {
+        window.TalkMe('setUserData', { 
+          name: guestName, 
+          email: guestEmail 
+        });
+        clearInterval(initUserData);
+      }
+    }, 100);
+
+    // Cleanup timeout after 5 seconds
+    const timeout = setTimeout(() => clearInterval(initUserData), 5000);
+
     // Очистка при размонтировании
     return () => {
+      clearInterval(initUserData);
+      clearTimeout(timeout);
       const script = document.getElementById('supportScript');
       if (script && script.parentNode) {
         script.parentNode.removeChild(script);
@@ -26,7 +51,15 @@ const ChatPage = () => {
         delete window.TalkMe;
       }
     };
-  }, []);
+  }, [loading, roomData]);
+
+  if (loading) {
+    return (
+      <div className="w-full max-w-4xl mx-auto pt-8 h-[calc(100vh-120px)] flex items-center justify-center">
+        <p className="text-muted-foreground">Загрузка...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto pt-8 h-[calc(100vh-120px)] flex flex-col">
@@ -60,7 +93,7 @@ const ChatPage = () => {
 // Расширяем типы для Talk-Me
 declare global {
   interface Window {
-    TalkMe?: {
+    TalkMe?: ((method: string, data?: any) => void) & {
       q?: any[];
       [key: string]: any;
     };
