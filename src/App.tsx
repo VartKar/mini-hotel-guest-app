@@ -12,7 +12,9 @@ const RoomPage = lazy(() => import("./pages/RoomPage"));
 const TravelPage = lazy(() => import("./pages/TravelPage"));
 const ServicesPage = lazy(() => import("./pages/ServicesPage"));
 const ShopPage = lazy(() => import("./pages/ShopPage"));
-const ChatPage = lazy(() => import("./pages/ChatPage"));
+const ChatPage = lazy(() =>
+  import("./pages/ChatPage").then((m) => ({ default: (m as any).default ?? (m as any) }))
+);
 const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const HostPage = lazy(() => import("./pages/HostPage"));
