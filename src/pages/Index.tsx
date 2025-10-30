@@ -29,7 +29,7 @@ const menuItems = [{
   icon: <MessageCircle size={20} strokeWidth={1.5} />,
   path: "/chat"
 }, {
-  name: "Профиль",
+  name: "Мой профиль",
   icon: <User size={20} strokeWidth={1.5} />,
   path: "/feedback"
 }];
