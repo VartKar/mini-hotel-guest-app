@@ -65,8 +65,8 @@ const ChatPage: React.FC = () => {
 
     const script = document.createElement("script");
     script.id = "supportScript";
-    script.src = `https://lcab.talk-me.ru/support/support.js?h=${CHAT_ID}`;
-    console.log("[TalkMe] Loading script:", script.src);
+    script.src = `https://lcab.talk-me.ru/support/support.js?h=${CHAT_ID}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`;
+    console.log("[TalkMe] Loading script with user data in URL:", script.src);
     document.head.appendChild(script);
 
     let applyAttempts = 0;
