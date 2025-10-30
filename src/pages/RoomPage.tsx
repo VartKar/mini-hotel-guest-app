@@ -173,6 +173,20 @@ const RoomPage = () => {
         )}
       </div>
 
+      {roomData.notes_for_guests && (
+        <div className="bg-blue-50 border-l-4 border-hotel-accent rounded-lg p-4 shadow-sm mt-6">
+          <div className="flex items-center mb-2">
+            <div className="w-8 h-8 rounded-full bg-hotel-accent flex items-center justify-center text-hotel-dark mr-3">
+              📝
+            </div>
+            <h4 className="font-medium text-hotel-dark">Заметки для гостей</h4>
+          </div>
+          <p className="text-sm text-hotel-neutral ml-11 whitespace-pre-wrap">
+            {roomData.notes_for_guests}
+          </p>
+        </div>
+      )}
+
       {roomData.checkout_time && (
         <div className="bg-gradient-to-r from-hotel-accent to-yellow-100 rounded-lg p-4 shadow-sm mt-6">
           <h4 className="font-medium text-hotel-dark mb-1">Время выезда</h4>
