@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import DOMPurify from "dompurify";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useHotelServices } from "@/hooks/useHotelServices";
 import { useCart, CartItem } from "@/hooks/useCart";
@@ -201,6 +202,7 @@ const ServicesPage = () => {
     lines.forEach((line, idx) => {
       // Bold text: **text** -> <strong>
       const boldProcessed = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      const sanitized = DOMPurify.sanitize(boldProcessed);
       
       // List items starting with •
       if (line.trim().startsWith('•')) {
@@ -212,7 +214,7 @@ const ServicesPage = () => {
             <p 
               key={idx} 
               className="mb-2" 
-              dangerouslySetInnerHTML={{ __html: boldProcessed }}
+              dangerouslySetInnerHTML={{ __html: sanitized }}
             />
           );
         }
