@@ -8,36 +8,36 @@ const DEFAULT_IMG = "https://i.postimg.cc/NFprr3hY/valse.png";
 
 const menuItems = [{
   name: "Мой номер",
-  subtitle: "Wi-Fi, парковка и другая информация",
+  subtitle: "Полная информация",
   icon: <Home size={24} strokeWidth={1.5} />,
   path: "/room",
   colorClass: "bg-blue-50 text-blue-600"
 }, {
   name: "Что вокруг",
-  subtitle: "Интересные места, экскурсии, кафе",
+  subtitle: "Гид по городу",
   icon: <Map size={24} strokeWidth={1.5} />,
   path: "/travel",
   colorClass: "bg-green-50 text-green-600"
 }, {
-  name: "Услуги отеля",
-  subtitle: "Уборка, трансфер, стирка",
+  name: "Сервисы отеля",
+  subtitle: "Заказ услуг",
   icon: <Coffee size={24} strokeWidth={1.5} />,
   path: "/services",
   colorClass: "bg-purple-50 text-purple-600"
 }, {
   name: "Маркет",
-  subtitle: "Местные товары и сувениры",
+  subtitle: "Местные товары",
   icon: <ShoppingBag size={24} strokeWidth={1.5} />,
   path: "/shop",
   colorClass: "bg-orange-50 text-orange-600"
 }, {
   name: "Консьерж",
-  subtitle: "На связи по всем вопросам",
+  subtitle: "Онлайн-чат",
   icon: <MessageCircle size={24} strokeWidth={1.5} />,
   path: "/chat",
   colorClass: "bg-pink-50 text-pink-600"
 }, {
-  name: "Мой профиль",
+  name: "Профиль",
   subtitle: "Бонусы и настройки",
   icon: <User size={24} strokeWidth={1.5} />,
   path: "/feedback",
