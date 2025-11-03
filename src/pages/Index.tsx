@@ -149,7 +149,7 @@ const Index = () => {
 
         {/* Demo info for non-personalized */}
         {!isPersonalized && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3 mb-6">
             <div className="flex items-center gap-2">
               <Info size={16} className="text-blue-600 flex-shrink-0" />
               <div>
@@ -163,6 +163,16 @@ const Index = () => {
             </div>
           </div>
         )}
+
+        {/* Link to alternative design */}
+        <div className="text-center pb-8">
+          <Link 
+            to="/alt" 
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors underline"
+          >
+            Посмотреть альтернативный дизайн
+          </Link>
+        </div>
       </div>
     </div>
   );

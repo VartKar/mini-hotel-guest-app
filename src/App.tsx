@@ -8,6 +8,7 @@ import Layout from "./components/Layout";
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
+const AltIndex = lazy(() => import("./pages/AltIndex"));
 const RoomPage = lazy(() => import("./pages/RoomPage"));
 const TravelPage = lazy(() => import("./pages/TravelPage"));
 const ServicesPage = lazy(() => import("./pages/ServicesPage"));
@@ -39,6 +40,13 @@ function App() {
               <Layout>
                 <Suspense fallback={<div>Загрузка...</div>}>
                   <Index />
+                </Suspense>
+              </Layout>
+            } />
+            <Route path="/alt" element={
+              <Layout>
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <AltIndex />
                 </Suspense>
               </Layout>
             } />
