@@ -8,7 +8,7 @@ const DEFAULT_IMG = "https://i.postimg.cc/NFprr3hY/valse.png";
 
 const menuItems = [{
   name: "Мой номер",
-  subtitle: "Полная информация",
+  subtitle: "Информация",
   icon: <Home size={24} strokeWidth={1.5} />,
   path: "/room",
   colorClass: "bg-blue-50 text-blue-600"
