@@ -5,64 +5,14 @@ export const useHostMarketingMetrics = (hostEmail: string) => {
   return useQuery({
     queryKey: ["host-marketing-metrics", hostEmail],
     queryFn: async () => {
-      if (!hostEmail) {
-        return {
-          guestsCount: 0,
-          ordersCount: 0,
-          totalBonuses: 0,
-          revenue: 0,
-          topGuests: [],
-          distribution: {},
-        };
-      }
-
-      // First get host's rooms
-      const { data: rooms } = await supabase
-        .from("rooms")
-        .select("id")
-        .ilike("host_email", hostEmail.trim());
-
-      if (!rooms || rooms.length === 0) {
-        return {
-          guestsCount: 0,
-          ordersCount: 0,
-          totalBonuses: 0,
-          revenue: 0,
-          topGuests: [],
-          distribution: {},
-        };
-      }
-
-      const roomIds = rooms.map(r => r.id);
-
-      // Get bookings for these rooms
-      const { data: bookings } = await supabase
-        .from("bookings")
-        .select("id, guest_email")
-        .in("room_id", roomIds);
-
-      if (!bookings || bookings.length === 0) {
-        return {
-          guestsCount: 0,
-          ordersCount: 0,
-          totalBonuses: 0,
-          revenue: 0,
-          topGuests: [],
-          distribution: {},
-        };
-      }
-
-      // Get unique guest emails and booking IDs
-      const guestEmails = [...new Set(bookings.map(b => b.guest_email))];
-      const bookingIds = bookings.map(b => b.id);
-
-      // Get guests
-      const { data: uniqueGuests } = await supabase
+      // 1) Get guests visible to the authenticated host (RLS enforces scoping)
+      const { data: visibleGuests } = await supabase
         .from("guests")
-        .select("*")
-        .in("email", guestEmails);
+        .select("*");
 
-      if (!uniqueGuests || uniqueGuests.length === 0) {
+      const uniqueGuests = visibleGuests || [];
+
+      if (!uniqueGuests.length) {
         return {
           guestsCount: 0,
           ordersCount: 0,
@@ -75,13 +25,23 @@ export const useHostMarketingMetrics = (hostEmail: string) => {
 
       const guestsCount = uniqueGuests.length;
 
-      // Total bonuses from host's guests
+      // 2) Total bonuses from host's guests
       const totalBonuses = uniqueGuests.reduce(
         (sum, g) => sum + (g.loyalty_points || 0),
         0
       );
 
-      // Orders from host's guests (last 30 days)
+      // 3) Collect bookings for these guests (RLS ensures only host-related bookings)
+      const guestEmails = uniqueGuests.map((g) => g.email);
+
+      const { data: bookings } = await supabase
+        .from("bookings")
+        .select("id, guest_email")
+        .in("guest_email", guestEmails);
+
+      const bookingIds = (bookings || []).map((b) => b.id);
+
+      // 4) Orders from host's guests (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -99,7 +59,7 @@ export const useHostMarketingMetrics = (hostEmail: string) => {
 
       const ordersCount = (shopOrdersCount || 0) + (travelOrdersCount || 0);
 
-      // Revenue from host's guests (last 30 days)
+      // 5) Revenue from host's guests (last 30 days)
       const { data: shopOrders } = await supabase
         .from("shop_orders")
         .select("total_amount")
@@ -118,12 +78,12 @@ export const useHostMarketingMetrics = (hostEmail: string) => {
         (shopOrders?.reduce((sum, o) => sum + Number(o.total_amount), 0) || 0) +
         (travelOrders?.reduce((sum, o) => sum + Number(o.total_amount), 0) || 0);
 
-      // Top 3 guests by total_spent
+      // 6) Top 3 guests by total_spent
       const topGuests = [...uniqueGuests]
         .sort((a, b) => (b.total_spent || 0) - (a.total_spent || 0))
         .slice(0, 3);
 
-      // Loyalty tier distribution
+      // 7) Loyalty tier distribution
       const distribution = uniqueGuests.reduce((acc, g) => {
         const tier = g.loyalty_tier || "Стандарт";
         acc[tier] = (acc[tier] || 0) + 1;
@@ -139,6 +99,7 @@ export const useHostMarketingMetrics = (hostEmail: string) => {
         distribution,
       };
     },
-    enabled: !!hostEmail,
+    // Independent of hostEmail string; RLS handles scoping
+    enabled: true,
   });
 };
