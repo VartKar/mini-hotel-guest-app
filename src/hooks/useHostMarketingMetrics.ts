@@ -16,27 +16,62 @@ export const useHostMarketingMetrics = (hostEmail: string) => {
         };
       }
 
-      // Get host's guests through bookings and rooms
-      const { data: hostGuests } = await supabase
-        .from("guests")
-        .select(`
-          *,
-          bookings!inner(
-            id,
-            rooms!inner(
-              host_email
-            )
-          )
-        `)
-        .eq("bookings.rooms.host_email", hostEmail);
+      // First get host's rooms
+      const { data: rooms } = await supabase
+        .from("rooms")
+        .select("id")
+        .ilike("host_email", hostEmail.trim());
 
-      // Remove duplicates and flatten
-      const uniqueGuests = hostGuests?.reduce((acc, guest) => {
-        if (!acc.find((g: any) => g.id === guest.id)) {
-          acc.push(guest);
-        }
-        return acc;
-      }, [] as any[]) || [];
+      if (!rooms || rooms.length === 0) {
+        return {
+          guestsCount: 0,
+          ordersCount: 0,
+          totalBonuses: 0,
+          revenue: 0,
+          topGuests: [],
+          distribution: {},
+        };
+      }
+
+      const roomIds = rooms.map(r => r.id);
+
+      // Get bookings for these rooms
+      const { data: bookings } = await supabase
+        .from("bookings")
+        .select("id, guest_email")
+        .in("room_id", roomIds);
+
+      if (!bookings || bookings.length === 0) {
+        return {
+          guestsCount: 0,
+          ordersCount: 0,
+          totalBonuses: 0,
+          revenue: 0,
+          topGuests: [],
+          distribution: {},
+        };
+      }
+
+      // Get unique guest emails and booking IDs
+      const guestEmails = [...new Set(bookings.map(b => b.guest_email))];
+      const bookingIds = bookings.map(b => b.id);
+
+      // Get guests
+      const { data: uniqueGuests } = await supabase
+        .from("guests")
+        .select("*")
+        .in("email", guestEmails);
+
+      if (!uniqueGuests || uniqueGuests.length === 0) {
+        return {
+          guestsCount: 0,
+          ordersCount: 0,
+          totalBonuses: 0,
+          revenue: 0,
+          topGuests: [],
+          distribution: {},
+        };
+      }
 
       const guestsCount = uniqueGuests.length;
 
@@ -50,41 +85,21 @@ export const useHostMarketingMetrics = (hostEmail: string) => {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const guestIds = uniqueGuests.map((g) => g.id);
-
       const { count: shopOrdersCount } = await supabase
         .from("shop_orders")
         .select("*", { count: "exact", head: true })
-        .in("booking_id_key", 
-          (await supabase
-            .from("bookings")
-            .select("id")
-            .in("guest_email", uniqueGuests.map(g => g.email))
-            .then(res => res.data?.map(b => b.id) || []))
-        )
+        .in("booking_id_key", bookingIds)
         .gte("created_at", thirtyDaysAgo.toISOString());
 
       const { count: travelOrdersCount } = await supabase
         .from("travel_service_orders")
         .select("*", { count: "exact", head: true })
-        .in("booking_id_key",
-          (await supabase
-            .from("bookings")
-            .select("id")
-            .in("guest_email", uniqueGuests.map(g => g.email))
-            .then(res => res.data?.map(b => b.id) || []))
-        )
+        .in("booking_id_key", bookingIds)
         .gte("created_at", thirtyDaysAgo.toISOString());
 
       const ordersCount = (shopOrdersCount || 0) + (travelOrdersCount || 0);
 
       // Revenue from host's guests (last 30 days)
-      const bookingIds = (await supabase
-        .from("bookings")
-        .select("id")
-        .in("guest_email", uniqueGuests.map(g => g.email))
-        .then(res => res.data?.map(b => b.id) || []));
-
       const { data: shopOrders } = await supabase
         .from("shop_orders")
         .select("total_amount")

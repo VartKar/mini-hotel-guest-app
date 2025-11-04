@@ -7,30 +7,35 @@ export const useHostGuests = (hostEmail: string) => {
     queryFn: async () => {
       if (!hostEmail) return [];
 
-      // Get host's guests through bookings and rooms
-      const { data: hostGuests } = await supabase
+      // First get host's rooms
+      const { data: rooms } = await supabase
+        .from("rooms")
+        .select("id")
+        .ilike("host_email", hostEmail.trim());
+
+      if (!rooms || rooms.length === 0) return [];
+
+      const roomIds = rooms.map(r => r.id);
+
+      // Get bookings for these rooms
+      const { data: bookings } = await supabase
+        .from("bookings")
+        .select("guest_email")
+        .in("room_id", roomIds);
+
+      if (!bookings || bookings.length === 0) return [];
+
+      // Get unique guest emails
+      const guestEmails = [...new Set(bookings.map(b => b.guest_email))];
+
+      // Get guests
+      const { data: guests } = await supabase
         .from("guests")
-        .select(`
-          *,
-          bookings!inner(
-            id,
-            rooms!inner(
-              host_email
-            )
-          )
-        `)
-        .eq("bookings.rooms.host_email", hostEmail)
+        .select("*")
+        .in("email", guestEmails)
         .order("last_visit_date", { ascending: false, nullsFirst: false });
 
-      // Remove duplicates
-      const uniqueGuests = hostGuests?.reduce((acc, guest) => {
-        if (!acc.find((g: any) => g.id === guest.id)) {
-          acc.push(guest);
-        }
-        return acc;
-      }, [] as any[]) || [];
-
-      return uniqueGuests;
+      return guests || [];
     },
     enabled: !!hostEmail,
   });
