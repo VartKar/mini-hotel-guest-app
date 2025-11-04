@@ -276,17 +276,23 @@ export const useRoomData = () => {
 
       console.log('✅ Booking found:', bookingData);
 
-      // Fetch guest_id from guests table
+      // Fetch guest_id from guests table (required for bonuses)
       let guestId: string | null = null;
       if (bookingData.guest_email) {
-        const { data: guestData } = await supabase
+        const { data: guestData, error: guestError } = await supabase
           .from('guests')
           .select('id')
           .eq('email', bookingData.guest_email.toLowerCase().trim())
-          .single();
+          .maybeSingle();
         
-        guestId = guestData?.id || null;
-        console.log('💎 Guest ID found:', guestId);
+        if (guestError) {
+          console.error('❌ Error fetching guest:', guestError);
+        } else if (guestData) {
+          guestId = guestData.id;
+          console.log('💎 Guest ID found:', guestId);
+        } else {
+          console.log('⚠️ No guest record found for email:', bookingData.guest_email);
+        }
       }
 
       const combinedData: RoomData = {
