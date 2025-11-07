@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Home, Compass, Coffee, ShoppingBag, MessageCircle, User, Info } from "lucide-react";
+import { Home, MapPin, Coffee, ShoppingBag, MessageCircle, User, Info } from "lucide-react";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
@@ -17,30 +17,26 @@ const menuItems = [{
 }, {
   name: "Что вокруг",
   subtitle: "Интересное в городе",
-  icon: <Compass size={20} strokeWidth={1.5} />,
+  icon: <MapPin size={20} strokeWidth={1.5} />,
   path: "/travel",
   colorClass: "bg-green-50 text-green-600"
 }, {
   name: "Услуги отеля",
-  subtitle: "Заказ услуг",
   icon: <Coffee size={20} strokeWidth={1.5} />,
   path: "/services",
   colorClass: "bg-purple-50 text-purple-600"
 }, {
   name: "Маркет",
-  subtitle: "Местные товары",
   icon: <ShoppingBag size={20} strokeWidth={1.5} />,
   path: "/shop",
   colorClass: "bg-orange-50 text-orange-600"
 }, {
   name: "Консьерж",
-  subtitle: "Онлайн-чат",
   icon: <MessageCircle size={20} strokeWidth={1.5} />,
   path: "/chat",
   colorClass: "bg-pink-50 text-pink-600"
 }, {
   name: "Профиль и бонусы",
-  subtitle: "Бонусы и настройки",
   icon: <User size={20} strokeWidth={1.5} />,
   path: "/feedback",
   colorClass: "bg-indigo-50 text-indigo-600"
@@ -157,7 +153,7 @@ const Index = () => {
                 {item.icon}
               </div>
               <span className="text-sm font-medium text-gray-900 mb-1">{item.name}</span>
-              <span className="text-xs text-gray-400">{item.subtitle}</span>
+              {item.subtitle && <span className="text-xs text-gray-400">{item.subtitle}</span>}
             </Link>
           ))}
         </div>
