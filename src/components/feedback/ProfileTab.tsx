@@ -55,58 +55,79 @@ const ProfileTab = ({ profile, onProfileChange }: ProfileTabProps) => {
     });
 
     try {
-      // Fetch shop orders
-      let shopQuery = supabase
-        .from('shop_orders')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+      // Fetch shop orders using all available identifiers and merge
+      const shopPromises: Promise<any>[] = [];
       if (hasGuestId) {
-        // Priority: guest_id (most reliable)
-        shopQuery = shopQuery.eq('guest_id', (roomData as any)!.guest_id);
-      } else if (hasBooking) {
-        shopQuery = shopQuery.eq('booking_id_key', roomData!.booking_record_id);
-      } else if (hasRoom) {
-        shopQuery = shopQuery.eq('room_number', roomData!.room_number);
+        shopPromises.push(
+          (async () => await supabase
+            .from('shop_orders').select('*')
+            .eq('guest_id', (roomData as any)!.guest_id)
+            .order('created_at', { ascending: false })
+          )()
+        );
+      }
+      if (hasBooking) {
+        shopPromises.push(
+          (async () => await supabase
+            .from('shop_orders').select('*')
+            .eq('booking_id_key', roomData!.booking_record_id)
+            .order('created_at', { ascending: false })
+          )()
+        );
+      }
+      if (hasRoom) {
+        shopPromises.push(
+          (async () => await supabase
+            .from('shop_orders').select('*')
+            .eq('room_number', roomData!.room_number)
+            .order('created_at', { ascending: false })
+          )()
+        );
       }
 
-      const { data: shopOrders, error: shopError } = await shopQuery;
+      const shopResults = await Promise.all(shopPromises.map(p => p.catch((e: any) => ({ data: [], error: e }))));
+      const shopOrders = shopResults.flatMap((res: any) => res?.data || []);
 
-      // Fetch travel orders
-      let travelOrders: any[] = [];
-      
+      // Fetch travel orders using available identifiers and merge
+      const travelPromises: Promise<any>[] = [];
       if (hasGuestId) {
-        const { data, error } = await supabase
-          .from('travel_service_orders')
-          .select('*')
-          .eq('guest_id', (roomData as any)!.guest_id)
-          .order('created_at', { ascending: false });
-        
-        if (!error) travelOrders = data || [];
-      } else if (hasBooking) {
-        const { data, error } = await supabase
-          .from('travel_service_orders')
-          .select('*')
-          .eq('booking_id_key', roomData!.booking_record_id)
-          .order('created_at', { ascending: false });
-        
-        if (!error) travelOrders = data || [];
+        travelPromises.push(
+          (async () => await supabase
+            .from('travel_service_orders').select('*')
+            .eq('guest_id', (roomData as any)!.guest_id)
+            .order('created_at', { ascending: false })
+          )()
+        );
+      }
+      if (hasBooking) {
+        travelPromises.push(
+          (async () => await supabase
+            .from('travel_service_orders').select('*')
+            .eq('booking_id_key', roomData!.booking_record_id)
+            .order('created_at', { ascending: false })
+          )()
+        );
       }
 
-      if (shopError) console.error('Error fetching shop orders:', shopError);
+      const travelResults = await Promise.all(travelPromises.map(p => p.catch((e: any) => ({ data: [], error: e }))));
+      const travelOrders = travelResults.flatMap((res: any) => res?.data || []);
+
+      // Deduplicate by id
+      const dedupeById = <T extends { id: string }>(arr: T[]) => {
+        const map = new Map<string, T>();
+        arr.forEach(item => map.set(item.id, item));
+        return Array.from(map.values());
+      };
+
+      const shopUnique = dedupeById(shopOrders);
+      const travelUnique = dedupeById(travelOrders);
 
       const allOrders: Order[] = [
-        ...(shopOrders || []).map(order => ({
-          ...order,
-          type: 'shop' as const
-        })),
-        ...travelOrders.map(order => ({
-          ...order,
-          type: 'travel' as const
-        }))
+        ...shopUnique.map(order => ({ ...order, type: 'shop' as const })),
+        ...travelUnique.map(order => ({ ...order, type: 'travel' as const }))
       ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-      console.log('[ProfileTab] Fetched orders:', allOrders.length);
+      console.log('[ProfileTab] Fetched orders:', allOrders.length, { shop: shopUnique.length, travel: travelUnique.length });
       setOrders(allOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
