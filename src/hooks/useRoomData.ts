@@ -176,6 +176,27 @@ export const useRoomData = () => {
     }
   }, []);
 
+  // Patch missing guest_id from stored booking if needed
+  useEffect(() => {
+    const patchGuestId = async () => {
+      if (roomData && !roomData.guest_id && roomData.booking_record_id) {
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('guest_id')
+          .eq('id', roomData.booking_record_id)
+          .single();
+        if (!error && data?.guest_id) {
+          const updated = { ...roomData, guest_id: data.guest_id } as RoomData;
+          globalRoomData = updated;
+          setRoomData(updated);
+          saveToStorage(updated, isPersonalized);
+          notifyListeners();
+        }
+      }
+    };
+    patchGuestId();
+  }, [roomData, isPersonalized]);
+
   const fetchDefaultRoom = async () => {
     try {
       setLoading(true);
@@ -276,9 +297,11 @@ export const useRoomData = () => {
 
       console.log('✅ Booking found:', bookingData);
 
-      // Fetch guest_id from guests table (required for bonuses)
-      let guestId: string | null = null;
-      if (bookingData.guest_email) {
+      // Prefer guest_id from booking record to avoid RLS on guests
+      let guestId: string | null = bookingData.guest_id ?? null;
+
+      // If missing, try to resolve via guests.email (may be restricted by RLS)
+      if (!guestId && bookingData.guest_email) {
         const { data: guestData, error: guestError } = await supabase
           .from('guests')
           .select('id')
@@ -286,10 +309,10 @@ export const useRoomData = () => {
           .maybeSingle();
         
         if (guestError) {
-          console.error('❌ Error fetching guest:', guestError);
+          console.error('❌ Error fetching guest by email:', guestError);
         } else if (guestData) {
           guestId = guestData.id;
-          console.log('💎 Guest ID found:', guestId);
+          console.log('💎 Guest ID resolved by email:', guestId);
         } else {
           console.log('⚠️ No guest record found for email:', bookingData.guest_email);
         }
