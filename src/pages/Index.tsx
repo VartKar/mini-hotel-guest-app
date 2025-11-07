@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Home, Map, Coffee, ShoppingBag, MessageCircle, User, Info } from "lucide-react";
+import { Home, Compass, Coffee, ShoppingBag, MessageCircle, User, Info } from "lucide-react";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
@@ -10,28 +10,40 @@ const DEFAULT_IMG = "https://i.postimg.cc/NFprr3hY/valse.png";
 
 const menuItems = [{
   name: "Мой номер",
+  subtitle: "WiFi, парковки и прочее",
   icon: <Home size={20} strokeWidth={1.5} />,
-  path: "/room"
+  path: "/room",
+  colorClass: "bg-blue-50 text-blue-600"
 }, {
   name: "Что вокруг",
-  icon: <Map size={20} strokeWidth={1.5} />,
-  path: "/travel"
+  subtitle: "Интересное в городе",
+  icon: <Compass size={20} strokeWidth={1.5} />,
+  path: "/travel",
+  colorClass: "bg-green-50 text-green-600"
 }, {
   name: "Услуги отеля",
+  subtitle: "Заказ услуг",
   icon: <Coffee size={20} strokeWidth={1.5} />,
-  path: "/services"
+  path: "/services",
+  colorClass: "bg-purple-50 text-purple-600"
 }, {
   name: "Маркет",
+  subtitle: "Местные товары",
   icon: <ShoppingBag size={20} strokeWidth={1.5} />,
-  path: "/shop"
+  path: "/shop",
+  colorClass: "bg-orange-50 text-orange-600"
 }, {
   name: "Консьерж",
+  subtitle: "Онлайн-чат",
   icon: <MessageCircle size={20} strokeWidth={1.5} />,
-  path: "/chat"
+  path: "/chat",
+  colorClass: "bg-pink-50 text-pink-600"
 }, {
   name: "Профиль и бонусы",
+  subtitle: "Бонусы и настройки",
   icon: <User size={20} strokeWidth={1.5} />,
-  path: "/feedback"
+  path: "/feedback",
+  colorClass: "bg-indigo-50 text-indigo-600"
 }];
 
 const Index = () => {
@@ -139,10 +151,13 @@ const Index = () => {
             <Link
               key={item.name}
               to={item.path}
-              className="flex flex-col items-center justify-center bg-white rounded-lg p-6 shadow-sm transition-all hover:shadow-md"
+              className="flex flex-col items-start bg-white rounded-lg p-6 shadow-sm transition-all hover:shadow-md"
             >
-              <div className="text-hotel-dark mb-3">{item.icon}</div>
-              <span className="text-center text-sm font-normal">{item.name}</span>
+              <div className={`w-10 h-10 rounded-lg ${item.colorClass} flex items-center justify-center mb-3`}>
+                {item.icon}
+              </div>
+              <span className="text-sm font-medium text-gray-900 mb-1">{item.name}</span>
+              <span className="text-xs text-gray-400">{item.subtitle}</span>
             </Link>
           ))}
         </div>
