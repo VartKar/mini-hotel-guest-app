@@ -39,107 +39,18 @@ const ChatPage: React.FC = () => {
     ensureCanonical();
   }, []);
 
-  // Init TalkMe and pass user data when available
+  // Init TalkMe chat widget
   useEffect(() => {
-    if (loading) {
-      console.log("[TalkMe] Waiting for room data to load...");
-      return;
-    }
-
-    const name =
-      roomData?.guest_name?.trim() ||
-      localStorage.getItem("guestName") ||
-      "Гость отеля";
-
-    const email =
-      roomData?.guest_email?.trim() ||
-      localStorage.getItem("guestEmail") ||
-      "guest@example.com";
-
-    console.log("[TalkMe] Initializing with user data:", { name, email });
-
-    // METHOD 1: Set global variable before script loads
-    (window as any).talkMeUserData = { name, email };
-
-    // METHOD 2: Load script with URL parameters
     const script = document.createElement("script");
     script.id = "supportScript";
-    script.src = `https://lcab.talk-me.ru/support/support.js?h=${CHAT_ID}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`;
+    script.src = `https://lcab.talk-me.ru/support/support.js?h=${CHAT_ID}`;
+    script.async = true;
     document.head.appendChild(script);
 
-    // METHOD 3: Try API calls
-    const tryApiMethods = () => {
-      try {
-        if (typeof window.TalkMe === "function") {
-          window.TalkMe("setUserData", { name, email });
-          console.log("[TalkMe] API: setUserData called");
-        }
-        if ((window as any).TalkMeWidget) {
-          (window as any).TalkMeWidget.setUser({ name, email });
-          console.log("[TalkMe] API: TalkMeWidget.setUser called");
-        }
-      } catch (error) {
-        console.error("[TalkMe] API error:", error);
-      }
-    };
-
-    // METHOD 4: Direct form field manipulation
-    const fillFormFields = () => {
-      try {
-        const container = document.getElementById("onlineSupportContainer");
-        if (!container) return false;
-
-        // Try to find and fill form fields in the container
-        const inputs = container.querySelectorAll('input[type="text"], input[type="email"], input[name*="name"], input[name*="email"]');
-        inputs.forEach((input: any) => {
-          const inputEl = input as HTMLInputElement;
-          const fieldName = inputEl.name?.toLowerCase() || inputEl.placeholder?.toLowerCase() || '';
-          
-          if (fieldName.includes('name') || fieldName.includes('имя')) {
-            inputEl.value = name;
-            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-            inputEl.dispatchEvent(new Event('change', { bubbles: true }));
-            console.log("[TalkMe] Filled name field:", inputEl.name || inputEl.placeholder);
-          } else if (fieldName.includes('email') || fieldName.includes('почта')) {
-            inputEl.value = email;
-            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-            inputEl.dispatchEvent(new Event('change', { bubbles: true }));
-            console.log("[TalkMe] Filled email field:", inputEl.name || inputEl.placeholder);
-          }
-        });
-
-        return inputs.length > 0;
-      } catch (error) {
-        console.error("[TalkMe] Form fill error:", error);
-        return false;
-      }
-    };
-
-    // Poll for widget availability and try all methods
-    let attempts = 0;
-    const poll = setInterval(() => {
-      attempts++;
-      
-      tryApiMethods();
-      const foundFields = fillFormFields();
-      
-      if (foundFields) {
-        console.log("[TalkMe] Fields found and filled on attempt", attempts);
-      }
-      
-      if (attempts >= 25) {
-        console.log("[TalkMe] Stopping after 25 attempts");
-        clearInterval(poll);
-      }
-    }, 500);
-
     return () => {
-      clearInterval(poll);
       script.remove();
-      delete (window as any).TalkMe;
-      delete (window as any).talkMeUserData;
     };
-  }, [loading, roomData?.guest_name, roomData?.guest_email]);
+  }, []);
 
   if (loading) {
     return (
