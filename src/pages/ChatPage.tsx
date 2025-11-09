@@ -41,14 +41,25 @@ const ChatPage: React.FC = () => {
 
   // Init TalkMe chat widget
   useEffect(() => {
+    // Create script element
     const script = document.createElement("script");
-    script.id = "supportScript";
-    script.src = `https://lcab.talk-me.ru/support/support.js?h=${CHAT_ID}`;
+    script.type = "text/javascript";
     script.async = true;
-    document.head.appendChild(script);
+    script.src = `https://lcab.talk-me.ru/support/support.js?h=${CHAT_ID}`;
+    
+    // Add to document
+    document.body.appendChild(script);
 
     return () => {
-      script.remove();
+      // Cleanup
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+      // Remove widget container if it was created
+      const widget = document.getElementById("onlineSupportContainer");
+      if (widget) {
+        widget.innerHTML = "";
+      }
     };
   }, []);
 
