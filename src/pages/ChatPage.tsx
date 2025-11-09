@@ -41,26 +41,10 @@ const ChatPage: React.FC = () => {
 
   // Init TalkMe chat widget
   useEffect(() => {
-    // Create script element
     const script = document.createElement("script");
-    script.type = "text/javascript";
-    script.async = true;
     script.src = `https://lcab.talk-me.ru/support/support.js?h=${CHAT_ID}`;
-    
-    // Add to document
+    script.async = true;
     document.body.appendChild(script);
-
-    return () => {
-      // Cleanup
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-      // Remove widget container if it was created
-      const widget = document.getElementById("onlineSupportContainer");
-      if (widget) {
-        widget.innerHTML = "";
-      }
-    };
   }, []);
 
   if (loading) {
@@ -84,11 +68,10 @@ const ChatPage: React.FC = () => {
           </p>
         </header>
 
-        <article
-          id="onlineSupportContainer"
+        <div
+          id="TalkMe-container"
           style={{ height: "400px", width: "100%" }}
           className="border border-border rounded-lg bg-card"
-          aria-label="Онлайн чат поддержки Rubik Inn"
         />
 
         <aside className="text-muted-foreground mt-4">
