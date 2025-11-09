@@ -39,12 +39,20 @@ const ChatPage: React.FC = () => {
     ensureCanonical();
   }, []);
 
-  // Init TalkMe chat widget
+  // Init TalkMe chat widget using official implementation
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src = `https://lcab.talk-me.ru/support/support.js?h=${CHAT_ID}`;
-    script.async = true;
-    document.body.appendChild(script);
+    (function() {
+      function initTalkMe(d: Document, w: Window, m: string, i?: boolean) {
+        window.supportAPIMethod = m;
+        const s = d.createElement('script');
+        s.id = 'supportScript';
+        s.src = (!i ? 'https://lcab.talk-me.ru/support/support.js' : 'https://static.site-chat.me/support/support.int.js') + '?h=' + CHAT_ID;
+        s.onerror = i ? undefined : function() { initTalkMe(d, w, m, true); };
+        w[m] = w[m] ? w[m] : function() { (w[m].q = w[m].q ? w[m].q : []).push(arguments); };
+        (d.head ? d.head : d.body).appendChild(s);
+      }
+      initTalkMe(document, window, 'TalkMe');
+    })();
   }, []);
 
   if (loading) {
@@ -87,7 +95,8 @@ const ChatPage: React.FC = () => {
 // TypeScript declaration for TalkMe on window
 declare global {
   interface Window {
-    TalkMe?: (action: string, data?: any) => void;
+    TalkMe?: any;
+    supportAPIMethod?: string;
   }
 }
 
