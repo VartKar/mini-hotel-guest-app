@@ -399,62 +399,60 @@ const ServicesPage = () => {
                   return (
                     <Card key={service.id}>
                       <CardContent className="p-0">
-                        <div className="flex gap-4">
-                          {/* Image */}
-                          {service.image_url && (
-                            <div className="w-32 h-32 shrink-0">
-                              <img
-                                src={service.image_url}
-                                alt={service.title}
-                                className="w-full h-full object-cover rounded-l-lg"
-                              />
+                        {/* Image */}
+                        {service.image_url && (
+                          <div className="w-full h-40 sm:h-48">
+                            <img
+                              src={service.image_url}
+                              alt={service.title}
+                              className="w-full h-full object-cover rounded-t-lg"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Content */}
+                        <div className="p-4">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <h3 className="text-lg font-semibold flex-1">{service.title}</h3>
+                            <Badge variant="default" className="shrink-0">
+                              {service.base_price > 0 ? `${service.base_price} ₽` : 'Бесплатно'}
+                            </Badge>
+                          </div>
+                          
+                          <p className="text-sm text-muted-foreground mb-3">{service.description}</p>
+                          
+                          {/* Details Content */}
+                          {service.has_details && service.details_content && (
+                            <div className="mb-3">
+                              {isExpanded ? (
+                                <div className="p-3 bg-muted/50 rounded-lg mb-2">
+                                  <div className="text-sm space-y-1">
+                                    {renderMarkdown(service.details_content)}
+                                  </div>
+                                </div>
+                              ) : null}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleServiceDetails(service.id)}
+                                className="h-7 text-xs"
+                              >
+                                <Info className="h-3 w-3 mr-1" />
+                                {isExpanded ? "Скрыть детали" : "Показать детали"}
+                              </Button>
                             </div>
                           )}
                           
-                          {/* Content */}
-                          <div className="flex-1 p-4">
-                            <div className="flex items-start justify-between mb-2">
-                              <h3 className="text-lg font-semibold">{service.title}</h3>
-                              <Badge variant="default">
-                                {service.base_price > 0 ? `${service.base_price} ₽` : 'Бесплатно'}
-                              </Badge>
-                            </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <Badge variant="outline" className="text-xs">{service.category}</Badge>
                             
-                            <p className="text-sm text-muted-foreground mb-3">{service.description}</p>
-                            
-                            {/* Details Content */}
-                            {service.has_details && service.details_content && (
-                              <div className="mb-3">
-                                {isExpanded ? (
-                                  <div className="p-3 bg-muted/50 rounded-lg mb-2">
-                                    <div className="text-sm space-y-1">
-                                      {renderMarkdown(service.details_content)}
-                                    </div>
-                                  </div>
-                                ) : null}
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => toggleServiceDetails(service.id)}
-                                  className="h-7 text-xs"
-                                >
-                                  <Info className="h-3 w-3 mr-1" />
-                                  {isExpanded ? "Скрыть детали" : "Показать детали"}
-                                </Button>
-                              </div>
-                            )}
-                            
-                            <div className="flex items-center justify-between">
-                              <Badge variant="outline">{service.category}</Badge>
-                              
-                              <Button
-                                variant={isInCart ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => isInCart ? handleRemoveItem(service.id) : addToCart(service)}
-                              >
-                                {isInCart ? "В корзине" : "Добавить"}
-                              </Button>
-                            </div>
+                            <Button
+                              variant={isInCart ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => isInCart ? handleRemoveItem(service.id) : addToCart(service)}
+                            >
+                              {isInCart ? "В корзине" : "Добавить"}
+                            </Button>
                           </div>
                         </div>
                       </CardContent>
