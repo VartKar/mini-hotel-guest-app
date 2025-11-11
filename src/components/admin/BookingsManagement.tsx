@@ -22,6 +22,7 @@ const BookingsManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [hideDefaultGuests, setHideDefaultGuests] = useState(true);
   const queryClient = useQueryClient();
 
@@ -113,10 +114,15 @@ const BookingsManagement = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Calendar className="w-5 h-5 mr-2" />
-            Управление бронированиями
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center">
+              <Calendar className="w-5 h-5 mr-2" />
+              Управление бронированиями
+            </CardTitle>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              ➕ Создать новое бронирование
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {/* Search and Filter Controls */}
@@ -249,6 +255,7 @@ const BookingsManagement = () => {
           </DialogHeader>
           {selectedBooking && (
             <BookingDetailsForm
+              mode="edit"
               booking={selectedBooking}
               onClose={() => setIsEditDialogOpen(false)}
               onSuccess={() => {
@@ -257,6 +264,23 @@ const BookingsManagement = () => {
               }}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Booking Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Создать новое бронирование</DialogTitle>
+          </DialogHeader>
+          <BookingDetailsForm
+            mode="create"
+            onClose={() => setIsCreateDialogOpen(false)}
+            onSuccess={() => {
+              setIsCreateDialogOpen(false);
+              queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
+            }}
+          />
         </DialogContent>
       </Dialog>
     </div>

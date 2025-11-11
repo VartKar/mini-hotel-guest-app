@@ -16,56 +16,100 @@ type Booking = Database['public']['Tables']['bookings']['Row'] & {
   rooms: Database['public']['Tables']['rooms']['Row'];
 };
 
+type Room = Database['public']['Tables']['rooms']['Row'];
+
 interface BookingDetailsFormProps {
-  booking: Booking;
+  mode: 'create' | 'edit';
+  booking?: Booking;
   onClose: () => void;
   onSuccess: () => void;
 }
 
 const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
+  mode,
   booking,
   onClose,
   onSuccess
 }) => {
   const [existingProperties, setExistingProperties] = useState<{ property_id: string; count: number }[]>([]);
-  const [formData, setFormData] = useState({
-    // Booking data
-    guest_name: booking.guest_name || '',
-    guest_email: booking.guest_email || '',
-    guest_phone: booking.guest_phone || '',
-    number_of_guests: booking.number_of_guests || 2,
-    check_in_date: booking.check_in_date || '',
-    check_out_date: booking.check_out_date || '',
-    stay_duration: booking.stay_duration || '',
-    booking_status: booking.booking_status || 'confirmed',
-    access_token: booking.access_token || '',
-    notes_internal: booking.notes_internal || '',
-    // Room data
-    room_number: booking.rooms?.room_number || '',
-    apartment_name: booking.rooms?.apartment_name || '',
-    property_id: booking.rooms?.property_id || '',
-    city: booking.rooms?.city || '',
-    host_name: booking.rooms?.host_name || '',
-    host_email: booking.rooms?.host_email || '',
-    host_phone: booking.rooms?.host_phone || '',
-    property_manager_name: booking.rooms?.property_manager_name || '',
-    property_manager_phone: booking.rooms?.property_manager_phone || '',
-    property_manager_email: booking.rooms?.property_manager_email || '',
+  const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
+  const [selectedRoomId, setSelectedRoomId] = useState<string>(booking?.room_id || '');
+  
+  // Generate dummy default values for create mode
+  const getDefaultValues = () => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const nextWeek = new Date(today);
+    nextWeek.setDate(nextWeek.getDate() + 7);
+
+    return {
+      guest_name: 'Иван Иванов',
+      guest_email: 'guest@example.com',
+      guest_phone: '+7 (999) 123-45-67',
+      number_of_guests: 2,
+      check_in_date: tomorrow.toISOString().split('T')[0],
+      check_out_date: nextWeek.toISOString().split('T')[0],
+      stay_duration: '6 ночей',
+      booking_status: 'confirmed',
+      access_token: mode === 'create' ? crypto.randomUUID().substring(0, 16) : '',
+      notes_internal: '',
+      room_number: '101',
+      apartment_name: 'Стандартный номер',
+      property_id: '',
+      city: 'Сочи',
+      host_name: 'Иван Петров',
+      host_email: 'host@example.com',
+      host_phone: '+7 (999) 888-77-66',
+      property_manager_name: 'Мария Сидорова',
+      property_manager_phone: '+7 (999) 777-66-55',
+      property_manager_email: 'manager@example.com',
+    };
+  };
+
+  const [formData, setFormData] = useState(() => {
+    if (mode === 'edit' && booking) {
+      return {
+        guest_name: booking.guest_name || '',
+        guest_email: booking.guest_email || '',
+        guest_phone: booking.guest_phone || '',
+        number_of_guests: booking.number_of_guests || 2,
+        check_in_date: booking.check_in_date || '',
+        check_out_date: booking.check_out_date || '',
+        stay_duration: booking.stay_duration || '',
+        booking_status: booking.booking_status || 'confirmed',
+        access_token: booking.access_token || '',
+        notes_internal: booking.notes_internal || '',
+        room_number: booking.rooms?.room_number || '',
+        apartment_name: booking.rooms?.apartment_name || '',
+        property_id: booking.rooms?.property_id || '',
+        city: booking.rooms?.city || '',
+        host_name: booking.rooms?.host_name || '',
+        host_email: booking.rooms?.host_email || '',
+        host_phone: booking.rooms?.host_phone || '',
+        property_manager_name: booking.rooms?.property_manager_name || '',
+        property_manager_phone: booking.rooms?.property_manager_phone || '',
+        property_manager_email: booking.rooms?.property_manager_email || '',
+      };
+    }
+    return getDefaultValues();
   });
 
   const queryClient = useQueryClient();
 
-  // Fetch existing properties on mount
+  // Fetch existing properties and rooms on mount
   useEffect(() => {
-    const fetchProperties = async () => {
+    const fetchData = async () => {
       try {
         const { data: roomsData } = await supabase
           .from('rooms')
-          .select('property_id')
-          .not('property_id', 'is', null)
+          .select('*')
+          .eq('is_active', true)
           .order('property_id', { ascending: true });
 
         if (roomsData) {
+          setAvailableRooms(roomsData);
+          
           // Group by property_id and count rooms
           const propertyMap = roomsData.reduce((acc: any, room: any) => {
             const propId = room.property_id;
@@ -80,72 +124,138 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
           setExistingProperties(properties);
         }
       } catch (error) {
-        console.error('Error fetching properties:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchProperties();
+    fetchData();
   }, []);
 
-  const updateBookingMutation = useMutation({
+  const saveMutation = useMutation({
     mutationFn: async (updatedData: typeof formData) => {
-      // Split the data into booking and room updates
-      const bookingFields = {
-        guest_name: updatedData.guest_name,
-        guest_email: updatedData.guest_email,
-        guest_phone: updatedData.guest_phone,
-        number_of_guests: updatedData.number_of_guests,
-        check_in_date: updatedData.check_in_date || null,
-        check_out_date: updatedData.check_out_date || null,
-        stay_duration: updatedData.stay_duration,
-        booking_status: updatedData.booking_status,
-        access_token: updatedData.access_token,
-        notes_internal: updatedData.notes_internal,
-      };
+      if (mode === 'create') {
+        // Create mode: check if room is selected, create/find guest, create booking
+        if (!selectedRoomId) {
+          throw new Error('Необходимо выбрать комнату');
+        }
 
-      const roomFields = {
-        room_number: updatedData.room_number,
-        apartment_name: updatedData.apartment_name,
-        property_id: updatedData.property_id,
-        city: updatedData.city,
-        host_name: updatedData.host_name,
-        host_email: updatedData.host_email,
-        host_phone: updatedData.host_phone,
-        property_manager_name: updatedData.property_manager_name,
-        property_manager_phone: updatedData.property_manager_phone,
-        property_manager_email: updatedData.property_manager_email,
-      };
+        // Check if guest exists by email
+        const { data: existingGuest } = await supabase
+          .from('guests')
+          .select('id')
+          .ilike('email', updatedData.guest_email.trim())
+          .maybeSingle();
 
-      // Update booking
-      const { error: bookingError } = await supabase
-        .from('bookings')
-        .update(bookingFields)
-        .eq('id', booking.id);
-      
-      if (bookingError) throw bookingError;
+        let guestId = existingGuest?.id;
 
-      // Update room
-      const { error: roomError } = await supabase
-        .from('rooms')
-        .update(roomFields)
-        .eq('id', booking.room_id);
-      
-      if (roomError) throw roomError;
+        // Create guest if doesn't exist
+        if (!guestId) {
+          const { data: newGuest, error: guestError } = await supabase
+            .from('guests')
+            .insert({
+              name: updatedData.guest_name,
+              email: updatedData.guest_email.trim(),
+              phone: updatedData.guest_phone,
+              guest_type: 'direct',
+            })
+            .select()
+            .single();
+
+          if (guestError) throw guestError;
+          guestId = newGuest.id;
+        }
+
+        // Create booking
+        const { error: bookingError } = await supabase
+          .from('bookings')
+          .insert({
+            room_id: selectedRoomId,
+            guest_id: guestId,
+            guest_name: updatedData.guest_name,
+            guest_email: updatedData.guest_email.trim(),
+            guest_phone: updatedData.guest_phone,
+            number_of_guests: updatedData.number_of_guests,
+            check_in_date: updatedData.check_in_date || null,
+            check_out_date: updatedData.check_out_date || null,
+            stay_duration: updatedData.stay_duration,
+            booking_status: updatedData.booking_status,
+            access_token: updatedData.access_token,
+            notes_internal: updatedData.notes_internal,
+            booking_id: crypto.randomUUID(),
+          });
+
+        if (bookingError) throw bookingError;
+      } else {
+        // Edit mode: update booking and room
+        if (!booking) throw new Error('No booking to update');
+
+        const bookingFields = {
+          guest_name: updatedData.guest_name,
+          guest_email: updatedData.guest_email,
+          guest_phone: updatedData.guest_phone,
+          number_of_guests: updatedData.number_of_guests,
+          check_in_date: updatedData.check_in_date || null,
+          check_out_date: updatedData.check_out_date || null,
+          stay_duration: updatedData.stay_duration,
+          booking_status: updatedData.booking_status,
+          access_token: updatedData.access_token,
+          notes_internal: updatedData.notes_internal,
+        };
+
+        const roomFields = {
+          room_number: updatedData.room_number,
+          apartment_name: updatedData.apartment_name,
+          property_id: updatedData.property_id,
+          city: updatedData.city,
+          host_name: updatedData.host_name,
+          host_email: updatedData.host_email,
+          host_phone: updatedData.host_phone,
+          property_manager_name: updatedData.property_manager_name,
+          property_manager_phone: updatedData.property_manager_phone,
+          property_manager_email: updatedData.property_manager_email,
+        };
+
+        const { error: bookingError } = await supabase
+          .from('bookings')
+          .update(bookingFields)
+          .eq('id', booking.id);
+        
+        if (bookingError) throw bookingError;
+
+        const { error: roomError } = await supabase
+          .from('rooms')
+          .update(roomFields)
+          .eq('id', booking.room_id);
+        
+        if (roomError) throw roomError;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-all-bookings'] });
-      toast.success('Бронирование обновлено');
+      toast.success(mode === 'create' ? 'Бронирование создано' : 'Бронирование обновлено');
       onSuccess();
     },
-    onError: (error) => {
-      console.error('Error updating booking:', error);
-      toast.error('Ошибка при обновлении бронирования');
+    onError: (error: any) => {
+      console.error('Error saving booking:', error);
+      toast.error(error.message || 'Ошибка при сохранении бронирования');
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateBookingMutation.mutate(formData);
+    
+    // Validation
+    if (!formData.guest_name || !formData.guest_email) {
+      toast.error('Имя и email гостя обязательны');
+      return;
+    }
+    
+    if (mode === 'create' && !selectedRoomId) {
+      toast.error('Необходимо выбрать комнату');
+      return;
+    }
+    
+    saveMutation.mutate(formData);
   };
 
   const handleInputChange = (field: keyof typeof formData, value: any) => {
@@ -158,12 +268,41 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Guest Link Generator */}
-      <GuestLinkGenerator
-        bookingId={booking.id}
-        currentToken={formData.access_token}
-        onTokenUpdate={handleTokenUpdate}
-      />
+      {/* Room Selection (Create Mode Only) */}
+      {mode === 'create' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Выбор комнаты</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Label htmlFor="room_select">Комната *</Label>
+            <Select value={selectedRoomId} onValueChange={setSelectedRoomId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Выберите комнату" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableRooms.map(room => (
+                  <SelectItem key={room.id} value={room.id}>
+                    {room.apartment_name} - Комната {room.room_number} ({room.property_id})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              Выберите существующую комнату для бронирования
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Guest Link Generator (Edit Mode Only) */}
+      {mode === 'edit' && booking && (
+        <GuestLinkGenerator
+          bookingId={booking.id}
+          currentToken={formData.access_token}
+          onTokenUpdate={handleTokenUpdate}
+        />
+      )}
 
       {/* Guest Information */}
       <Card>
@@ -420,8 +559,8 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
         <Button type="button" variant="outline" onClick={onClose}>
           Отмена
         </Button>
-        <Button type="submit" disabled={updateBookingMutation.isPending}>
-          {updateBookingMutation.isPending ? 'Сохранение...' : 'Сохранить'}
+        <Button type="submit" disabled={saveMutation.isPending}>
+          {saveMutation.isPending ? 'Сохранение...' : (mode === 'create' ? 'Создать' : 'Сохранить')}
         </Button>
       </div>
     </form>
