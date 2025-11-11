@@ -6,9 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import GuestLinkGenerator from "./GuestLinkGenerator";
 import { Database } from "@/integrations/supabase/types";
 
@@ -34,6 +36,8 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
   const [existingProperties, setExistingProperties] = useState<{ property_id: string; count: number }[]>([]);
   const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
   const [selectedRoomId, setSelectedRoomId] = useState<string>(booking?.room_id || '');
+  const [existingGuest, setExistingGuest] = useState<any | null>(null);
+  const [isSearchingGuest, setIsSearchingGuest] = useState(false);
   
   // Generate dummy default values for create mode
   const getDefaultValues = () => {
@@ -130,6 +134,50 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
 
     fetchData();
   }, []);
+
+  // Search for existing guest by email (debounced)
+  useEffect(() => {
+    if (mode !== "create") return; // Only search when creating new bookings
+    
+    const timer = setTimeout(async () => {
+      const email = formData.guest_email?.trim();
+      
+      if (!email || !email.includes('@')) {
+        setExistingGuest(null);
+        return;
+      }
+
+      setIsSearchingGuest(true);
+      
+      try {
+        const { data, error } = await supabase
+          .from('guests')
+          .select('*')
+          .ilike('email', email)
+          .maybeSingle();
+        
+        if (error) throw error;
+        
+        if (data) {
+          setExistingGuest(data);
+          // Auto-fill fields from existing guest
+          setFormData(prev => ({
+            ...prev,
+            guest_name: data.name,
+            guest_phone: data.phone || prev.guest_phone,
+          }));
+        } else {
+          setExistingGuest(null);
+        }
+      } catch (error) {
+        console.error("Error searching guest:", error);
+      } finally {
+        setIsSearchingGuest(false);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [formData.guest_email, mode]);
 
   const saveMutation = useMutation({
     mutationFn: async (updatedData: typeof formData) => {
@@ -322,12 +370,17 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
             </div>
             <div>
               <Label htmlFor="guest_email">Email гостя</Label>
-              <Input
-                type="email"
-                id="guest_email"
-                value={formData.guest_email}
-                onChange={(e) => handleInputChange('guest_email', e.target.value)}
-              />
+              <div className="relative">
+                <Input
+                  type="email"
+                  id="guest_email"
+                  value={formData.guest_email}
+                  onChange={(e) => handleInputChange('guest_email', e.target.value)}
+                />
+                {isSearchingGuest && (
+                  <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+              </div>
             </div>
             <div>
               <Label htmlFor="guest_phone">Телефон гостя</Label>
@@ -348,6 +401,45 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
               />
             </div>
           </div>
+
+          {/* Existing Guest Card */}
+          {existingGuest && mode === "create" && (
+            <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+              <div className="flex items-start gap-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm font-medium">✅ Гость найден в программе лояльности</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">💎 Уровень:</span>
+                      <Badge variant={
+                        existingGuest.loyalty_tier === 'Платина' ? 'default' :
+                        existingGuest.loyalty_tier === 'Золото' ? 'secondary' :
+                        existingGuest.loyalty_tier === 'Серебро' ? 'outline' : 'secondary'
+                      }>
+                        {existingGuest.loyalty_tier}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">🎁 Баллы:</span>
+                      <span className="font-medium">{existingGuest.loyalty_points?.toLocaleString('ru-RU') || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">💰 Потрачено:</span>
+                      <span className="font-medium">{existingGuest.total_spent?.toLocaleString('ru-RU') || 0} ₽</span>
+                    </div>
+                    {existingGuest.last_visit_date && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">📅 Последний визит:</span>
+                        <span>{new Date(existingGuest.last_visit_date).toLocaleDateString('ru-RU')}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
