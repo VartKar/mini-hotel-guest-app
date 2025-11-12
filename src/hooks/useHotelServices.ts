@@ -27,10 +27,6 @@ export const useHotelServices = (city: string = 'Сочи', propertyId?: string 
   return useQuery({
     queryKey: ['hotel-services', city],
     queryFn: async () => {
-      console.log('=== HOTEL SERVICES DEBUG ===');
-      console.log('Fetching hotel services for city:', city);
-      
-      // Get all hotel services for the city
       const { data: services, error: servicesError } = await supabase
         .from('hotel_services')
         .select('*')
@@ -38,27 +34,21 @@ export const useHotelServices = (city: string = 'Сочи', propertyId?: string 
         .eq('is_active', true)
         .order('category', { ascending: true });
 
-      console.log('Hotel services query result:', { services, servicesError });
-
       if (servicesError) {
         console.error('Error fetching hotel services:', servicesError);
         throw servicesError;
       }
 
       if (!services || services.length === 0) {
-        console.log('No hotel services found for city:', city);
         return [];
       }
 
-      // Since we removed property_service_pricing, use base prices
       const servicesWithPricing: HotelServiceWithPrice[] = services.map(service => ({
         ...service,
         final_price: service.base_price,
-        is_available: true // All active services are available
+        is_available: true
       }));
 
-      console.log('Final hotel services with pricing:', servicesWithPricing.length, 'services');
-      console.log('=== END HOTEL SERVICES DEBUG ===');
       return servicesWithPricing;
     },
   });

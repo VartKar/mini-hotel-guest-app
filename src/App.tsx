@@ -22,7 +22,18 @@ const HostPage = lazy(() => import("./pages/HostPage"));
 const GuestPage = lazy(() => import("./pages/GuestPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
+      gcTime: 10 * 60 * 1000, // 10 minutes - cache retained longer
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+      refetchOnMount: false, // Don't refetch on mount if data is fresh
+      retry: 1, // One retry on failure
+      retryDelay: 1000, // 1 second between retries
+    },
+  },
+});
 
 function App() {
   return (
