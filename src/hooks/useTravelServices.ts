@@ -26,34 +26,32 @@ export const useTravelServices = (city: string = 'Сочи', propertyId?: string
   return useQuery({
     queryKey: ['travel-services', city, propertyId],
     queryFn: async () => {
-      console.log('Fetching travel services for city:', city, 'property:', propertyId);
-      
-      // First, get all travel services for the city
-      const { data: services, error: servicesError } = await supabase
-        .from('travel_services')
-        .select('*')
-        .eq('city', city)
-        .eq('is_active', true)
-        .order('category', { ascending: true });
+      // Fetch services and pricing in parallel
+      const [servicesResult, pricingResult] = await Promise.all([
+        supabase
+          .from('travel_services')
+          .select('*')
+          .eq('city', city)
+          .eq('is_active', true)
+          .order('category', { ascending: true }),
+        propertyId 
+          ? supabase
+              .from('property_service_pricing')
+              .select('travel_service_id, price_override, is_available')
+              .eq('property_id', propertyId)
+          : Promise.resolve({ data: [], error: null })
+      ]);
 
-      if (servicesError) {
-        console.error('Error fetching travel services:', servicesError);
-        throw servicesError;
+      if (servicesResult.error) {
+        console.error('Error fetching travel services:', servicesResult.error);
+        throw servicesResult.error;
       }
 
-      // If we have a property ID, get property-specific pricing
-      let propertyPricing: any[] = [];
-      if (propertyId) {
-        const { data: pricing, error: pricingError } = await supabase
-          .from('property_service_pricing')
-          .select('travel_service_id, price_override, is_available')
-          .eq('property_id', propertyId);
+      const services = servicesResult.data;
+      const propertyPricing = pricingResult.error ? [] : (pricingResult.data || []);
 
-        if (pricingError) {
-          console.error('Error fetching service pricing:', pricingError);
-        } else {
-          propertyPricing = pricing || [];
-        }
+      if (pricingResult.error) {
+        console.error('Error fetching service pricing:', pricingResult.error);
       }
 
       // Combine services with pricing
@@ -66,7 +64,6 @@ export const useTravelServices = (city: string = 'Сочи', propertyId?: string
         };
       });
 
-      console.log('Travel services with pricing:', servicesWithPricing.length);
       return servicesWithPricing;
     },
   });
