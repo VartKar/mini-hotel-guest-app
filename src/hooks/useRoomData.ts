@@ -272,7 +272,7 @@ export const useRoomData = () => {
       
       console.log('🔍 Looking up email:', email);
       
-      // Look up booking by email
+      // Look up booking by email - get latest booking by check-in date
       const { data: bookingData, error: bookingError } = await supabase
         .from('bookings')
         .select(`
@@ -282,7 +282,9 @@ export const useRoomData = () => {
         .eq('guest_email', email.toLowerCase().trim())
         .eq('visible_to_guests', true)
         .eq('is_archived', false)
-        .single();
+        .order('check_in_date', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       if (bookingError) {
         console.error('Error looking up booking:', bookingError);
