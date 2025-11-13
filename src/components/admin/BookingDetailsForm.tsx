@@ -38,6 +38,8 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
   const [selectedRoomId, setSelectedRoomId] = useState<string>(booking?.room_id || '');
   const [existingGuest, setExistingGuest] = useState<any | null>(null);
   const [isSearchingGuest, setIsSearchingGuest] = useState(false);
+  const [existingHost, setExistingHost] = useState<any | null>(null);
+  const [isSearchingHost, setIsSearchingHost] = useState(false);
   
   // Generate dummy default values for create mode
   const getDefaultValues = () => {
@@ -65,9 +67,6 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
       host_name: 'Иван Петров',
       host_email: 'host@example.com',
       host_phone: '+7 (999) 888-77-66',
-      property_manager_name: 'Мария Сидорова',
-      property_manager_phone: '+7 (999) 777-66-55',
-      property_manager_email: 'manager@example.com',
     };
   };
 
@@ -91,9 +90,6 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
         host_name: booking.rooms?.host_name || '',
         host_email: booking.rooms?.host_email || '',
         host_phone: booking.rooms?.host_phone || '',
-        property_manager_name: booking.rooms?.property_manager_name || '',
-        property_manager_phone: booking.rooms?.property_manager_phone || '',
-        property_manager_email: booking.rooms?.property_manager_email || '',
       };
     }
     return getDefaultValues();
@@ -179,6 +175,51 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
     return () => clearTimeout(timer);
   }, [formData.guest_email, mode]);
 
+  // Search for existing host by email (debounced)
+  useEffect(() => {
+    if (mode !== "create") return; // Only search when creating new bookings
+    
+    const timer = setTimeout(async () => {
+      const email = formData.host_email?.trim();
+      
+      if (!email || !email.includes('@')) {
+        setExistingHost(null);
+        return;
+      }
+
+      setIsSearchingHost(true);
+      
+      try {
+        const { data, error } = await supabase
+          .from('rooms')
+          .select('host_name, host_phone')
+          .ilike('host_email', email)
+          .limit(1)
+          .maybeSingle();
+        
+        if (error) throw error;
+        
+        if (data) {
+          setExistingHost(data);
+          // Auto-fill fields from existing host
+          setFormData(prev => ({
+            ...prev,
+            host_name: data.host_name || prev.host_name,
+            host_phone: data.host_phone || prev.host_phone,
+          }));
+        } else {
+          setExistingHost(null);
+        }
+      } catch (error) {
+        console.error("Error searching host:", error);
+      } finally {
+        setIsSearchingHost(false);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [formData.host_email, mode]);
+
   const saveMutation = useMutation({
     mutationFn: async (updatedData: typeof formData) => {
       if (mode === 'create') {
@@ -229,7 +270,7 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
             booking_status: updatedData.booking_status,
             access_token: updatedData.access_token,
             notes_internal: updatedData.notes_internal,
-            booking_id: crypto.randomUUID(),
+            booking_id: `BOOK-${new Date().toISOString().slice(0,10).replace(/-/g, '')}-${Date.now().toString().slice(-4)}`,
           });
 
         if (bookingError) throw bookingError;
@@ -258,9 +299,6 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
           host_name: updatedData.host_name,
           host_email: updatedData.host_email,
           host_phone: updatedData.host_phone,
-          property_manager_name: updatedData.property_manager_name,
-          property_manager_phone: updatedData.property_manager_phone,
-          property_manager_email: updatedData.property_manager_email,
         };
 
         const { error: bookingError } = await supabase
@@ -602,44 +640,6 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
                 id="host_phone"
                 value={formData.host_phone}
                 onChange={(e) => handleInputChange('host_phone', e.target.value)}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Property Manager Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Информация о менеджере объекта</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="property_manager_name">Имя менеджера</Label>
-              <Input
-                type="text"
-                id="property_manager_name"
-                value={formData.property_manager_name}
-                onChange={(e) => handleInputChange('property_manager_name', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="property_manager_email">Email менеджера</Label>
-              <Input
-                type="email"
-                id="property_manager_email"
-                value={formData.property_manager_email}
-                onChange={(e) => handleInputChange('property_manager_email', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="property_manager_phone">Телефон менеджера</Label>
-              <Input
-                type="tel"
-                id="property_manager_phone"
-                value={formData.property_manager_phone}
-                onChange={(e) => handleInputChange('property_manager_phone', e.target.value)}
               />
             </div>
           </div>
