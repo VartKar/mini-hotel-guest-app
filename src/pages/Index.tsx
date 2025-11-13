@@ -174,16 +174,6 @@ const Index = () => {
             </div>
           </div>
         )}
-
-        {/* Link to alternative design */}
-        <div className="text-center pb-8">
-          <Link 
-            to="/alt" 
-            className="text-xs text-gray-400 hover:text-gray-600 transition-colors underline"
-          >
-            Посмотреть альтернативный дизайн
-          </Link>
-        </div>
       </div>
     </div>
   );
