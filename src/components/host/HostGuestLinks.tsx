@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Download } from "lucide-react";
+import { Copy, Download, QrCode } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 
@@ -110,9 +110,12 @@ export const HostGuestLinks = ({ hostEmail }: HostGuestLinksProps) => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>QR-коды для комнат</CardTitle>
+    <Card className="shadow-md border-primary/10">
+      <CardHeader className="border-b bg-muted/30">
+        <div className="flex items-center gap-2">
+          <QrCode className="h-5 w-5 text-primary" />
+          <CardTitle>QR-коды для комнат</CardTitle>
+        </div>
         <CardDescription>
           Распечатайте и разместите QR-коды в комнатах или отправьте ссылки гостям
         </CardDescription>
