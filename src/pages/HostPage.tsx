@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, User, Loader2, MessageSquare } from "lucide-react";
+import { Calendar, User, Loader2, MessageSquare, LogOut, Building2, ShoppingBag, Plane, QrCode, BarChart3 } from "lucide-react";
 import { useHostData, HostBooking } from "@/hooks/useHostData";
 import { useHostAuth } from "@/hooks/useHostAuth";
 import { supabase } from "@/integrations/supabase/client";

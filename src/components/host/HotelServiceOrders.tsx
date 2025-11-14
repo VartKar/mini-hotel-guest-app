@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Calendar, Clock, User, CheckCircle, AlertCircle } from "lucide-react";
+import { Calendar, Clock, User, CheckCircle, AlertCircle, ShoppingBag } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -102,11 +102,11 @@ const HotelServiceOrders = ({ hostEmail }: HotelServiceOrdersProps) => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Выполнен</Badge>;
+        return <Badge className="bg-green-100 text-green-800 border-green-200">Выполнен</Badge>;
       case 'processing':
-        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">В работе</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">В работе</Badge>;
       case 'pending':
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Ожидает</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Ожидает</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }

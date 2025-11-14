@@ -35,10 +35,12 @@ export const HostMarketingDashboard = ({ hostEmail }: HostMarketingDashboardProp
   }
 
   return (
-    <Card className="p-6 mb-6">
+    <Card className="p-6 mb-6 shadow-md border-primary/10 bg-gradient-to-br from-card to-card/50">
       <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold mb-1">Мои гости и статистика</h2>
+        <div className="border-b pb-4">
+          <h2 className="text-2xl font-bold mb-1 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            Мои гости и статистика
+          </h2>
           <p className="text-muted-foreground">
             Аналитика по гостям ваших объектов
           </p>
