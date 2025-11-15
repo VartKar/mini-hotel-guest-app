@@ -25,6 +25,8 @@ export interface TravelServiceWithPrice extends TravelService {
 export const useTravelServices = (city: string = 'Сочи', propertyId?: string | null) => {
   return useQuery({
     queryKey: ['travel-services', city, propertyId],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000,   // 10 minutes
     queryFn: async () => {
       // Fetch services and pricing in parallel
       const [servicesResult, pricingResult] = await Promise.all([

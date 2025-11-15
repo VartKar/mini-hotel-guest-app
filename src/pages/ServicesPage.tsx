@@ -40,7 +40,7 @@ interface ServiceCartItem extends CartItem {
 
 const ServicesPage = () => {
   const { roomData, isPersonalized } = useRoomData();
-  const { data: services = [], isLoading: loading } = useHotelServices();
+  const { data: services = [], isLoading: loading } = useHotelServices(roomData?.city || 'Сочи', roomData?.property_id);
   
   const {
     items: selectedServices,
