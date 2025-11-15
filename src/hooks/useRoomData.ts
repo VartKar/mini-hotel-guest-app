@@ -176,26 +176,6 @@ export const useRoomData = () => {
     }
   }, []);
 
-  // Patch missing guest_id from stored booking if needed
-  useEffect(() => {
-    const patchGuestId = async () => {
-      if (roomData && !roomData.guest_id && roomData.booking_record_id) {
-        const { data, error } = await supabase
-          .from('bookings')
-          .select('guest_id')
-          .eq('id', roomData.booking_record_id)
-          .single();
-        if (!error && data?.guest_id) {
-          const updated = { ...roomData, guest_id: data.guest_id } as RoomData;
-          globalRoomData = updated;
-          setRoomData(updated);
-          saveToStorage(updated, isPersonalized);
-          notifyListeners();
-        }
-      }
-    };
-    patchGuestId();
-  }, [roomData, isPersonalized]);
 
   const fetchDefaultRoom = async () => {
     try {
@@ -272,19 +252,29 @@ export const useRoomData = () => {
       
       console.log('🔍 Looking up email:', email);
       
-      // Look up booking by email - get latest booking by check-in date
-      const { data: bookingData, error: bookingError } = await supabase
-        .from('bookings')
-        .select(`
-          *,
-          rooms (*)
-        `)
-        .eq('guest_email', email.toLowerCase().trim())
-        .eq('visible_to_guests', true)
-        .eq('is_archived', false)
-        .order('check_in_date', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // Parallel queries for booking and guest data
+      const [bookingResult, guestResult] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select(`
+            *,
+            rooms (*)
+          `)
+          .eq('guest_email', email.toLowerCase().trim())
+          .eq('visible_to_guests', true)
+          .eq('is_archived', false)
+          .order('check_in_date', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('guests')
+          .select('id')
+          .eq('email', email.toLowerCase().trim())
+          .maybeSingle()
+      ]);
+
+      const { data: bookingData, error: bookingError } = bookingResult;
+      const { data: guestData, error: guestError } = guestResult;
 
       if (bookingError) {
         console.error('Error looking up booking:', bookingError);
@@ -299,25 +289,16 @@ export const useRoomData = () => {
 
       console.log('✅ Booking found:', bookingData);
 
-      // Prefer guest_id from booking record to avoid RLS on guests
+      // Prefer guest_id from booking, fallback to guests table lookup
       let guestId: string | null = bookingData.guest_id ?? null;
 
-      // If missing, try to resolve via guests.email (may be restricted by RLS)
-      if (!guestId && bookingData.guest_email) {
-        const { data: guestData, error: guestError } = await supabase
-          .from('guests')
-          .select('id')
-          .eq('email', bookingData.guest_email.toLowerCase().trim())
-          .maybeSingle();
-        
-        if (guestError) {
-          console.error('❌ Error fetching guest by email:', guestError);
-        } else if (guestData) {
-          guestId = guestData.id;
-          console.log('💎 Guest ID resolved by email:', guestId);
-        } else {
-          console.log('⚠️ No guest record found for email:', bookingData.guest_email);
-        }
+      if (!guestId && guestData) {
+        guestId = guestData.id;
+        console.log('💎 Guest ID resolved from parallel query:', guestId);
+      } else if (!guestId && guestError) {
+        console.error('❌ Error fetching guest:', guestError);
+      } else if (!guestId) {
+        console.log('⚠️ No guest record found for email:', bookingData.guest_email);
       }
 
       const combinedData: RoomData = {

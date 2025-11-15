@@ -39,7 +39,7 @@ interface ShopCartItem extends CartItem {
 
 const ShopPage = () => {
   const { roomData, isPersonalized } = useRoomData();
-  const { data: items = [], isLoading: loading } = useShopItems();
+  const { data: items = [], isLoading: loading } = useShopItems(roomData?.city || 'Сочи', roomData?.property_id);
   
   const {
     items: cart,

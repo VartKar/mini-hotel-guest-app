@@ -1,9 +1,11 @@
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Home, MapPin, Coffee, ShoppingBag, MessageCircle, User, Info } from "lucide-react";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 // Placeholder image
 const DEFAULT_IMG = "https://i.postimg.cc/NFprr3hY/valse.png";
@@ -44,28 +46,17 @@ const menuItems = [{
 
 const Index = () => {
   const { roomData, loading, isPersonalized } = useRoomData();
+  const queryClient = useQueryClient();
 
   const apartmentName = roomData?.apartment_name || 'Апартаменты "Вальс"';
   const guestName = roomData?.guest_name || "Иван";
 
-  // For main page: prioritize main_image_url (hotel overview), then room_image_url
-  const getValidImage = () => {
-    console.log('🖼️ Index getValidImage called with:', {
-      main_image_url: roomData?.main_image_url,
-      room_image_url: roomData?.room_image_url
-    });
-    
-    if (roomData?.main_image_url && roomData.main_image_url.trim() !== '') {
-      console.log('✅ Index using main_image_url:', roomData.main_image_url);
-      return roomData.main_image_url;
-    }
-    if (roomData?.room_image_url && roomData.room_image_url.trim() !== '') {
-      console.log('✅ Index using room_image_url as fallback:', roomData.room_image_url);
-      return roomData.room_image_url;
-    }
-    console.log('⚠️ Index using default image');
+  // Memoized image selection
+  const hotelImage = useMemo(() => {
+    if (roomData?.main_image_url?.trim()) return roomData.main_image_url;
+    if (roomData?.room_image_url?.trim()) return roomData.room_image_url;
     return DEFAULT_IMG;
-  };
+  }, [roomData?.main_image_url, roomData?.room_image_url]);
 
   const [imgError, setImgError] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -76,14 +67,42 @@ const Index = () => {
     setImgLoaded(false);
   }, [roomData?.main_image_url, roomData?.room_image_url]);
 
-  const hotelImage = getValidImage();
+  // Prefetch shop items for faster /shop page loading
+  React.useEffect(() => {
+    if (roomData?.city && roomData?.property_id) {
+      queryClient.prefetchQuery({
+        queryKey: ['shop-items', roomData.city, roomData.property_id],
+        queryFn: async () => {
+          const [itemsResult, pricingResult] = await Promise.all([
+            supabase
+              .from('shop_items')
+              .select('*')
+              .eq('city', roomData.city)
+              .eq('is_active', true)
+              .order('category', { ascending: true }),
+            supabase
+              .from('property_item_pricing')
+              .select('shop_item_id, price_override, is_available')
+              .eq('property_id', roomData.property_id)
+          ]);
 
-  console.log('🖼️ Index page final image logic:', {
-    finalImageUrl: hotelImage,
-    imgError,
-    imgLoaded,
-    loading
-  });
+          const { data: items } = itemsResult;
+          const { data: pricing } = pricingResult;
+
+          if (!items) return [];
+
+          return items.map(item => {
+            const itemPricing = pricing?.find(p => p.shop_item_id === item.id);
+            return {
+              ...item,
+              final_price: itemPricing?.price_override || item.base_price,
+              is_available: itemPricing?.is_available !== false
+            };
+          });
+        }
+      });
+    }
+  }, [roomData?.city, roomData?.property_id, queryClient]);
 
   const documentTitle = roomData?.apartment_name
     ? `RubikInn - ${roomData.apartment_name}`

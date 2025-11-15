@@ -23,6 +23,8 @@ export interface ShopItemWithPrice extends ShopItem {
 export const useShopItems = (city: string = 'Сочи', propertyId?: string | null) => {
   return useQuery({
     queryKey: ['shop-items', city, propertyId],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000,   // 10 minutes
     queryFn: async () => {
       // Parallel queries for better performance
       const [itemsResult, pricingResult] = await Promise.all([
