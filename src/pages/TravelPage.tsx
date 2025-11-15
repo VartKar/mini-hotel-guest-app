@@ -30,7 +30,7 @@ const TravelPage = () => {
     roomData?.check_out_date || null, 
     roomData?.city || 'Сочи'
   );
-  const { data: services = [], isLoading: servicesLoading } = useTravelServices(roomData?.city || 'Сочи');
+  const { data: services = [], isLoading: servicesLoading } = useTravelServices(roomData?.city || 'Сочи', roomData?.property_id);
   
   const {
     items: selectedServices,

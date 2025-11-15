@@ -26,6 +26,8 @@ export interface HotelServiceWithPrice extends HotelService {
 export const useHotelServices = (city: string = 'Сочи', propertyId?: string | null) => {
   return useQuery({
     queryKey: ['hotel-services', city],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000,   // 10 minutes
     queryFn: async () => {
       const { data: services, error: servicesError } = await supabase
         .from('hotel_services')

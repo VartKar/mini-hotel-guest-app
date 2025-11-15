@@ -153,6 +153,8 @@ export const useTravelItinerary = (bookingIdKey: string | null, checkInDate: str
   // Fetch template itineraries with restaurant data
   const { data: templateItineraries, isLoading } = useQuery({
     queryKey: ['travel-itinerary-templates'],
+    staleTime: 10 * 60 * 1000, // 10 minutes (rarely changes)
+    gcTime: 15 * 60 * 1000,    // 15 minutes
     queryFn: async () => {
       const { data, error } = await supabase
         .from('travel_itineraries')
