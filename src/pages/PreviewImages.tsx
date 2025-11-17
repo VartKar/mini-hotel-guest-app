@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useServiceImageUpload } from "@/hooks/useServiceImageUpload";
-import { Upload, ArrowLeft } from "lucide-react";
+import { useImageGeneration } from "@/hooks/useImageGeneration";
+import { Upload, ArrowLeft, Sparkles } from "lucide-react";
 
 const images = [
   { name: "Доставка цветов", path: "/images/services/flowers-delivery.webp", type: "hotel" },
@@ -22,7 +25,21 @@ const images = [
 
 export default function PreviewImages() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
+  const [prompt, setPrompt] = useState("");
+  const [width, setWidth] = useState(1280);
+  const [height, setHeight] = useState(720);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  
   const { uploadAllImages, isUploading, progress } = useServiceImageUpload();
+  const { generateImage, isGenerating } = useImageGeneration();
+
+  const handleGenerate = async () => {
+    const imageUrl = await generateImage(prompt, width, height);
+    if (imageUrl) {
+      setGeneratedImage(imageUrl);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -33,12 +50,23 @@ export default function PreviewImages() {
             Нажмите на изображение для увеличения
           </p>
           
-          <div className="flex gap-4 items-center">
+          <div className="flex flex-wrap gap-4 items-center">
+            <Button 
+              onClick={() => setShowGenerateDialog(true)}
+              size="lg"
+              className="gap-2"
+              variant="default"
+            >
+              <Sparkles className="h-5 w-5" />
+              Сгенерировать изображение
+            </Button>
+
             <Button 
               onClick={uploadAllImages} 
               disabled={isUploading}
               size="lg"
               className="gap-2"
+              variant="secondary"
             >
               <Upload className="h-5 w-5" />
               {isUploading ? "Загрузка..." : "Загрузить в Supabase Storage"}
@@ -91,6 +119,62 @@ export default function PreviewImages() {
               className="w-full h-auto"
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Сгенерировать изображение сервиса</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="prompt">Описание изображения</Label>
+              <Input
+                id="prompt"
+                placeholder="Например: Доставка цветов в номер отеля, профессиональное фото"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="width">Ширина (px)</Label>
+                <Input
+                  id="width"
+                  type="number"
+                  value={width}
+                  onChange={(e) => setWidth(Number(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="height">Высота (px)</Label>
+                <Input
+                  id="height"
+                  type="number"
+                  value={height}
+                  onChange={(e) => setHeight(Number(e.target.value))}
+                />
+              </div>
+            </div>
+
+            <Button 
+              onClick={handleGenerate} 
+              disabled={isGenerating || !prompt}
+              className="w-full"
+            >
+              {isGenerating ? "Генерация..." : "Сгенерировать"}
+            </Button>
+
+            {generatedImage && (
+              <div className="space-y-2">
+                <Label>Результат:</Label>
+                <img src={generatedImage} alt="Generated" className="w-full rounded-lg" />
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
