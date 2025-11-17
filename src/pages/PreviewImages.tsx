@@ -2,6 +2,9 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { useServiceImageUpload } from "@/hooks/useServiceImageUpload";
+import { Upload, ArrowLeft } from "lucide-react";
 
 const images = [
   { name: "Доставка цветов", path: "/images/services/flowers-delivery.webp", type: "hotel" },
@@ -19,15 +22,35 @@ const images = [
 
 export default function PreviewImages() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const { uploadAllImages, isUploading, progress } = useServiceImageUpload();
 
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Предпросмотр изображений сервисов</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mb-4">
             Нажмите на изображение для увеличения
           </p>
+          
+          <div className="flex gap-4 items-center">
+            <Button 
+              onClick={uploadAllImages} 
+              disabled={isUploading}
+              size="lg"
+              className="gap-2"
+            >
+              <Upload className="h-5 w-5" />
+              {isUploading ? "Загрузка..." : "Загрузить в Supabase Storage"}
+            </Button>
+            
+            {isUploading && (
+              <div className="flex-1 max-w-md">
+                <Progress value={progress} className="h-2" />
+                <p className="text-sm text-muted-foreground mt-1">{progress}%</p>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -52,7 +75,8 @@ export default function PreviewImages() {
         </div>
 
         <div className="mt-8 flex justify-center">
-          <Button size="lg" onClick={() => window.location.href = "/"}>
+          <Button size="lg" onClick={() => window.location.href = "/"} variant="outline" className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
             Вернуться на главную
           </Button>
         </div>
