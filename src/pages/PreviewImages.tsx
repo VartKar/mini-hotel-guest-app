@@ -11,19 +11,19 @@ import { useImageGeneration } from "@/hooks/useImageGeneration";
 import { Upload, ArrowLeft, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
-const images = [
-  { name: "Доставка цветов", fileName: "flowers-delivery.webp", path: "/images/services/flowers-delivery.webp", type: "hotel" as const, title: "Доставка цветов" },
-  { name: "Доставка еды", fileName: "food-delivery.webp", path: "/images/services/food-delivery.webp", type: "hotel" as const, title: "Доставка еды" },
-  { name: "СПА услуги", fileName: "spa-services.webp", path: "/images/services/spa-services.webp", type: "hotel" as const, title: "СПА услуги" },
-  { name: "Прачечная", fileName: "laundry.webp", path: "/images/services/laundry.webp", type: "hotel" as const, title: "Прачечная" },
-  { name: "Поздний выезд", fileName: "late-checkout.webp", path: "/images/services/late-checkout.webp", type: "hotel" as const, title: "Поздний выезд" },
-  { name: "Уборка номера", fileName: "room-cleaning.webp", path: "/images/services/room-cleaning.webp", type: "hotel" as const, title: "Уборка номера" },
-  { name: "Конная прогулка", fileName: "horse-riding.webp", path: "/images/services/horse-riding.webp", type: "travel" as const, title: "Конная прогулка" },
-  { name: "Рафтинг", fileName: "rafting.webp", path: "/images/services/rafting.webp", type: "travel" as const, title: "Рафтинг" },
-  { name: "Дегустация вин", fileName: "wine-tasting.webp", path: "/images/services/wine-tasting.webp", type: "travel" as const, title: "Дегустация вин" },
-  { name: "Канатная дорога", fileName: "cable-car.webp", path: "/images/services/cable-car.webp", type: "travel" as const, title: "Канатная дорога" },
-  { name: "Дендрарий", fileName: "dendrarium.webp", path: "/images/services/dendrarium.webp", type: "travel" as const, title: "Дендрарий" },
-];
+  const images = [
+    { name: "Доставка цветов", fileName: "flowers-delivery.webp", path: "/images/services/flowers-delivery.webp", type: "hotel" as const, title: "Цветы в номер" },
+    { name: "Доставка еды", fileName: "food-delivery.webp", path: "/images/services/food-delivery.webp", type: "hotel" as const, title: "Еда в номер" },
+    { name: "СПА услуги", fileName: "spa-services.webp", path: "/images/services/spa-services.webp", type: "hotel" as const, title: "Спа-услуги" },
+    { name: "Прачечная", fileName: "laundry.webp", path: "/images/services/laundry.webp", type: "hotel" as const, title: "Услуги прачечной" },
+    { name: "Поздний выезд", fileName: "late-checkout.webp", path: "/images/services/late-checkout.webp", type: "hotel" as const, title: "Поздний выезд" },
+    { name: "Уборка номера", fileName: "room-cleaning.webp", path: "/images/services/room-cleaning.webp", type: "hotel" as const, title: "Уборка номера" },
+    { name: "Конная прогулка", fileName: "horse-riding.webp", path: "/images/services/horse-riding.webp", type: "travel" as const, title: "Конная прогулка" },
+    { name: "Рафтинг", fileName: "rafting.webp", path: "/images/services/rafting.webp", type: "travel" as const, title: "Рафтинг по реке Мзымта" },
+    { name: "Дегустация вин", fileName: "wine-tasting.webp", path: "/images/services/wine-tasting.webp", type: "travel" as const, title: "Дегустация вин" },
+    { name: "Канатная дорога", fileName: "cable-car.webp", path: "/images/services/cable-car.webp", type: "travel" as const, title: "Канатная дорога на Ахун" },
+    { name: "Дендрарий", fileName: "dendrarium.webp", path: "/images/services/dendrarium.webp", type: "travel" as const, title: "Экскурсия по Дендрарию" },
+  ];
 
 export default function PreviewImages() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
