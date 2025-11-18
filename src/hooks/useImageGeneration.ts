@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 export const useImageGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const generateImage = async (prompt: string, width: number = 1280, height: number = 720): Promise<string | null> => {
     setIsGenerating(true);
@@ -40,5 +41,61 @@ export const useImageGeneration = () => {
     }
   };
 
-  return { generateImage, isGenerating };
+  const saveGeneratedImage = async (
+    base64Url: string, 
+    fileName: string,
+    serviceTitle: string,
+    serviceType: "hotel" | "travel"
+  ): Promise<boolean> => {
+    setIsSaving(true);
+    try {
+      // Convert base64 to blob
+      const response = await fetch(base64Url);
+      const blob = await response.blob();
+      const file = new File([blob], fileName, { type: 'image/webp' });
+
+      // Upload to Supabase Storage
+      const { error: uploadError, data } = await supabase.storage
+        .from('service-images')
+        .upload(fileName, file, {
+          upsert: true,
+          contentType: 'image/webp'
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error("Ошибка загрузки изображения в Storage");
+        return false;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('service-images')
+        .getPublicUrl(fileName);
+
+      // Update database
+      const tableName = serviceType === "hotel" ? 'hotel_services' : 'travel_services';
+      const { error: updateError } = await supabase
+        .from(tableName)
+        .update({ image_url: publicUrl })
+        .eq('title', serviceTitle);
+
+      if (updateError) {
+        console.error('DB update error:', updateError);
+        toast.error("Ошибка обновления базы данных");
+        return false;
+      }
+
+      toast.success("Изображение сохранено и база данных обновлена!");
+      return true;
+    } catch (error) {
+      console.error('Error saving image:', error);
+      toast.error("Ошибка сохранения изображения");
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return { generateImage, saveGeneratedImage, isGenerating, isSaving };
 };
