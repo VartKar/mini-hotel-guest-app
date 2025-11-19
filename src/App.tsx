@@ -107,9 +107,11 @@ function App() {
               </Suspense>
             } />
             <Route path="/preview-images" element={
-              <Suspense fallback={<div>Загрузка...</div>}>
-                <PreviewImages />
-              </Suspense>
+              <Layout>
+                <Suspense fallback={<div>Загрузка...</div>}>
+                  <PreviewImages />
+                </Suspense>
+              </Layout>
             } />
             <Route path="*" element={
               <Suspense fallback={<div>Загрузка...</div>}>
