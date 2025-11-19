@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { useServiceImageUpload } from "@/hooks/useServiceImageUpload";
 import { useImageGeneration } from "@/hooks/useImageGeneration";
 import { Upload, ArrowLeft, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
   const images = [
     { name: "Доставка цветов", fileName: "flowers-delivery.webp", path: "/images/services/flowers-delivery.webp", type: "hotel" as const, title: "Цветы в номер" },
@@ -25,6 +26,16 @@ import { toast } from "sonner";
     { name: "Дендрарий", fileName: "dendrarium.webp", path: "/images/services/dendrarium.webp", type: "travel" as const, title: "Экскурсия по Дендрарию" },
   ];
 
+type ServiceImage = {
+  id: string;
+  name: string;
+  fileName: string;
+  path: string;
+  type: "hotel" | "travel";
+  title: string;
+  image_url: string | null;
+};
+
 export default function PreviewImages() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
@@ -32,10 +43,61 @@ export default function PreviewImages() {
   const [width, setWidth] = useState(1280);
   const [height, setHeight] = useState(720);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const [selectedServiceForGeneration, setSelectedServiceForGeneration] = useState<typeof images[0] | null>(null);
+  const [selectedServiceForGeneration, setSelectedServiceForGeneration] = useState<ServiceImage | null>(null);
+  const [servicesWithImages, setServicesWithImages] = useState<ServiceImage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   const { uploadAllImages, isUploading, progress } = useServiceImageUpload();
   const { generateImage, saveGeneratedImage, isGenerating, isSaving } = useImageGeneration();
+
+  useEffect(() => {
+    loadServicesWithImages();
+  }, []);
+
+  const loadServicesWithImages = async () => {
+    setIsLoading(true);
+    try {
+      const [hotelResponse, travelResponse] = await Promise.all([
+        supabase.from("hotel_services").select("id, title, image_url").eq("city", "Сочи"),
+        supabase.from("travel_services").select("id, title, image_url").eq("city", "Сочи")
+      ]);
+
+      const servicesData: ServiceImage[] = [];
+
+      // Map hotel services
+      images.filter(img => img.type === "hotel").forEach(img => {
+        const service = hotelResponse.data?.find(s => s.title === img.title);
+        if (service) {
+          servicesData.push({
+            ...img,
+            id: service.id,
+            image_url: service.image_url,
+            path: service.image_url || img.path
+          });
+        }
+      });
+
+      // Map travel services
+      images.filter(img => img.type === "travel").forEach(img => {
+        const service = travelResponse.data?.find(s => s.title === img.title);
+        if (service) {
+          servicesData.push({
+            ...img,
+            id: service.id,
+            image_url: service.image_url,
+            path: service.image_url || img.path
+          });
+        }
+      });
+
+      setServicesWithImages(servicesData);
+    } catch (error) {
+      console.error("Error loading services:", error);
+      toast.error("Ошибка загрузки данных");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleGenerate = async () => {
     const imageUrl = await generateImage(prompt, width, height);
@@ -62,12 +124,12 @@ export default function PreviewImages() {
       setGeneratedImage(null);
       setPrompt("");
       setSelectedServiceForGeneration(null);
-      // Reload page to show updated images
-      setTimeout(() => window.location.reload(), 1000);
+      // Reload services data
+      await loadServicesWithImages();
     }
   };
 
-  const openGenerateDialog = (service: typeof images[0]) => {
+  const openGenerateDialog = (service: ServiceImage) => {
     setSelectedServiceForGeneration(service);
     setPrompt(`${service.name}, профессиональное фото высокого качества`);
     setShowGenerateDialog(true);
@@ -113,35 +175,41 @@ export default function PreviewImages() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {images.map((image, index) => (
-            <Card key={index} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="text-lg">{image.name}</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {image.type === "hotel" ? "Отель" : "Туризм"}
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <img
-                  src={image.path}
-                  alt={image.name}
-                  className="w-full h-48 object-cover rounded-md cursor-pointer"
-                  onClick={() => setSelectedImage(image.path)}
-                />
-                <Button 
-                  onClick={() => openGenerateDialog(image)}
-                  variant="outline"
-                  size="sm"
-                  className="w-full gap-2"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  Сгенерировать новое
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <Progress value={50} className="w-64" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {servicesWithImages.map((service) => (
+              <Card key={service.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="text-lg">{service.name}</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {service.type === "hotel" ? "Отель" : "Туризм"}
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <img
+                    src={service.path}
+                    alt={service.name}
+                    className="w-full h-48 object-cover rounded-md cursor-pointer"
+                    onClick={() => setSelectedImage(service.path)}
+                  />
+                  <Button 
+                    onClick={() => openGenerateDialog(service)}
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Сгенерировать новое
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         <div className="mt-8 flex justify-center">
           <Button size="lg" onClick={() => window.location.href = "/"} variant="outline" className="gap-2">
