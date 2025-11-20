@@ -26,15 +26,40 @@ export default function PreviewImages() {
     try {
       const response = await fetch(imagePath);
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${imageName}.webp`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      toast.success(`Изображение "${imageName}" скачано`);
+      
+      // Проверяем поддержку File System Access API
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = await (window as any).showSaveFilePicker({
+            suggestedName: `${imageName}.webp`,
+            types: [{
+              description: 'WebP Images',
+              accept: { 'image/webp': ['.webp'] }
+            }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          toast.success(`Изображение "${imageName}" скачано`);
+        } catch (err: any) {
+          if (err.name === 'AbortError') {
+            toast.info('Скачивание отменено');
+          } else {
+            throw err;
+          }
+        }
+      } else {
+        // Fallback для старых браузеров
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${imageName}.webp`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast.success(`Изображение "${imageName}" скачано в папку загрузок`);
+      }
     } catch (error) {
       toast.error(`Ошибка при скачивании "${imageName}"`);
       console.error(error);
@@ -42,13 +67,43 @@ export default function PreviewImages() {
   };
 
   const downloadAllImages = async () => {
-    toast.info(`Начинаем скачивание ${images.length} изображений...`);
-    for (const image of images) {
-      await downloadImage(image.path, image.name);
-      // Небольшая задержка между скачиваниями
-      await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      // Проверяем поддержку File System Access API для выбора директории
+      if ('showDirectoryPicker' in window) {
+        const dirHandle = await (window as any).showDirectoryPicker();
+        toast.info(`Начинаем скачивание ${images.length} изображений...`);
+        
+        for (const image of images) {
+          try {
+            const response = await fetch(image.path);
+            const blob = await response.blob();
+            const fileHandle = await dirHandle.getFileHandle(`${image.name}.webp`, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+            await new Promise(resolve => setTimeout(resolve, 300));
+          } catch (error) {
+            console.error(`Ошибка при скачивании ${image.name}:`, error);
+          }
+        }
+        toast.success("Все изображения скачаны!");
+      } else {
+        // Fallback - скачиваем по одному в папку загрузок
+        toast.info(`Начинаем скачивание ${images.length} изображений в папку загрузок...`);
+        for (const image of images) {
+          await downloadImage(image.path, image.name);
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        toast.success("Все изображения скачаны в папку загрузок!");
+      }
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        toast.info('Скачивание отменено');
+      } else {
+        toast.error('Ошибка при скачивании изображений');
+        console.error(error);
+      }
     }
-    toast.success("Все изображения скачаны!");
   };
 
   return (
