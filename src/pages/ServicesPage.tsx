@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import DOMPurify from "dompurify";
 import { useRoomData } from "@/hooks/useRoomData";
 import { useHotelServices } from "@/hooks/useHotelServices";
@@ -58,6 +58,7 @@ const ServicesPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set());
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
+  const [priceFilter, setPriceFilter] = useState<"all" | "free" | "paid">("all");
 
   useEffect(() => {
     if (roomData?.guest_name) {
@@ -67,6 +68,14 @@ const ServicesPage = () => {
       setCustomerPhone(roomData.guest_phone);
     }
   }, [roomData]);
+
+  const filteredServices = useMemo(() => {
+    return services.filter(service => {
+      if (priceFilter === "free") return service.base_price === 0;
+      if (priceFilter === "paid") return service.base_price > 0;
+      return true;
+    });
+  }, [services, priceFilter]);
 
   const toggleServiceDetails = (serviceId: string) => {
     setExpandedServices(prev => {
@@ -347,7 +356,7 @@ const ServicesPage = () => {
   return (
     <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold">Услуги отеля</h1>
           
           {/* Mobile Cart Button */}
@@ -376,23 +385,55 @@ const ServicesPage = () => {
             </SheetContent>
           </Sheet>
         </div>
+
+        {/* Price Filter */}
+        <div className="mb-6 space-y-3">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={priceFilter === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setPriceFilter("all")}
+            >
+              Все услуги
+            </Button>
+            <Button
+              variant={priceFilter === "free" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setPriceFilter("free")}
+            >
+              Бесплатные
+            </Button>
+            <Button
+              variant={priceFilter === "paid" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setPriceFilter("paid")}
+            >
+              Платные
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Найдено: {filteredServices.length} {filteredServices.length === 1 ? 'услуга' : filteredServices.length < 5 ? 'услуги' : 'услуг'}
+          </p>
+        </div>
         
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Services Grid */}
           <div className="lg:col-span-2">
-            {services.length === 0 ? (
+            {filteredServices.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
                   <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-lg font-medium mb-2">Услуг пока нет</p>
+                  <p className="text-lg font-medium mb-2">
+                    {services.length === 0 ? "Услуг пока нет" : "Ничего не найдено"}
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    Скоро здесь появятся услуги
+                    {services.length === 0 ? "Скоро здесь появятся услуги" : "Попробуйте изменить фильтры"}
                   </p>
                 </CardContent>
               </Card>
             ) : (
               <div className="grid gap-4">
-                {services.map((service) => {
+                {filteredServices.map((service) => {
                   const isInCart = selectedServices.some(s => s.id === service.id);
                   const isExpanded = expandedServices.has(service.id);
                   
