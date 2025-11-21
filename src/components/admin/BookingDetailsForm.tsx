@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,32 +41,26 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
   const [existingHost, setExistingHost] = useState<any | null>(null);
   const [isSearchingHost, setIsSearchingHost] = useState(false);
   
-  // Generate dummy default values for create mode
+  // Default values for create mode
   const getDefaultValues = () => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const nextWeek = new Date(today);
-    nextWeek.setDate(nextWeek.getDate() + 7);
-
     return {
-      guest_name: 'Иван Иванов',
-      guest_email: 'guest@example.com',
-      guest_phone: '+7 (999) 123-45-67',
+      guest_name: '',
+      guest_email: '',
+      guest_phone: '',
       number_of_guests: 2,
-      check_in_date: tomorrow.toISOString().split('T')[0],
-      check_out_date: nextWeek.toISOString().split('T')[0],
-      stay_duration: '6 ночей',
+      check_in_date: '',
+      check_out_date: '',
+      stay_duration: '',
       booking_status: 'confirmed',
-      access_token: mode === 'create' ? crypto.randomUUID().substring(0, 16) : '',
+      access_token: '',
       notes_internal: '',
-      room_number: '101',
-      apartment_name: 'Стандартный номер',
+      room_number: '',
+      apartment_name: '',
       property_id: '',
       city: 'Сочи',
-      host_name: 'Иван Петров',
-      host_email: 'host@example.com',
-      host_phone: '+7 (999) 888-77-66',
+      host_name: '',
+      host_email: '',
+      host_phone: '',
     };
   };
 
@@ -96,6 +90,25 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
   });
 
   const queryClient = useQueryClient();
+
+  // Auto-calculate stay_duration when dates change
+  useEffect(() => {
+    if (formData.check_in_date && formData.check_out_date) {
+      const checkIn = new Date(formData.check_in_date);
+      const checkOut = new Date(formData.check_out_date);
+      const diffTime = checkOut.getTime() - checkIn.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays > 0) {
+        const nightsText = diffDays === 1 ? 'ночь' : diffDays < 5 ? 'ночи' : 'ночей';
+        setFormData(prev => ({ ...prev, stay_duration: `${diffDays} ${nightsText}` }));
+      } else if (diffDays <= 0) {
+        setFormData(prev => ({ ...prev, stay_duration: '' }));
+      }
+    } else {
+      setFormData(prev => ({ ...prev, stay_duration: '' }));
+    }
+  }, [formData.check_in_date, formData.check_out_date]);
 
   // Fetch existing properties and rooms on mount
   useEffect(() => {
@@ -228,6 +241,20 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
           throw new Error('Необходимо выбрать комнату');
         }
 
+        // Check for booking conflicts
+        if (updatedData.check_in_date && updatedData.check_out_date) {
+          const { data: conflictingBookings } = await supabase
+            .from('bookings')
+            .select('id, guest_name, check_in_date, check_out_date')
+            .eq('room_id', selectedRoomId)
+            .neq('booking_status', 'cancelled')
+            .or(`and(check_in_date.lte.${updatedData.check_out_date},check_out_date.gte.${updatedData.check_in_date})`);
+
+          if (conflictingBookings && conflictingBookings.length > 0) {
+            throw new Error(`Конфликт бронирований: комната уже забронирована с ${new Date(conflictingBookings[0].check_in_date!).toLocaleDateString('ru-RU')} по ${new Date(conflictingBookings[0].check_out_date!).toLocaleDateString('ru-RU')} (${conflictingBookings[0].guest_name})`);
+          }
+        }
+
         // Check if guest exists by email
         const { data: existingGuest } = await supabase
           .from('guests')
@@ -339,6 +366,29 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
     if (mode === 'create' && !selectedRoomId) {
       toast.error('Необходимо выбрать комнату');
       return;
+    }
+
+    // Date validation
+    if (formData.check_in_date && formData.check_out_date) {
+      const checkIn = new Date(formData.check_in_date);
+      const checkOut = new Date(formData.check_out_date);
+      
+      if (checkOut <= checkIn) {
+        toast.error('Дата выезда должна быть позже даты заезда');
+        return;
+      }
+
+      // Check if check-in date is in the past (only for create mode)
+      if (mode === 'create') {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        checkIn.setHours(0, 0, 0, 0);
+        
+        if (checkIn < today) {
+          toast.error('Дата заезда не может быть в прошлом');
+          return;
+        }
+      }
     }
     
     saveMutation.mutate(formData);
@@ -513,7 +563,12 @@ const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
                 id="stay_duration"
                 value={formData.stay_duration}
                 onChange={(e) => handleInputChange('stay_duration', e.target.value)}
+                placeholder="Рассчитывается автоматически"
+                disabled
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Автоматически рассчитывается по датам заезда и выезда
+              </p>
             </div>
             <div>
               <Label htmlFor="booking_status">Статус бронирования</Label>
