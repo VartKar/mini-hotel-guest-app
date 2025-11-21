@@ -21,12 +21,29 @@ const AdminPage = () => {
     setAuthLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
 
       if (error) throw error;
+      
+      // Check if user has admin role
+      if (data.user) {
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .eq('role', 'admin')
+          .single();
+
+        if (roleError || !roleData) {
+          await supabase.auth.signOut();
+          toast.error('У вас нет прав администратора');
+          return;
+        }
+      }
+      
       toast.success('Вход выполнен');
     } catch (error: any) {
       toast.error(error.message || 'Ошибка входа');
