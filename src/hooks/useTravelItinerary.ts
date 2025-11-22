@@ -98,48 +98,42 @@ const calculateDays = (checkIn: string | null, checkOut: string | null): number 
 const selectActivitiesForStay = (templates: TravelItinerary[], numberOfDays: number, city: string): TravelItinerary[] => {
   // Filter templates by city first
   const cityTemplates = templates.filter(template => 
-    template.city === city || (!template.city && city === 'Сочи') // fallback for default city
+    template.city === city || (!template.city && city === 'Сочи')
   );
   
   if (cityTemplates.length === 0) {
-    return templates.slice(0, numberOfDays); // fallback to any templates
+    return templates.slice(0, numberOfDays);
   }
   
-  // Group by activity category for variety
-  const categorizedTemplates = cityTemplates.reduce((acc, template) => {
-    const category = template.activity_category || 'general';
-    if (!acc[category]) acc[category] = [];
-    acc[category].push(template);
-    return acc;
-  }, {} as Record<string, TravelItinerary[]>);
-  
-  const categories = Object.keys(categorizedTemplates);
+  // Create a pool of all available activities (not yet selected)
+  const availablePool = [...cityTemplates];
   const selectedActivities: TravelItinerary[] = [];
   
-  // Distribute activities across days, ensuring variety
+  // Select activities ensuring no duplicates
   for (let day = 1; day <= numberOfDays; day++) {
-    const categoryIndex = (day - 1) % categories.length;
-    const category = categories[categoryIndex];
-    const categoryTemplates = categorizedTemplates[category];
-    
-    if (categoryTemplates && categoryTemplates.length > 0) {
-      // Select activity from this category that hasn't been used yet
-      const availableActivities = categoryTemplates.filter(
-        template => !selectedActivities.find(selected => selected.id === template.id)
-      );
+    if (availablePool.length === 0) {
+      // If we've exhausted all unique activities, refill the pool but exclude just-used ones
+      const recentIds = selectedActivities.slice(-Math.min(3, selectedActivities.length)).map(a => a.id);
+      availablePool.push(...cityTemplates.filter(t => !recentIds.includes(t.id)));
       
-      const selectedTemplate = availableActivities.length > 0 
-        ? availableActivities[Math.floor(Math.random() * availableActivities.length)]
-        : categoryTemplates[Math.floor(Math.random() * categoryTemplates.length)];
-      
-      // Create a copy with the correct day number
-      const dayActivity = {
-        ...selectedTemplate,
-        day_number: day
-      };
-      
-      selectedActivities.push(dayActivity);
+      // If still empty (very rare), just use all templates again
+      if (availablePool.length === 0) {
+        availablePool.push(...cityTemplates);
+      }
     }
+    
+    // Pick a random activity from the available pool
+    const randomIndex = Math.floor(Math.random() * availablePool.length);
+    const selectedTemplate = availablePool[randomIndex];
+    
+    // Remove from pool to ensure uniqueness
+    availablePool.splice(randomIndex, 1);
+    
+    // Add to selected with correct day number
+    selectedActivities.push({
+      ...selectedTemplate,
+      day_number: day
+    });
   }
   
   return selectedActivities;
