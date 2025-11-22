@@ -12,6 +12,7 @@ const images = [
   { name: "Прачечная", path: "/images/services/laundry.webp", type: "hotel" },
   { name: "Поздний выезд", path: "/images/services/late-checkout.webp", type: "hotel" },
   { name: "Уборка номера", path: "/images/services/room-cleaning.webp", type: "hotel" },
+  { name: "Ранний заезд", path: "/images/services/early-checkin.webp", type: "hotel" },
   { name: "Конная прогулка", path: "/images/services/horse-riding.webp", type: "travel" },
   { name: "Рафтинг", path: "/images/services/rafting.webp", type: "travel" },
   { name: "Дегустация вин", path: "/images/services/wine-tasting.webp", type: "travel" },
