@@ -54,6 +54,8 @@ export const HostGuestLinks = ({ hostEmail }: HostGuestLinksProps) => {
         };
       }).filter(qr => qr.access_token) as RoomQRCode[];
     },
+    // Only run when we have a valid email
+    enabled: !!hostEmail && hostEmail.length > 0,
   });
   const handleCopyLink = (token: string) => {
     const url = `https://mini-hotel-guest-app.lovable.app/guest/${token}`;
