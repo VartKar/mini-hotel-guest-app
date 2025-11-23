@@ -99,7 +99,7 @@ export const useHostMarketingMetrics = (hostEmail: string) => {
         distribution,
       };
     },
-    // Independent of hostEmail string; RLS handles scoping
-    enabled: true,
+    // Only run when we have a valid email
+    enabled: !!hostEmail && hostEmail.length > 0,
   });
 };

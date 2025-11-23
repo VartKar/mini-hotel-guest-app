@@ -13,7 +13,7 @@ export const useHostGuests = (hostEmail: string) => {
 
       return guests || [];
     },
-    // Do not depend on hostEmail, RLS will scope results to the host
-    enabled: true,
+    // Only run when we have a valid email
+    enabled: !!hostEmail && hostEmail.length > 0,
   });
 };
