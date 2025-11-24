@@ -16,6 +16,7 @@ import HotelServiceOrders from "@/components/host/HotelServiceOrders";
 import TravelServiceOrders from "@/components/host/TravelServiceOrders";
 import { HostMarketingDashboard } from "@/components/host/HostMarketingDashboard";
 import { HostGuestLinks } from "@/components/host/HostGuestLinks";
+import { HostRevenueDashboard } from "@/components/host/HostRevenueDashboard";
 
 const HostPage = () => {
   const { isHostAuthenticated, loading: hostAuthLoading, logout: hostLogout, user } = useHostAuth();
@@ -289,6 +290,11 @@ const HostPage = () => {
         </div>
 
         <div className="grid gap-6">
+          {/* Revenue Dashboard */}
+          {hostData?.host_email && (
+            <HostRevenueDashboard hostEmail={hostData.host_email} />
+          )}
+
           {/* Host Info */}
           <Card>
             <CardHeader>
