@@ -247,29 +247,33 @@ const HostPage = () => {
     );
   }
 
-  // Show error if authenticated but not host
-  if (user && !isHostAuthenticated) {
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // Show error if no host data or error
+  if (error || !hostData) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-red-600">Доступ запрещен</CardTitle>
+            <CardTitle className="text-red-600">
+              {error || 'Нет данных'}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p>У вас нет прав хоста. Обратитесь к администратору системы.</p>
+            <p className="text-muted-foreground">
+              {error || 'Не удалось загрузить данные хоста. Убедитесь, что у вас есть активные бронирования и вы указаны как хост в настройках комнат.'}
+            </p>
             <Button onClick={handleLogout} variant="outline" className="w-full">
               Выйти
             </Button>
           </CardContent>
         </Card>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -316,10 +320,14 @@ const HostPage = () => {
           </Card>
 
           {/* Marketing Dashboard */}
-          <HostMarketingDashboard hostEmail={hostData?.host_email || ""} />
+          {hostData?.host_email && (
+            <HostMarketingDashboard hostEmail={hostData.host_email} />
+          )}
 
           {/* Guest Links */}
-          <HostGuestLinks hostEmail={hostData?.host_email || ""} />
+          {hostData?.host_email && (
+            <HostGuestLinks hostEmail={hostData.host_email} />
+          )}
 
           {/* Bookings */}
           <Card>
@@ -379,10 +387,14 @@ const HostPage = () => {
           </Card>
 
           {/* Hotel Service Orders */}
-          <HotelServiceOrders hostEmail={hostData?.host_email || ''} />
+          {hostData?.host_email && (
+            <HotelServiceOrders hostEmail={hostData.host_email} />
+          )}
 
           {/* Travel Service Orders */}
-          <TravelServiceOrders hostEmail={hostData?.host_email || ''} />
+          {hostData?.host_email && (
+            <TravelServiceOrders hostEmail={hostData.host_email} />
+          )}
 
           {/* Change Request Form */}
           {selectedBooking && (
