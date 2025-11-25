@@ -32,7 +32,9 @@ const DatabaseManagement = () => {
     existing_properties: { property_id: string; count: number }[];
     rooms: any[];
     guests: any[];
-  }>({ travel_services: [], restaurant_recommendations: [], existing_properties: [], rooms: [], guests: [] });
+    hosts: { host_email: string; host_name: string | null; host_phone: string | null }[];
+  }>({ travel_services: [], restaurant_recommendations: [], existing_properties: [], rooms: [], guests: [], hosts: [] });
+  const [selectedHost, setSelectedHost] = useState<{ host_email: string; host_name: string | null; host_phone: string | null } | null>(null);
 
   const tables = [
     { value: 'rooms', label: 'Номера' },
@@ -77,7 +79,8 @@ const DatabaseManagement = () => {
           restaurant_recommendations: restaurantsRes.data || [],
           existing_properties: [],
           rooms: [],
-          guests: []
+          guests: [],
+          hosts: []
         });
       } catch (error) {
         console.error('Error fetching related data:', error);
@@ -109,12 +112,12 @@ const DatabaseManagement = () => {
       }
     }
     
-    // Fetch existing property_ids when working with rooms table
+    // Fetch existing property_ids and unique hosts when working with rooms table
     if (selectedTable === 'rooms') {
       try {
         const { data: roomsData } = await supabase
           .from('rooms')
-          .select('property_id')
+          .select('property_id, host_email, host_name, host_phone')
           .not('property_id', 'is', null)
           .order('property_id', { ascending: true });
 
@@ -131,13 +134,28 @@ const DatabaseManagement = () => {
 
           const properties = Object.values(propertyMap) as { property_id: string; count: number }[];
           
+          // Extract unique hosts
+          const hostsMap = new Map<string, { host_email: string; host_name: string | null; host_phone: string | null }>();
+          roomsData.forEach((room: any) => {
+            if (room.host_email && !hostsMap.has(room.host_email)) {
+              hostsMap.set(room.host_email, {
+                host_email: room.host_email,
+                host_name: room.host_name,
+                host_phone: room.host_phone
+              });
+            }
+          });
+          
+          const uniqueHosts = Array.from(hostsMap.values());
+          
           setRelatedData(prev => ({
             ...prev,
-            existing_properties: properties
+            existing_properties: properties,
+            hosts: uniqueHosts
           }));
         }
       } catch (error) {
-        console.error('Error fetching properties:', error);
+        console.error('Error fetching properties and hosts:', error);
       }
     }
   };
@@ -290,6 +308,65 @@ const DatabaseManagement = () => {
     const actualValue = value !== undefined ? value : sampleValue;
     // typeof null === 'object', so we need special handling
     const fieldType = actualValue === null ? 'null' : typeof actualValue;
+    
+    // Handle host_email for rooms table with host selection
+    if (selectedTable === 'rooms' && key === 'host_email') {
+      return (
+        <div className="space-y-2">
+          <Select 
+            name={key} 
+            defaultValue={value || 'new'}
+            onValueChange={(val) => {
+              if (val === 'new') {
+                setSelectedHost(null);
+              } else {
+                const host = relatedData.hosts.find(h => h.host_email === val);
+                setSelectedHost(host || null);
+              }
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="new">✨ Новый хост (ввести вручную)</SelectItem>
+              {relatedData.hosts.map(h => (
+                <SelectItem key={h.host_email} value={h.host_email}>
+                  {h.host_name ? `${h.host_name} (${h.host_email})` : h.host_email}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Выберите существующего хоста или создайте нового
+          </p>
+        </div>
+      );
+    }
+    
+    // Handle host_name for rooms table - autofill if host selected
+    if (selectedTable === 'rooms' && key === 'host_name') {
+      return (
+        <Input
+          name={key}
+          key={selectedHost?.host_email || 'new'} // Force re-render when host changes
+          defaultValue={selectedHost?.host_name || value || ''}
+          placeholder="Введите имя хоста"
+        />
+      );
+    }
+    
+    // Handle host_phone for rooms table - autofill if host selected
+    if (selectedTable === 'rooms' && key === 'host_phone') {
+      return (
+        <Input
+          name={key}
+          key={selectedHost?.host_email || 'new'} // Force re-render when host changes
+          defaultValue={selectedHost?.host_phone || value || ''}
+          placeholder="Введите телефон хоста"
+        />
+      );
+    }
     
     // Handle property_id for rooms table
     if (selectedTable === 'rooms' && key === 'property_id') {
@@ -765,9 +842,15 @@ const DatabaseManagement = () => {
             </SelectContent>
           </Select>
           
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) setSelectedHost(null); // Reset selected host when closing dialog
+          }}>
             <DialogTrigger asChild>
-              <Button onClick={() => setEditingRecord(null)}>
+              <Button onClick={() => {
+                setEditingRecord(null);
+                setSelectedHost(null);
+              }}>
                 <Plus className="w-4 h-4 mr-2" />
                 Добавить запись
               </Button>
