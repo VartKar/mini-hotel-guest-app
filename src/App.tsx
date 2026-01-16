@@ -18,6 +18,7 @@ const ChatPage = lazy(() =>
 const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const HostPage = lazy(() => import("./pages/HostPage"));
+const HostLandingPage = lazy(() => import("./pages/HostLandingPage"));
 const GuestPage = lazy(() => import("./pages/GuestPage"));
 const PreviewImages = lazy(() => import("./pages/PreviewImages"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -104,6 +105,11 @@ function App() {
             <Route path="/host" element={
               <Suspense fallback={<div>Загрузка...</div>}>
                 <HostPage />
+              </Suspense>
+            } />
+            <Route path="/for-hosts" element={
+              <Suspense fallback={<div>Загрузка...</div>}>
+                <HostLandingPage />
               </Suspense>
             } />
             <Route path="/preview-images" element={
