@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -158,7 +159,10 @@ const HostPage = () => {
           <CardHeader>
             <CardTitle>Панель хоста</CardTitle>
             <CardDescription>
-              Управление бронированиями и заказами
+              Управление бронированиями и заказами.{" "}
+              <Link to="/for-hosts" className="text-primary hover:underline">
+                Узнать больше о сервисе →
+              </Link>
             </CardDescription>
           </CardHeader>
           <CardContent>
