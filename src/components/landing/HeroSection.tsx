@@ -1,10 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Sparkles, TrendingUp, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
 const HeroSection = () => {
-  return (
-    <section className="relative py-16 md:py-24 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/10">
+  return <section className="relative py-16 md:py-24 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/10">
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
@@ -22,7 +20,7 @@ const HeroSection = () => {
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
               <span className="text-foreground">Гости довольны.</span>
               <br />
-              <span className="text-foreground">Персонал спокоен.</span>
+              
               <br />
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Доход растёт.</span>
             </h1>
@@ -54,16 +52,13 @@ const HeroSection = () => {
                 </a>
               </Button>
               <Button size="default" variant="outline" className="text-sm border-2 hover:bg-primary/5" asChild>
-                <a href="/guest/demo-booking" target="_blank" rel="noopener noreferrer">
-                  <Play className="mr-2 h-4 w-4" />
-                  Смотреть демо
-                </a>
+                
               </Button>
             </div>
 
             <p className="text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
               <span>✓ Без программистов</span>
-              <span>✓ Без привязки карты</span>
+              
               <span>✓ 30 дней бесплатно</span>
             </p>
           </div>
@@ -74,11 +69,7 @@ const HeroSection = () => {
               <div className="relative w-[240px] md:w-[280px] h-[500px] md:h-[580px] bg-gradient-to-b from-foreground to-foreground/90 rounded-[2.5rem] md:rounded-[3rem] p-2.5 md:p-3 shadow-2xl shadow-foreground/20">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 md:w-32 h-5 md:h-6 bg-foreground rounded-b-2xl z-10" />
                 <div className="w-full h-full bg-background rounded-[2rem] md:rounded-[2.5rem] overflow-hidden">
-                  <img 
-                    src="/images/landing/app-screenshot.png" 
-                    alt="ChillStay App" 
-                    className="w-full h-full object-cover object-top"
-                  />
+                  <img src="/images/landing/app-screenshot.png" alt="ChillStay App" className="w-full h-full object-cover object-top" />
                 </div>
               </div>
               
@@ -101,13 +92,11 @@ const HeroSection = () => {
               
               {/* Decorative elements */}
               <div className="absolute -top-8 -right-12 w-24 md:w-32 h-24 md:h-32 bg-primary/20 rounded-full blur-2xl" />
-              <div className="absolute -bottom-12 -left-12 w-32 md:w-40 h-32 md:h-40 bg-accent/30 rounded-full blur-3xl" />
+              
             </div>
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
