@@ -12,8 +12,7 @@ const HeroSection = () => {
       <div className="container max-w-6xl mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="space-y-6">
-            <Badge variant="secondary" className="px-3 py-1.5 text-sm font-medium bg-primary/10 text-primary border-primary/20">
-              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+            <Badge variant="secondary" className="px-3 py-1.5 text-sm font-medium bg-primary/10 text-primary border-primary/20">Платформа №1 для управляющих и владельцев апартаментов и мини-отелей<Sparkles className="h-3.5 w-3.5 mr-1.5" />
               Платформа №1 для мини-отелей
             </Badge>
             
