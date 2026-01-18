@@ -54,7 +54,8 @@ const PricingSection = () => {
             </div>
           </div>
 
-          <p className="text-sm text-muted-foreground mt-8">Есть вопросы? Напишите нам<a href="mailto:hello@rubikinn.app" className="text-primary hover:underline font-medium">Напишите нам</a> — ответим за 5 минут
+          <p className="text-sm text-muted-foreground mt-8">
+            Есть вопросы? <a href="mailto:hello@chillstay.app" className="text-primary hover:underline font-medium">Напишите нам</a> — ответим за 5 минут
           </p>
         </div>
       </div>

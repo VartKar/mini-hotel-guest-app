@@ -9,9 +9,9 @@ const LandingFooter = () => {
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/70 rounded-lg flex items-center justify-center">
-              <span className="text-sm font-bold text-primary-foreground">R</span>
+              <span className="text-sm font-bold text-primary-foreground">C</span>
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">RubikInn</span>
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">ChillStay</span>
           </div>
           
           <nav className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
@@ -24,13 +24,13 @@ const LandingFooter = () => {
             <a href="#pricing" className="hover:text-primary transition-colors">
               Цены
             </a>
-            <a href="mailto:hello@rubikinn.app" className="hover:text-primary transition-colors">
+            <a href="mailto:hello@chillstay.app" className="hover:text-primary transition-colors">
               Контакты
             </a>
           </nav>
 
           <p className="text-sm text-muted-foreground">
-            © {currentYear} RubikInn. Все права защищены.
+            © {currentYear} ChillStay. Все права защищены.
           </p>
         </div>
       </div>
