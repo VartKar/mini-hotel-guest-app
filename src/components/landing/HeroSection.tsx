@@ -14,16 +14,20 @@ const HeroSection = () => {
           <div className="space-y-6">
             <Badge variant="secondary" className="px-3 py-1.5 text-sm font-medium bg-primary/10 text-primary border-primary/20">
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              Платформа №1 для мини-отелей
+              Платформа №1 для апартаментов и мини-отелей
             </Badge>
             
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
               <span className="text-foreground">Гости довольны.</span>
               <br />
-              <span className="text-foreground">Персонал спокоен.</span>
+              <span className="text-foreground">Вы спокойны.</span>
               <br />
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Доход растёт.</span>
             </h1>
+            
+            <p className="text-lg md:text-xl font-semibold text-primary">
+              Сервис 5 звёзд — для отелей любого размера
+            </p>
             
             <p className="text-base md:text-lg text-muted-foreground max-w-lg">
               Всё-в-одном решение для <span className="text-foreground font-semibold">прямых бронирований</span>, <span className="text-foreground font-semibold">допродаж</span> и <span className="text-foreground font-semibold">возврата гостей</span>
@@ -80,12 +84,6 @@ const HeroSection = () => {
                 </div>
               </div>
               
-              <div className="absolute -bottom-2 -left-4 md:-bottom-4 md:-left-8 bg-card rounded-xl p-2.5 md:p-3 shadow-lg border">
-                <div className="flex items-center gap-1.5 md:gap-2">
-                  <span className="text-base md:text-lg">⭐</span>
-                  <span className="text-xs md:text-sm font-semibold">4.9 рейтинг</span>
-                </div>
-              </div>
               
               {/* Decorative elements */}
               <div className="absolute -top-8 -right-12 w-24 md:w-32 h-24 md:h-32 bg-primary/20 rounded-full blur-2xl" />

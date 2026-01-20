@@ -1,6 +1,6 @@
 import { X, AlertTriangle } from "lucide-react";
 const painPoints = [{
-  text: "15–25% комиссии Booking и Циан"
+  text: "15–25% комиссии Avito и Циан"
 }, {
   text: "Гость уехал — контакт потерян"
 }, {
