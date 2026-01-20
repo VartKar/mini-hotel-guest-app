@@ -4,13 +4,12 @@ import PainSection from "@/components/landing/PainSection";
 import SolutionSection from "@/components/landing/SolutionSection";
 import RevenueSection from "@/components/landing/RevenueSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
-import BenefitsSection from "@/components/landing/BenefitsSection";
 import PricingSection from "@/components/landing/PricingSection";
 import LandingFooter from "@/components/landing/LandingFooter";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 const HostLandingPage = () => {
-  useDocumentTitle("ChillStay — Платформа для мини-отелей и апартаментов");
+  useDocumentTitle("ChillStay — Платформа для апартаментов и мини-отелей");
 
   return (
     <div className="min-h-screen bg-background">
@@ -21,7 +20,6 @@ const HostLandingPage = () => {
         <RevenueSection />
         <SolutionSection />
         <HowItWorksSection />
-        <BenefitsSection />
         <PricingSection />
       </main>
       <LandingFooter />

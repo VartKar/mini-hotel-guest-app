@@ -9,14 +9,14 @@ const steps = [
   },
   {
     icon: Smartphone,
-    title: "Открывает страницу",
+    title: "Открывает сайт апартаментов",
     description: "Wi-Fi, инструкции, услуги — всё под рукой",
     color: "bg-blue-500"
   },
   {
     icon: ShoppingCart,
     title: "Заказывает услуги",
-    description: "Трансфер, экскурсии, товары — вы получаете доход",
+    description: "Онлайн-заказ проверенных услуг и товаров по лучшим ценам",
     color: "bg-accent"
   },
   {
