@@ -30,7 +30,7 @@ const HeroSection = () => {
             </p>
             
             <p className="text-base md:text-lg text-muted-foreground max-w-lg">
-              Всё-в-одном решение для <span className="text-foreground font-semibold">прямых бронирований</span>, <span className="text-foreground font-semibold">допродаж</span> и <span className="text-foreground font-semibold">возврата гостей</span>
+              Всё-в-одном решение для <span className="text-foreground font-semibold">премиального гостевого сервиса</span>, <span className="text-foreground font-semibold">дополнительных продаж</span> и <span className="text-foreground font-semibold">повторных бронирований</span>
             </p>
 
             <div className="flex flex-wrap gap-4 text-sm">
