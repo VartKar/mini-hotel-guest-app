@@ -9,7 +9,7 @@ const features = [
   {
     icon: Smartphone,
     title: "Всё в одном месте",
-    text: "Контакты, правила, услуги"
+    text: "Wi-Fi, сервисы, сувениры, правила, консьерж"
   },
   {
     icon: RotateCcw,
@@ -24,7 +24,7 @@ const SolutionSection = () => {
       <div className="container max-w-4xl mx-auto px-4">
         <div className="text-center mb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-            Персональная страница для каждого гостя
+            Мини-сайт для каждого номера
           </h2>
           <p className="text-muted-foreground">
             Гость получает мобильную страницу вашего отеля — и сохраняет её навсегда
