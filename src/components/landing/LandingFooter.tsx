@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+
 
 const LandingFooter = () => {
   const currentYear = new Date().getFullYear();
@@ -15,16 +15,13 @@ const LandingFooter = () => {
           </div>
           
           <nav className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
-            <Link to="/host" className="hover:text-primary transition-colors">
-              Для хостов
-            </Link>
             <a href="#solution" className="hover:text-primary transition-colors">
               Решение
             </a>
             <a href="#pricing" className="hover:text-primary transition-colors">
               Цены
             </a>
-            <a href="mailto:hello@chillstay.app" className="hover:text-primary transition-colors">
+            <a href="mailto:support@chillstay.app" className="hover:text-primary transition-colors">
               Контакты
             </a>
           </nav>

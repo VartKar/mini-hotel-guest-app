@@ -38,7 +38,7 @@ const HeroSection = () => {
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <TrendingUp className="h-4 w-4 text-primary" />
                 </div>
-                <span className="font-medium">+40% к доходу</span>
+                <span className="font-medium">до +40% выручки</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">

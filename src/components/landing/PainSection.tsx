@@ -6,7 +6,7 @@ const painPoints = [{
 }, {
   text: "Повторные бронирования — дело случая"
 }, {
-  text: "Доход только с проживания"
+  text: "Доход только с проживания, а не с сервисов"
 }];
 const PainSection = () => {
   return <section className="py-12 md:py-16 bg-gradient-to-b from-destructive/5 to-background">

@@ -17,7 +17,7 @@ const revenueStreams = [{
 }, {
   icon: Users,
   title: "Партнёрская программа",
-  description: "Рекомендуйте коллегам и получайте пассивный доход.",
+  description: "Приглашайте коллег — получайте дополнительный доход.",
   metric: "20%",
   metricLabel: "с каждого",
   gradient: "from-accent to-orange-500"
@@ -65,11 +65,6 @@ const RevenueSection = () => {
         })}
         </div>
 
-        <div className="text-center">
-          <Button size="lg" className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg" asChild>
-            
-          </Button>
-        </div>
       </div>
     </section>;
 };

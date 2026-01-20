@@ -25,7 +25,7 @@ const PricingSection = () => {
               <div className="mb-8">
                 <span className="text-muted-foreground text-lg">от</span>
                 <span className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mx-3">800</span>
-                <span className="text-muted-foreground text-lg">₽ / месяц</span>
+                <span className="text-muted-foreground text-lg">₽ / месяц за 1 объект</span>
               </div>
 
               <div className="flex flex-wrap justify-center gap-3 mb-8">
