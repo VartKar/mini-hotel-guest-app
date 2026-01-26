@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BookingsManagement from "./BookingsManagement";
 import ChangeRequestsManagement from "./ChangeRequestsManagement";
@@ -8,6 +7,7 @@ import FeedbackManagement from "./FeedbackManagement";
 import DatabaseManagement from "./DatabaseManagement";
 import { DefaultGuestQRCodes } from "./DefaultGuestQRCodes";
 import { AdminMarketingDashboard } from "./AdminMarketingDashboard";
+import { UsersManagement } from "./UsersManagement";
 
 const AdminDashboard = () => {
   return (
@@ -15,19 +15,24 @@ const AdminDashboard = () => {
       <h1 className="text-3xl font-bold mb-6">Панель администратора</h1>
       
     <Tabs defaultValue="marketing" className="w-full">
-      <TabsList className="grid w-full grid-cols-8">
+      <TabsList className="grid w-full grid-cols-9">
         <TabsTrigger value="marketing">📊 Маркетинг</TabsTrigger>
+        <TabsTrigger value="users">👥 Роли</TabsTrigger>
         <TabsTrigger value="bookings">Бронирования</TabsTrigger>
-          <TabsTrigger value="qr-codes">QR-коды</TabsTrigger>
-          <TabsTrigger value="change-requests">Изменения</TabsTrigger>
-          <TabsTrigger value="travel-orders">Экскурсии</TabsTrigger>
-          <TabsTrigger value="shop-orders">Магазин</TabsTrigger>
-          <TabsTrigger value="feedback">Отзывы</TabsTrigger>
-          <TabsTrigger value="database">БД</TabsTrigger>
+        <TabsTrigger value="qr-codes">QR-коды</TabsTrigger>
+        <TabsTrigger value="change-requests">Изменения</TabsTrigger>
+        <TabsTrigger value="travel-orders">Экскурсии</TabsTrigger>
+        <TabsTrigger value="shop-orders">Магазин</TabsTrigger>
+        <TabsTrigger value="feedback">Отзывы</TabsTrigger>
+        <TabsTrigger value="database">БД</TabsTrigger>
       </TabsList>
         
         <TabsContent value="marketing" className="mt-6">
           <AdminMarketingDashboard />
+        </TabsContent>
+        
+        <TabsContent value="users" className="mt-6">
+          <UsersManagement />
         </TabsContent>
         
         <TabsContent value="bookings" className="mt-6">
